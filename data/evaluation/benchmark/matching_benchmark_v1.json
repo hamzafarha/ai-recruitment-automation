@@ -1,0 +1,10 @@
+{
+  "benchmark_name": "ai_recruitment_v1_benchmark",
+  "version": "1.0",
+  "total_pairs": 50,
+  "metric_targets": {
+    "ndcg@5": 0.85,
+    "precision@3": 0.8,
+    "map": 0.78
+  }
+}

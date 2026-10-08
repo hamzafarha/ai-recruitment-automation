@@ -1,0 +1,30 @@
+{
+  "schema_version": "1.0.0",
+  "id": "syn_job_01_lead_rag",
+  "title": "Lead AI / RAG Systems Engineer",
+  "department": "AI Research & Engineering",
+  "location": null,
+  "employment_type": null,
+  "description": "We are seeking an experienced ML engineer to architect enterprise RAG pipelines, vector search with Qdrant, and multi-agent workflows.",
+  "requirements": [
+    {
+      "requirement_text": "5+ years experience in Python and PyTorch",
+      "requirement_type": "required",
+      "importance": "high",
+      "min_years_experience": 5.0
+    },
+    {
+      "requirement_text": "Hands-on experience deploying Qdrant or vector databases",
+      "requirement_type": "required",
+      "importance": "high",
+      "min_years_experience": null
+    },
+    {
+      "requirement_text": "Demonstrated production experience with LLMs and Transformers",
+      "requirement_type": "required",
+      "importance": "high",
+      "min_years_experience": null
+    }
+  ],
+  "created_at": "2026-10-08T11:36:12.047499"
+}

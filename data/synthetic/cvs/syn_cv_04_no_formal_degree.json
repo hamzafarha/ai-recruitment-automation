@@ -1,0 +1,45 @@
+{
+  "schema_version": "1.0.0",
+  "id": "syn_cv_04_no_formal_degree",
+  "full_name": "Kai Chen (Synthetic)",
+  "email": "kai.synthetic@example.com",
+  "phone": null,
+  "location": null,
+  "summary": "Core open-source contributor to deep learning and embedding frameworks with 5 years self-directed engineering.",
+  "education": [],
+  "experience": [
+    {
+      "company": "OpenSource Community",
+      "title": "Core Maintainer",
+      "location": null,
+      "start_date": "2019",
+      "end_date": "Present",
+      "is_current": false,
+      "description": "Maintained model optimization repositories with 10k GitHub stars."
+    }
+  ],
+  "skills": [
+    {
+      "name": "PyTorch",
+      "category": null,
+      "proficiency_level": "expert",
+      "years_experience": 5.0
+    },
+    {
+      "name": "Transformers",
+      "category": null,
+      "proficiency_level": "expert",
+      "years_experience": 4.0
+    },
+    {
+      "name": "CUDA",
+      "category": null,
+      "proficiency_level": "advanced",
+      "years_experience": 3.0
+    }
+  ],
+  "certifications": [],
+  "projects": [],
+  "languages": [],
+  "created_at": "2026-10-08T11:36:12.047499"
+}

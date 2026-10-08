@@ -1,0 +1,54 @@
+[
+  {
+    "concept_uri": "http://data.europa.eu/esco/skill/s1",
+    "preferred_label": "Machine Learning",
+    "alt_labels": [
+      "ML",
+      "Statistical Learning",
+      "Deep Learning"
+    ],
+    "skill_type": "knowledge",
+    "source": "ESCO"
+  },
+  {
+    "concept_uri": "http://data.europa.eu/esco/skill/s2",
+    "preferred_label": "Python",
+    "alt_labels": [
+      "Python Programming",
+      "Python 3"
+    ],
+    "skill_type": "knowledge",
+    "source": "ESCO"
+  },
+  {
+    "concept_uri": "http://data.europa.eu/esco/skill/s3",
+    "preferred_label": "Natural Language Processing",
+    "alt_labels": [
+      "NLP",
+      "Text Processing",
+      "Computational Linguistics"
+    ],
+    "skill_type": "knowledge",
+    "source": "ESCO"
+  },
+  {
+    "concept_uri": "http://data.europa.eu/esco/skill/s4",
+    "preferred_label": "PyTorch",
+    "alt_labels": [
+      "Torch",
+      "PyTorch Framework"
+    ],
+    "skill_type": "knowledge",
+    "source": "ESCO"
+  },
+  {
+    "concept_uri": "http://data.europa.eu/esco/skill/s5",
+    "preferred_label": "Docker",
+    "alt_labels": [
+      "Containerization",
+      "Docker Containers"
+    ],
+    "skill_type": "skill/competence",
+    "source": "ESCO"
+  }
+]

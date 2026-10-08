@@ -1,0 +1,92 @@
+{
+  "pair_id": "pair_02_hard_negative",
+  "candidate_id": "syn_cv_02_junior_mismatch",
+  "job_id": "syn_job_01_lead_rag",
+  "ground_truth_score": 32.0,
+  "match_category": "hard_negative",
+  "rationale": "Hard Negative: Candidate lists Python and PyTorch keywords but lacks the mandatory 5+ years experience and production architecture skills.",
+  "candidate": {
+    "schema_version": "1.0.0",
+    "id": "syn_cv_02_junior_mismatch",
+    "full_name": "Lucas Martin (Synthetic)",
+    "email": "lucas.synthetic@example.com",
+    "phone": null,
+    "location": null,
+    "summary": "Recent computer science graduate passionate about basic AI scripting.",
+    "education": [
+      {
+        "institution": "City College",
+        "degree": "B.S. Computer Science",
+        "field_of_study": null,
+        "start_date": null,
+        "end_date": null,
+        "grade": null
+      }
+    ],
+    "experience": [
+      {
+        "company": "University Lab",
+        "title": "Research Assistant",
+        "location": null,
+        "start_date": "2023",
+        "end_date": "2024",
+        "is_current": false,
+        "description": "Assisted in running basic benchmark evaluations."
+      }
+    ],
+    "skills": [
+      {
+        "name": "Python",
+        "category": null,
+        "proficiency_level": "beginner",
+        "years_experience": 1.0
+      },
+      {
+        "name": "PyTorch",
+        "category": null,
+        "proficiency_level": "beginner",
+        "years_experience": 0.5
+      },
+      {
+        "name": "HTML",
+        "category": null,
+        "proficiency_level": "intermediate",
+        "years_experience": 2.0
+      }
+    ],
+    "certifications": [],
+    "projects": [],
+    "languages": [],
+    "created_at": "2026-10-08T11:36:12.047499"
+  },
+  "job": {
+    "schema_version": "1.0.0",
+    "id": "syn_job_01_lead_rag",
+    "title": "Lead AI / RAG Systems Engineer",
+    "department": "AI Research & Engineering",
+    "location": null,
+    "employment_type": null,
+    "description": "We are seeking an experienced ML engineer to architect enterprise RAG pipelines, vector search with Qdrant, and multi-agent workflows.",
+    "requirements": [
+      {
+        "requirement_text": "5+ years experience in Python and PyTorch",
+        "requirement_type": "required",
+        "importance": "high",
+        "min_years_experience": 5.0
+      },
+      {
+        "requirement_text": "Hands-on experience deploying Qdrant or vector databases",
+        "requirement_type": "required",
+        "importance": "high",
+        "min_years_experience": null
+      },
+      {
+        "requirement_text": "Demonstrated production experience with LLMs and Transformers",
+        "requirement_type": "required",
+        "importance": "high",
+        "min_years_experience": null
+      }
+    ],
+    "created_at": "2026-10-08T11:36:12.047499"
+  }
+}

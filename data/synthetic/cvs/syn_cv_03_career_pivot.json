@@ -1,0 +1,66 @@
+{
+  "schema_version": "1.0.0",
+  "id": "syn_cv_03_career_pivot",
+  "full_name": "Amara Okafor (Synthetic)",
+  "email": "amara.synthetic@example.com",
+  "phone": null,
+  "location": null,
+  "summary": "Principal Backend Engineer (10+ years distributed systems) transitioning into Generative AI engineering.",
+  "education": [
+    {
+      "institution": "State University",
+      "degree": "B.S. Electrical Engineering",
+      "field_of_study": null,
+      "start_date": null,
+      "end_date": null,
+      "grade": null
+    }
+  ],
+  "experience": [
+    {
+      "company": "CloudData Inc",
+      "title": "Principal Backend Engineer",
+      "location": null,
+      "start_date": "2016",
+      "end_date": "Present",
+      "is_current": false,
+      "description": "Architected distributed database clusters handling 100k writes/sec."
+    }
+  ],
+  "skills": [
+    {
+      "name": "Python",
+      "category": null,
+      "proficiency_level": "expert",
+      "years_experience": 10.0
+    },
+    {
+      "name": "PostgreSQL",
+      "category": null,
+      "proficiency_level": "expert",
+      "years_experience": 9.0
+    },
+    {
+      "name": "Docker",
+      "category": null,
+      "proficiency_level": "expert",
+      "years_experience": 8.0
+    },
+    {
+      "name": "LangGraph",
+      "category": null,
+      "proficiency_level": "intermediate",
+      "years_experience": 1.0
+    },
+    {
+      "name": "Qdrant",
+      "category": null,
+      "proficiency_level": "intermediate",
+      "years_experience": 1.0
+    }
+  ],
+  "certifications": [],
+  "projects": [],
+  "languages": [],
+  "created_at": "2026-10-08T11:36:12.047499"
+}

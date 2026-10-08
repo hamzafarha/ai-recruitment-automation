@@ -1,0 +1,54 @@
+{
+  "schema_version": "1.0.0",
+  "id": "syn_cv_02_junior_mismatch",
+  "full_name": "Lucas Martin (Synthetic)",
+  "email": "lucas.synthetic@example.com",
+  "phone": null,
+  "location": null,
+  "summary": "Recent computer science graduate passionate about basic AI scripting.",
+  "education": [
+    {
+      "institution": "City College",
+      "degree": "B.S. Computer Science",
+      "field_of_study": null,
+      "start_date": null,
+      "end_date": null,
+      "grade": null
+    }
+  ],
+  "experience": [
+    {
+      "company": "University Lab",
+      "title": "Research Assistant",
+      "location": null,
+      "start_date": "2023",
+      "end_date": "2024",
+      "is_current": false,
+      "description": "Assisted in running basic benchmark evaluations."
+    }
+  ],
+  "skills": [
+    {
+      "name": "Python",
+      "category": null,
+      "proficiency_level": "beginner",
+      "years_experience": 1.0
+    },
+    {
+      "name": "PyTorch",
+      "category": null,
+      "proficiency_level": "beginner",
+      "years_experience": 0.5
+    },
+    {
+      "name": "HTML",
+      "category": null,
+      "proficiency_level": "intermediate",
+      "years_experience": 2.0
+    }
+  ],
+  "certifications": [],
+  "projects": [],
+  "languages": [],
+  "created_at": "2026-10-08T11:36:12.047499"
+}

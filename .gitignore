@@ -28,13 +28,17 @@ coverage.xml
 models/*
 !models/.gitkeep
 
-# Raw and Interim Data (Strict privacy)
+# Raw and Interim Data (Strict privacy & large file exclusions)
 data/raw/cvs/*
 !data/raw/cvs/.gitkeep
 data/raw/jobs/*
 !data/raw/jobs/.gitkeep
 data/interim/*
 !data/interim/.gitkeep
+*.tar.gz
+*.parquet
+*.arrow
+*.bin
 
 # IDEs & OS files
 .vscode/

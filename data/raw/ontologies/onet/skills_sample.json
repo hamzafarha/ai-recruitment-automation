@@ -1,0 +1,24 @@
+[
+  {
+    "concept_uri": "15-1252.00",
+    "preferred_label": "Software Developers",
+    "alt_labels": [
+      "Full Stack Developer",
+      "Software Engineer",
+      "Backend Developer"
+    ],
+    "skill_type": "occupation",
+    "source": "ONET"
+  },
+  {
+    "concept_uri": "15-2051.00",
+    "preferred_label": "Data Scientists",
+    "alt_labels": [
+      "Machine Learning Engineer",
+      "AI Scientist",
+      "Data Modeler"
+    ],
+    "skill_type": "occupation",
+    "source": "ONET"
+  }
+]

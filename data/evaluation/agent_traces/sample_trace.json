@@ -1,0 +1,27 @@
+{
+  "trace_id": "trace-test-001",
+  "workflow": "recruitment_analysis_graph",
+  "agent_invocations": [
+    {
+      "agent": "parser_agent",
+      "status": "completed",
+      "duration_ms": 320
+    },
+    {
+      "agent": "rag_agent",
+      "status": "completed",
+      "duration_ms": 140
+    },
+    {
+      "agent": "matching_agent",
+      "status": "completed",
+      "duration_ms": 210
+    },
+    {
+      "agent": "evaluator_agent",
+      "status": "completed",
+      "duration_ms": 180
+    }
+  ],
+  "total_duration_ms": 850
+}
