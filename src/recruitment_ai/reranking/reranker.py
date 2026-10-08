@@ -44,6 +44,33 @@ class OptionalReranker(BaseReranker):
         if not documents:
             return []
 
+        # If BGE reranker is configured (Architecture: BAAI/bge-reranker-v2-m3)
+        if "bge-reranker" in self.settings.reranking_model.lower():
+            try:
+                from sentence_transformers import CrossEncoder
+
+                model = CrossEncoder(self.settings.reranking_model)
+                pairs = [[query, d.text] for d in documents]
+                scores = model.predict(pairs)
+                ranked_pairs = sorted(
+                    zip(documents, scores, strict=True),
+                    key=lambda x: x[1],
+                    reverse=True,
+                )[:top_n]
+                return [
+                    RerankResult(
+                        id=d.id,
+                        text=d.text,
+                        relevance_score=float(s),
+                        metadata=d.metadata,
+                    )
+                    for d, s in ranked_pairs
+                ]
+            except Exception as exc:
+                logger.info(
+                    f"BGE reranker not loaded in offline mode ({exc}). Using vector similarity ranking."
+                )
+
         # If Cohere API key is present, attempt neural reranking
         if self.settings.cohere_api_key:
             try:

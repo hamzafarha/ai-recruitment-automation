@@ -18,6 +18,7 @@ from api.routers import (
     matching,
     reports,
     search,
+    webhooks,
 )
 from recruitment_ai.config.settings import get_settings
 from recruitment_ai.utils.logging import configure_logging, get_logger
@@ -81,5 +82,6 @@ api_v1_router.include_router(search.router)
 api_v1_router.include_router(analysis.router)
 api_v1_router.include_router(reports.router)
 api_v1_router.include_router(feedback.router)
+api_v1_router.include_router(webhooks.router)
 
 app.include_router(api_v1_router)

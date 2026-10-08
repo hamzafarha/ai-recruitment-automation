@@ -13,13 +13,20 @@ document_processing:
     - ".jpg"
     - ".jpeg"
   ocr_engine: "paddleocr"
+  multimodal_model: "Qwen/Qwen2.5-VL-7B-Instruct"
   fallback_ocr: true
 
 embeddings:
-  model_name: "all-MiniLM-L6-v2"
-  dimension: 384
+  model_name: "BAAI/bge-m3"
+  dimension: 1024
   device: "cpu"
   batch_size: 32
+
+reranking:
+  model_name: "BAAI/bge-reranker-v2-m3"
+
+llm:
+  model_name: "Qwen/Qwen2.5-7B-Instruct"
 
 rag:
   chunk_size: 500

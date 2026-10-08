@@ -6,7 +6,6 @@ import sys
 from datetime import datetime
 from typing import Any
 
-
 # Enable UTF-8 encoding on console streams
 if hasattr(sys.stdout, "reconfigure"):
     try:

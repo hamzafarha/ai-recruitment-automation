@@ -3,8 +3,10 @@
 from recruitment_ai.ingestion.parser import (
     DocumentParser,
     DocxParser,
+    ImageOCRParser,
     ParsedDocument,
     PdfParser,
+    QwenMultimodalParser,
     UnifiedDocumentParser,
 )
 
@@ -13,5 +15,7 @@ __all__ = [
     "DocumentParser",
     "PdfParser",
     "DocxParser",
+    "ImageOCRParser",
+    "QwenMultimodalParser",
     "UnifiedDocumentParser",
 ]

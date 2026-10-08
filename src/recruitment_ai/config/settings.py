@@ -81,24 +81,29 @@ class Settings(BaseSettings):
     )
     qdrant_api_key: str | None = Field(default=None, alias="QDRANT_API_KEY")
 
-    # Embedding Settings
-    embedding_model: str = Field(default="all-MiniLM-L6-v2", alias="EMBEDDING_MODEL")
+    # Embedding Settings (Architecture: BAAI/bge-m3)
+    embedding_model: str = Field(default="BAAI/bge-m3", alias="EMBEDDING_MODEL")
     embedding_device: str = Field(default="cpu", alias="EMBEDDING_DEVICE")
-    embedding_dimension: int = Field(default=384, alias="EMBEDDING_DIMENSION")
+    embedding_dimension: int = Field(default=1024, alias="EMBEDDING_DIMENSION")
 
-    # LLM Settings
+    # LLM Settings (Architecture: Qwen/Qwen2.5-7B-Instruct & Qwen2.5-VL)
     llm_provider: Literal["mock", "openai", "huggingface"] = Field(
         default="mock", alias="LLM_PROVIDER"
     )
     openai_api_key: str | None = Field(default=None, alias="OPENAI_API_KEY")
     openai_model: str = Field(default="gpt-4o-mini", alias="OPENAI_MODEL")
     huggingface_model: str = Field(
-        default="mistralai/Mistral-7B-Instruct-v0.2", alias="HUGGINGFACE_MODEL"
+        default="Qwen/Qwen2.5-7B-Instruct", alias="HUGGINGFACE_MODEL"
+    )
+    multimodal_model: str = Field(
+        default="Qwen/Qwen2.5-VL-7B-Instruct", alias="MULTIMODAL_MODEL"
     )
 
-    # Reranking
+    # Reranking (Architecture: BAAI/bge-reranker-v2-m3)
     cohere_api_key: str | None = Field(default=None, alias="COHERE_API_KEY")
-    reranking_model: str = Field(default="rerank-english-v3.0", alias="RERANKING_MODEL")
+    reranking_model: str = Field(
+        default="BAAI/bge-reranker-v2-m3", alias="RERANKING_MODEL"
+    )
 
     # Observability & Tracing
     langchain_tracing_v2: bool = Field(default=False, alias="LANGCHAIN_TRACING_V2")

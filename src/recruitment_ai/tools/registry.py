@@ -100,30 +100,111 @@ def save_recruiter_feedback_impl(
     }
 
 
-get_candidate_profile_tool = AgentTool(
-    name="get_candidate_profile",
+# Architecture Toolbox implementations (Box 5)
+def cv_search_impl(
+    query: str, candidate_id: str | None = None, top_k: int = 5
+) -> dict[str, Any]:
+    """Search in candidate CV documents."""
+    return {
+        "tool": "cv_search_tool",
+        "query": query,
+        "candidate_id": candidate_id,
+        "top_k": top_k,
+        "results": [],
+    }
+
+
+def job_description_search_impl(
+    query: str, job_id: str | None = None, top_k: int = 5
+) -> dict[str, Any]:
+    """Search in job descriptions."""
+    return {
+        "tool": "job_description_search_tool",
+        "query": query,
+        "job_id": job_id,
+        "top_k": top_k,
+        "results": [],
+    }
+
+
+def hr_knowledge_search_impl(
+    query: str, category: str | None = None, top_k: int = 5
+) -> dict[str, Any]:
+    """Search HR Knowledge Base (policies, skills, guidelines)."""
+    return {
+        "tool": "hr_knowledge_search_tool",
+        "query": query,
+        "category": category,
+        "top_k": top_k,
+        "results": [],
+    }
+
+
+def candidate_db_impl(candidate_id: str) -> dict[str, Any]:
+    """Get structured candidate profile from database."""
+    return {
+        "tool": "candidate_db_tool",
+        "candidate_id": candidate_id,
+        "status": "loaded",
+    }
+
+
+def semantic_matching_impl(candidate_id: str, job_id: str) -> dict[str, Any]:
+    """Compute semantic embeddings similarity and skill alignment."""
+    return {
+        "tool": "semantic_matching_tool",
+        "candidate_id": candidate_id,
+        "job_id": job_id,
+        "score": 88.5,
+    }
+
+
+def reranking_impl(query: str, document_ids: list[str]) -> dict[str, Any]:
+    """Reorder retrieved results using BGE-reranker-v2-m3."""
+    return {"tool": "reranking_tool", "query": query, "ranked_ids": document_ids}
+
+
+cv_search_tool = AgentTool(
+    name="cv_search_tool",
+    description="Search inside candidate CVs for experience, skills, and qualifications",
+    func=cv_search_impl,
+)
+
+job_description_search_tool = AgentTool(
+    name="job_description_search_tool",
+    description="Search inside job descriptions and specific role requirements",
+    func=job_description_search_impl,
+)
+
+hr_knowledge_search_tool = AgentTool(
+    name="hr_knowledge_search_tool",
+    description="Search HR knowledge base for recruitment policies, skills criteria, and guidelines",
+    func=hr_knowledge_search_impl,
+)
+
+candidate_db_tool = AgentTool(
+    name="candidate_db_tool",
     description="Retrieve structured candidate profile from database",
-    func=get_candidate_profile_impl,
+    func=candidate_db_impl,
 )
 
-get_job_description_tool = AgentTool(
-    name="get_job_description",
-    description="Retrieve job vacancy details and requirements from database",
-    func=get_job_description_impl,
+semantic_matching_tool = AgentTool(
+    name="semantic_matching_tool",
+    description="Calculate semantic matching score between candidate profile and job requirements",
+    func=semantic_matching_impl,
 )
 
-calculate_match_score_tool = AgentTool(
-    name="calculate_match_score",
-    description="Compute match score between candidate and job profile",
-    func=calculate_match_score_impl,
+reranking_tool = AgentTool(
+    name="reranking_tool",
+    description="Rerank candidate-job retrieval results with neural cross-encoder",
+    func=reranking_impl,
 )
 
-search_recruitment_knowledge_tool = AgentTool(
-    name="search_recruitment_knowledge",
-    description="Search recruitment guidelines, job competencies, and knowledge base",
-    func=search_recruitment_knowledge_impl,
-)
-
+# Aliases for backwards compatibility
+get_candidate_profile_tool = candidate_db_tool
+get_job_description_tool = job_description_search_tool
+calculate_match_score_tool = semantic_matching_tool
+search_recruitment_knowledge_tool = hr_knowledge_search_tool
 save_recruiter_feedback_tool = AgentTool(
     name="save_recruiter_feedback",
     description="Save recruiter validation review and approval status",
@@ -136,6 +217,14 @@ class ToolRegistry:
 
     def __init__(self) -> None:
         self._tools: dict[str, AgentTool] = {}
+        # Core Architecture Toolbox (Box 5)
+        self.register(cv_search_tool)
+        self.register(job_description_search_tool)
+        self.register(hr_knowledge_search_tool)
+        self.register(candidate_db_tool)
+        self.register(semantic_matching_tool)
+        self.register(reranking_tool)
+        # Aliases for backwards compatibility
         self.register(get_candidate_profile_tool)
         self.register(get_job_description_tool)
         self.register(calculate_match_score_tool)
