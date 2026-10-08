@@ -1,0 +1,33 @@
+# Base application configuration
+app:
+  name: "AI Recruitment Automation"
+  version: "0.1.0"
+  environment: "development"
+
+document_processing:
+  max_file_size_mb: 15
+  allowed_extensions:
+    - ".pdf"
+    - ".docx"
+    - ".png"
+    - ".jpg"
+    - ".jpeg"
+  ocr_engine: "paddleocr"
+  fallback_ocr: true
+
+embeddings:
+  model_name: "all-MiniLM-L6-v2"
+  dimension: 384
+  device: "cpu"
+  batch_size: 32
+
+rag:
+  chunk_size: 500
+  chunk_overlap: 50
+  top_k: 5
+  rerank_top_k: 3
+
+agents:
+  recursion_limit: 25
+  timeout_seconds: 60
+  human_in_the_loop: true

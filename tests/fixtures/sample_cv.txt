@@ -1,0 +1,25 @@
+JOHN DOE (SYNTHETIC CANDIDATE)
+Email: john.doe.synthetic@example.com
+Phone: +1 555-019-2834
+Location: Remote / New York, NY
+
+SUMMARY
+Results-oriented Senior Machine Learning Engineer with 6+ years of experience designing and deploying
+scalable ML models, RAG architectures, and NLP pipelines in production.
+
+EXPERIENCE
+Senior AI Engineer | DataCore Systems | 2021 - Present
+- Architected vector search and RAG retrieval systems using Qdrant and Sentence Transformers.
+- Built FastAPI microservices processing 100k+ candidate documents daily.
+- Optimized fine-tuned transformer inference latency by 45%.
+
+Machine Learning Engineer | Apex AI | 2018 - 2021
+- Developed document extraction models with PyTorch and Hugging Face Transformers.
+- Implemented OCR pipeline for scanned financial reports.
+
+EDUCATION
+Master of Science in Computer Science | Columbia University | 2016 - 2018
+Bachelor of Science in Software Engineering | State University | 2012 - 2016
+
+SKILLS
+Python, PyTorch, Hugging Face, Sentence Transformers, Qdrant, Docker, FastAPI, PostgreSQL, LangChain

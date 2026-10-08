@@ -1,0 +1,51 @@
+# Byte-compiled / optimized files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Virtual environments
+.venv/
+venv/
+env/
+
+# Environment variables & secrets
+.env
+.env.*
+!.env.example
+
+# Testing & Type Checking
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+coverage.xml
+
+# Jupyter Notebooks
+.ipynb_checkpoints/
+
+# Models & Large Artefacts
+models/*
+!models/.gitkeep
+
+# Raw and Interim Data (Strict privacy)
+data/raw/cvs/*
+!data/raw/cvs/.gitkeep
+data/raw/jobs/*
+!data/raw/jobs/.gitkeep
+data/interim/*
+!data/interim/.gitkeep
+
+# IDEs & OS files
+.vscode/
+.idea/
+*.swp
+*~
+Thumbs.db
+Desktop.ini
+
+# Docker / DB data volumes
+pgdata/
+qdrant_storage/
+logs/
+*.log

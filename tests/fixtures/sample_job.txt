@@ -1,0 +1,16 @@
+JOB DESCRIPTION: Senior AI / Machine Learning Engineer
+Department: AI Research & Engineering
+Location: Remote
+
+Overview:
+We are seeking an experienced ML Engineer to lead development of our agentic AI recruitment system.
+
+Key Responsibilities:
+- Build high-performance document parsing and OCR pipelines.
+- Implement vector search with Qdrant and modern embedding models.
+- Deploy scalable FastAPI endpoints with LangGraph orchestration.
+
+Requirements:
+- Strong proficiency in Python, PyTorch, and Transformers.
+- Experience with RAG pipelines, vector databases (Qdrant), and LangChain/LangGraph.
+- Proven track record deploying microservices via Docker.
