@@ -1,14 +1,11 @@
-"""Unit tests for the data layer: loader, ontologies, synthetic generator, and knowledge base."""
+"""Unit tests for the data layer: loader, synthetic generator, and knowledge base.
+
+Skill normalization (ESCO lexicon) is tested in test_data_preparation.py."""
 
 from pathlib import Path
 
 from recruitment_ai.data.knowledge import KnowledgeBaseLoader
 from recruitment_ai.data.loader import DatasetCatalog, DatasetLoader
-from recruitment_ai.data.ontology import (
-    ESCONormalizer,
-    ONetNormalizer,
-    SkillOntologyManager,
-)
 from recruitment_ai.data.synthetic_generator import SyntheticDataGenerator
 
 
@@ -60,37 +57,6 @@ class TestDatasetCatalogAndLoader:
         assert len(samples) > 0
         assert "full_name" in samples[0]
         assert "skills" in samples[0]
-
-
-class TestOntologyNormalization:
-    def test_esco_normalizer_direct_and_alias(self) -> None:
-        normalizer = ESCONormalizer(ontology_path=Path("./data/raw/ontologies/esco"))
-        # Preferred label match
-        match_ml = normalizer.normalize_skill("Machine Learning")
-        assert match_ml is not None
-        assert match_ml.preferred_label == "Machine Learning"
-
-        # Alias match
-        match_alias = normalizer.normalize_skill("Deep Learning")
-        assert match_alias is not None
-        assert match_alias.preferred_label == "Machine Learning"
-
-    def test_onet_normalizer(self) -> None:
-        onet = ONetNormalizer(ontology_path=Path("./data/raw/ontologies/onet"))
-        occ = onet.normalize_occupation("Full Stack Developer")
-        assert occ is not None
-        assert occ.preferred_label == "Software Developers"
-
-    def test_skill_ontology_manager_enrichment(self) -> None:
-        manager = SkillOntologyManager()
-        normalized = manager.normalize_skill("ML")
-        assert normalized is not None
-        assert normalized.preferred_label == "Machine Learning"
-
-        enriched = manager.enrich_skill_list(["ML", "Python", "UnknownSkill123"])
-        assert "Machine Learning" in enriched
-        assert "Python" in enriched
-        assert "UnknownSkill123" in enriched  # Preserved original
 
 
 class TestSyntheticDataGenerator:

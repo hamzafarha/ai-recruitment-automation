@@ -133,12 +133,16 @@ python scripts/download_data.py --list
 python scripts/download_data.py --status
 ```
 
-### B. Seed Deterministic Sample Data & Synthetic Sets
+### B. Prepare the Downloaded Data (Step 1b)
 
 ```bash
-# Populate sample manifests, ontology subsets, synthetic profiles, and knowledge base documents
-python scripts/seed_sample_data.py
+# Convert Resume Parser labels to CandidateProfile, tag CV quality issues,
+# clean Tech Jobs 2026, and build the EN/FR skill lexicon (writes to data/interim/)
+python scripts/prepare_data.py
+python scripts/prepare_data.py --only lexicon   # one part: resumes | jobs | lexicon
 ```
+
+The HR knowledge base (`data/knowledge_base/`) is hand-written and versioned in git; it is not generated.
 
 ### C. Download / Stream Specific or All Datasets
 
@@ -152,16 +156,17 @@ python scripts/download_data.py --all
 
 ---
 
-## 5. Ontologies & Normalization (`recruitment_ai.data.ontology`)
+## 5. Skill Normalization (`recruitment_ai.data.skill_lexicon`)
 
-- **ESCO v1.2.1 (`ESCONormalizer`)**:
-  - Resolves non-standard skill terms to canonical labels (e.g., `"ML"`, `"Statistical Learning"`, `"Deep Learning"` $\rightarrow$ `"Machine Learning"`).
-  - Handles aliases, spelling variants, and multi-language European skill classifications.
-- **O*NET 31.0 (`ONetNormalizer`)**:
-  - Maps role titles to standardized SOC occupations (e.g., `"15-1252.00 Software Developers"`, `"15-2051.00 Data Scientists"`).
-  - Categorizes tools and software into O*NET Hot Technology clusters (Deep Learning Frameworks, Vector Databases, Relational DBs).
-- **Unified Manager (`SkillOntologyManager`)**:
-  - Exposes `normalize(skill_name)` and `enrich_skill_list(skills)` to transform raw extracted tokens into structured ontology representations with URIs.
+- **Lexicon** (`build_skill_lexicon`): built from ESCO v1.2.1 `skills_en.csv` + `skills_fr.csv` (13,939 skills)
+  and the project extension `data/reference/custom_skills.json` (87 modern tools missing from ESCO, e.g. Docker,
+  AWS, PyTorch, React). Every preferred, alternative and hidden label in both languages maps to one concept.
+- **Precedence**: custom entries > ESCO preferred labels > alternative labels > hidden labels > labels without
+  their "(qualifier)". Custom entries also fix coarse ESCO mappings (ESCO maps "TensorFlow" to "computer vision").
+- **`SkillNormalizer.normalize(raw)`**: `"ReactJS"` → React, `"Python 3"` → Python, `"apprentissage automatique"`
+  → machine learning. Returns `None` for unknown skills; the long tail is handled by embedding similarity in the
+  matching step. Coverage on technical/tool skills of tech CVs: 43 %.
+- O*NET is not used: ESCO covers the same need and adds French labels.
 
 ---
 

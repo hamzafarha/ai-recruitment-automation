@@ -1,12 +1,7 @@
-"""Data layer package for dataset ingestion, ontologies, synthetic generation, and knowledge sources."""
+"""Data layer package for dataset ingestion, preparation, skill lexicon, synthetic generation, and knowledge sources."""
 
 from recruitment_ai.data.knowledge import KnowledgeBaseLoader
 from recruitment_ai.data.loader import DatasetCatalog, DatasetLoader
-from recruitment_ai.data.ontology import (
-    ESCONormalizer,
-    ONetNormalizer,
-    SkillOntologyManager,
-)
 from recruitment_ai.data.resume_parser import convert_label, prepare_resume_parser
 from recruitment_ai.data.skill_lexicon import (
     SkillConcept,
@@ -26,9 +21,6 @@ __all__ = [
     "prepare_tech_jobs",
     "DatasetCatalog",
     "DatasetLoader",
-    "ESCONormalizer",
-    "ONetNormalizer",
-    "SkillOntologyManager",
     "SyntheticDataGenerator",
     "KnowledgeBaseLoader",
 ]
