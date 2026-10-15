@@ -34,10 +34,17 @@ def test_candidate_profile_schema_valid():
     assert profile.schema_version == "1.0.0"
 
 
+def test_candidate_profile_allows_missing_name():
+    """Anonymised CVs have no name: the profile must accept None, not force a value."""
+    profile = CandidateProfile(experience=[Experience(title="Developer")])
+    assert profile.full_name is None
+    assert profile.experience[0].company is None
+
+
 def test_candidate_profile_schema_validation_error():
-    """Verify validation triggers on missing required fields."""
+    """Verify validation still rejects invalid values."""
     with pytest.raises(ValidationError):
-        CandidateProfile()  # full_name is required
+        CandidateProfile(skills=[Skill(name="Python", proficiency_level="guru")])
 
 
 def test_job_description_schema():

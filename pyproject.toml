@@ -77,6 +77,11 @@ frontend = [
     "streamlit>=1.33.0",
 ]
 
+notebooks = [
+    "ipykernel>=6.29.0",
+    "matplotlib>=3.8.0",
+]
+
 dev = [
     "pytest>=8.1.0",
     "pytest-asyncio>=0.23.0",
@@ -89,7 +94,7 @@ dev = [
 ]
 
 all = [
-    "recruitment-ai[document-processing,ml,vectorstore,agents,api,database,frontend,dev]",
+    "recruitment-ai[document-processing,ml,vectorstore,agents,api,database,frontend,notebooks,dev]",
 ]
 
 [tool.setuptools.packages.find]

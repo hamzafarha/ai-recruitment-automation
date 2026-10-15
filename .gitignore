@@ -35,6 +35,8 @@ data/raw/jobs/*
 !data/raw/jobs/.gitkeep
 data/interim/*
 !data/interim/.gitkeep
+# Downloaded Hugging Face datasets (contain real CVs / personal data)
+data/raw/**/hf/
 *.tar.gz
 *.parquet
 *.arrow

@@ -40,14 +40,14 @@ class DocumentParser(ABC):
 
 
 class PdfParser(DocumentParser):
-    """PDF parser using PyMuPDF (fitz)."""
+    """PDF parser using PyMuPDF."""
 
     def parse(self, file_path: Path) -> ParsedDocument:
         path = Path(file_path)
         try:
-            import fitz  # PyMuPDF
+            import pymupdf
 
-            doc = fitz.open(str(path))
+            doc = pymupdf.open(str(path))
             pages: list[ParsedPage] = []
             full_text_chunks: list[str] = []
 
@@ -75,7 +75,7 @@ class PdfParser(DocumentParser):
             )
         except ImportError:
             logger.warning(
-                "PyMuPDF (fitz) is not installed. Using raw text fallback parser."
+                "PyMuPDF is not installed. Using raw text fallback parser."
             )
             text = path.read_text(encoding="utf-8", errors="ignore")
             return ParsedDocument(

@@ -17,10 +17,14 @@ class SchemaBase(BaseModel):
 
 
 class Education(SchemaBase):
-    """Candidate education entry."""
+    """Candidate education entry.
 
-    institution: str = Field(..., description="University or school name")
-    degree: str = Field(..., description="Degree or diploma earned")
+    Institution and degree are optional: CVs often omit one of them, and the
+    extractor must report "not found" (None) rather than invent a value.
+    """
+
+    institution: str | None = Field(default=None, description="University or school name")
+    degree: str | None = Field(default=None, description="Degree or diploma earned")
     field_of_study: str | None = Field(
         default=None, description="Major or area of study"
     )
@@ -32,10 +36,10 @@ class Education(SchemaBase):
 
 
 class Experience(SchemaBase):
-    """Candidate professional work experience."""
+    """Candidate professional work experience (company/title optional, see Education)."""
 
-    company: str = Field(..., description="Organization or company name")
-    title: str = Field(..., description="Job role / position title")
+    company: str | None = Field(default=None, description="Organization or company name")
+    title: str | None = Field(default=None, description="Job role / position title")
     location: str | None = Field(default=None, description="Job location or Remote")
     start_date: str | None = Field(default=None, description="Start date")
     end_date: str | None = Field(default=None, description="End date or 'Present'")
@@ -105,7 +109,8 @@ class CandidateProfile(SchemaBase):
         default="1.0.0", description="Schema version identifier"
     )
     id: str | None = Field(default=None, description="Unique candidate ID")
-    full_name: str = Field(..., description="Candidate full name")
+    # Optional: anonymised or badly scanned CVs have no readable name
+    full_name: str | None = Field(default=None, description="Candidate full name")
     email: EmailStr | str | None = Field(
         default=None, description="Primary email address"
     )
