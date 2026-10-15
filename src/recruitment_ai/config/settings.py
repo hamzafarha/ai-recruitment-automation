@@ -91,7 +91,10 @@ class Settings(BaseSettings):
         default="mock", alias="LLM_PROVIDER"
     )
     openai_api_key: str | None = Field(default=None, alias="OPENAI_API_KEY")
+    # Any OpenAI-compatible server, e.g. local Ollama: http://localhost:11434/v1
+    openai_base_url: str | None = Field(default=None, alias="OPENAI_BASE_URL")
     openai_model: str = Field(default="gpt-4o-mini", alias="OPENAI_MODEL")
+    llm_timeout_seconds: float = Field(default=300.0, alias="LLM_TIMEOUT_SECONDS")
     huggingface_model: str = Field(
         default="Qwen/Qwen2.5-7B-Instruct", alias="HUGGINGFACE_MODEL"
     )

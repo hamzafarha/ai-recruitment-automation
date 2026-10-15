@@ -1,5 +1,6 @@
 pydantic>=2.7.0
 pydantic-settings>=2.1.0
+email-validator>=2.0.0
 pyyaml>=6.0.1
 python-dotenv>=1.0.0
 httpx>=0.26.0
@@ -46,6 +47,12 @@ streamlit>=1.33.0
 torch>=2.2.0
 transformers>=4.40.0
 sentence-transformers>=2.6.0
+
+[training]
+peft>=0.10.0
+trl>=0.8.0
+bitsandbytes>=0.43.0
+accelerate>=0.29.0
 
 [vectorstore]
 qdrant-client>=1.8.0

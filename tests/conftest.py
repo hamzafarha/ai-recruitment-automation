@@ -2,7 +2,21 @@
 
 import os
 
-import pytest
+# Isolate unit tests from the developer's .env (set before any Settings is built):
+# no model downloads, no GPU, no real LLM calls. Real services are covered by
+# scripts/health_check.py.
+os.environ.update(
+    {
+        "APP_ENV": "testing",
+        "LLM_PROVIDER": "mock",
+        "EMBEDDING_MODEL": "offline-test-model",
+        "EMBEDDING_DEVICE": "cpu",
+        "RERANKING_MODEL": "passthrough",
+        "HF_HUB_OFFLINE": "1",
+    }
+)
+
+import pytest  # noqa: E402
 from fastapi.testclient import TestClient
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker

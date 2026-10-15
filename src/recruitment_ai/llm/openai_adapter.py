@@ -22,7 +22,11 @@ class OpenAIAdapter(LLMProvider):
 
             if not self.settings.openai_api_key:
                 raise ValueError("OPENAI_API_KEY is not set.")
-            return OpenAI(api_key=self.settings.openai_api_key)
+            return OpenAI(
+                api_key=self.settings.openai_api_key,
+                base_url=self.settings.openai_base_url,
+                timeout=self.settings.llm_timeout_seconds,
+            )
         except ImportError as exc:
             raise ImportError(
                 "openai package not installed. Run pip install openai."
@@ -91,14 +95,21 @@ class OpenAIAdapter(LLMProvider):
             messages.append({"role": "system", "content": system_prompt})
         messages.append({"role": "user", "content": prompt})
 
-        completion = client.beta.chat.completions.parse(
+        # Plain JSON-schema response_format works on both OpenAI and Ollama;
+        # Pydantic then validates the result.
+        res = client.chat.completions.create(
             model=self.settings.openai_model,
             messages=messages,
-            response_format=schema,
+            temperature=0.0,
+            response_format={
+                "type": "json_schema",
+                "json_schema": {
+                    "name": schema.__name__,
+                    "schema": schema.model_json_schema(),
+                },
+            },
         )
-        parsed = completion.choices[0].message.parsed
-        if parsed is None:
-            raise ValueError("Failed to parse structured output from OpenAI.")
-        from typing import cast
-
-        return cast(T, parsed)
+        content = res.choices[0].message.content
+        if not content:
+            raise ValueError("LLM returned an empty structured response.")
+        return schema.model_validate_json(content)

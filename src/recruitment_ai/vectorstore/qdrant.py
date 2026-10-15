@@ -27,10 +27,14 @@ class QdrantVectorStore(VectorStore):
             try:
                 from qdrant_client import QdrantClient
 
+                # An empty QDRANT_API_KEY= must mean "no key": qdrant-client
+                # switches to HTTPS whenever api_key is not None.
+                api_key = self.settings.qdrant_api_key or None
                 self._client = QdrantClient(
                     host=self.settings.qdrant_host,
                     port=self.settings.qdrant_port,
-                    api_key=self.settings.qdrant_api_key,
+                    api_key=api_key,
+                    https=api_key is not None,
                     timeout=5,
                 )
             except ImportError:

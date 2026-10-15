@@ -2,6 +2,7 @@
 
 import sys
 from pathlib import Path
+from typing import Any
 
 # Enable UTF-8 encoding on Windows console if supported
 if hasattr(sys.stdout, "reconfigure"):
@@ -47,6 +48,100 @@ def check_fastapi_app() -> tuple[bool, str]:
         return False, str(exc)
 
 
+def check_gpu() -> tuple[bool, str]:
+    """Verify PyTorch sees the CUDA GPU."""
+    try:
+        import torch
+
+        if not torch.cuda.is_available():
+            return False, f"torch {torch.__version__} has no CUDA (CPU-only build?)"
+        free, total = torch.cuda.mem_get_info()
+        name = torch.cuda.get_device_name(0)
+        return True, f"{name} ({free / 1e9:.1f}/{total / 1e9:.1f} GB free)"
+    except Exception as exc:
+        return False, str(exc)
+
+
+def check_embeddings() -> tuple[bool, str]:
+    """Verify the real embedding model loads (not the hash fallback)."""
+    from recruitment_ai.embeddings.service import SentenceTransformerEmbeddingService
+
+    settings = get_settings()
+    service = SentenceTransformerEmbeddingService(settings)
+    if service.model is None:
+        return False, f"{settings.embedding_model} failed to load (using fallback)"
+    a, b, c = service.embed_documents(
+        ["Python developer", "Développeur Python", "Pastry chef"]
+    )
+    sim_fr = sum(x * y for x, y in zip(a, b, strict=True))
+    sim_off = sum(x * y for x, y in zip(a, c, strict=True))
+    ok = len(a) == settings.embedding_dimension and sim_fr > sim_off
+    return ok, (
+        f"{settings.embedding_model} on {service.model.device}, dim={len(a)}, "
+        f"sim(EN,FR)={sim_fr:.2f} > sim(unrelated)={sim_off:.2f}"
+    )
+
+
+def check_reranker() -> tuple[bool, str]:
+    """Verify the BGE cross-encoder scores a relevant pair above an irrelevant one."""
+    from recruitment_ai.reranking.reranker import OptionalReranker
+
+    settings = get_settings()
+    reranker = OptionalReranker(settings)
+    query = "Python developer with machine learning experience"
+    scores = reranker.cross_encoder.predict(
+        [
+            [query, "I have 5 years of experience building ML models in Python."],
+            [query, "I managed a bakery team and handled customer orders."],
+        ]
+    )
+    relevant, irrelevant = float(scores[0]), float(scores[1])
+    # Scores are sigmoid probabilities: a clear match should be well above 0.5
+    ok = relevant > 0.5 and relevant > irrelevant
+    return ok, (
+        f"{settings.reranking_model}: relevant={relevant:.4f} "
+        f"> irrelevant={irrelevant:.4f}"
+    )
+
+
+def check_llm() -> tuple[bool, str]:
+    """Verify the configured LLM answers, including structured JSON output."""
+    import time
+
+    from pydantic import BaseModel
+
+    from recruitment_ai.llm import get_llm_provider
+
+    class _Ping(BaseModel):
+        skills: list[str]
+
+    settings = get_settings()
+    llm = get_llm_provider()
+    start = time.perf_counter()
+    result = llm.generate_structured(
+        "Extract the skills from: 'I use Python, Docker and SQL daily.'",
+        _Ping,
+        system_prompt="Return only JSON.",
+    )
+    elapsed = time.perf_counter() - start
+    model = (
+        settings.openai_model
+        if settings.llm_provider == "openai"
+        else settings.llm_provider
+    )
+    return bool(result.skills), f"{model} → {result.skills} in {elapsed:.1f}s"
+
+
+def _run_optional(name: str, check: Any) -> bool:
+    """Run a check that may fail on import or load; never crash the report."""
+    try:
+        ok, msg = check()
+    except Exception as exc:
+        ok, msg = False, f"{type(exc).__name__}: {exc}"
+    print(f"{'✓' if ok else '✗'} {name}: {msg}")
+    return ok
+
+
 def main() -> int:
     """Run all health checks and print structured report."""
     print("\n" + "=" * 55)
@@ -71,15 +166,19 @@ def main() -> int:
 
     # 3. PostgreSQL
     db_ok, db_msg = check_db_connection()
-    sym = "✓" if db_ok else "⚠"
+    sym = "✓" if db_ok else "✗"
     print(f"{sym} PostgreSQL: {db_msg}")
+    if not db_ok:
+        all_passed = False
 
     # 4. Qdrant
     settings = get_settings()
     qdrant = QdrantVectorStore(settings)
     q_ok, q_msg = qdrant.health_check()
-    sym = "✓" if q_ok else "⚠"
+    sym = "✓" if q_ok else "✗"
     print(f"{sym} Qdrant: {q_msg}")
+    if not q_ok:
+        all_passed = False
 
     # 5. FastAPI
     api_ok, api_msg = check_fastapi_app()
@@ -88,10 +187,21 @@ def main() -> int:
     if not api_ok:
         all_passed = False
 
+    # 6-9. AI models (first run downloads bge-m3 + reranker, ~4.5 GB)
+    print()
+    for name, check in [
+        ("GPU", check_gpu),
+        ("Embeddings", check_embeddings),
+        ("Reranker", check_reranker),
+        ("LLM", check_llm),
+    ]:
+        if not _run_optional(name, check):
+            all_passed = False
+
     print("\n" + "-" * 55)
     if all_passed:
         print("Core development environment is properly initialized!")
-        print("Note: PostgreSQL & Qdrant can be launched with 'docker compose up -d'.")
+        print("Note: start services with 'docker compose up -d postgres qdrant n8n'.")
     else:
         print("Environment issues detected. Please review the errors above.")
     print("-" * 55 + "\n")

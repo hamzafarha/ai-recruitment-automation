@@ -61,6 +61,10 @@ def configure_logging(level: str = "INFO", json_output: bool = False) -> None:
     # Remove existing handlers to avoid duplicates
     root_logger.handlers = [handler]
 
+    # Third-party HTTP clients log every request at INFO/DEBUG; keep them quiet
+    for noisy in ("httpx", "httpx2", "httpcore", "huggingface_hub", "urllib3"):
+        logging.getLogger(noisy).setLevel(logging.WARNING)
+
 
 def get_logger(name: str) -> logging.Logger:
     """Get named logger instance."""

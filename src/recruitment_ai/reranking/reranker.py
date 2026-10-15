@@ -37,6 +37,23 @@ class OptionalReranker(BaseReranker):
 
     def __init__(self, settings: Settings | None = None) -> None:
         self.settings = settings or get_settings()
+        self._cross_encoder: Any = None
+
+    @property
+    def cross_encoder(self) -> Any:
+        """Lazy load the BGE cross-encoder once and reuse it across calls."""
+        if self._cross_encoder is None:
+            from sentence_transformers import CrossEncoder
+
+            device = self.settings.embedding_device
+            model_kwargs = {"torch_dtype": "float16"} if device == "cuda" else {}
+            self._cross_encoder = CrossEncoder(
+                self.settings.reranking_model,
+                device=device,
+                max_length=512,
+                model_kwargs=model_kwargs,
+            )
+        return self._cross_encoder
 
     def rerank(
         self, query: str, documents: list[VectorSearchResult], top_n: int = 3
@@ -47,11 +64,8 @@ class OptionalReranker(BaseReranker):
         # If BGE reranker is configured (Architecture: BAAI/bge-reranker-v2-m3)
         if "bge-reranker" in self.settings.reranking_model.lower():
             try:
-                from sentence_transformers import CrossEncoder
-
-                model = CrossEncoder(self.settings.reranking_model)
                 pairs = [[query, d.text] for d in documents]
-                scores = model.predict(pairs)
+                scores = self.cross_encoder.predict(pairs)
                 ranked_pairs = sorted(
                     zip(documents, scores, strict=True),
                     key=lambda x: x[1],

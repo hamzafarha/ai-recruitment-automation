@@ -11,6 +11,11 @@ src/recruitment_ai/agents/graph.py
 src/recruitment_ai/agents/state.py
 src/recruitment_ai/config/__init__.py
 src/recruitment_ai/config/settings.py
+src/recruitment_ai/data/__init__.py
+src/recruitment_ai/data/knowledge.py
+src/recruitment_ai/data/loader.py
+src/recruitment_ai/data/ontology.py
+src/recruitment_ai/data/synthetic_generator.py
 src/recruitment_ai/database/__init__.py
 src/recruitment_ai/database/connection.py
 src/recruitment_ai/database/models.py
@@ -45,6 +50,9 @@ src/recruitment_ai/services/__init__.py
 src/recruitment_ai/services/candidate_service.py
 src/recruitment_ai/tools/__init__.py
 src/recruitment_ai/tools/registry.py
+src/recruitment_ai/training/__init__.py
+src/recruitment_ai/training/dataset.py
+src/recruitment_ai/training/qlora.py
 src/recruitment_ai/utils/__init__.py
 src/recruitment_ai/utils/logging.py
 src/recruitment_ai/utils/security.py
