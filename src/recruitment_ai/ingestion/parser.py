@@ -1,14 +1,28 @@
-"""Document ingestion and parsing abstractions."""
+"""Document ingestion: CV files (text PDF, scanned PDF, image, DOCX, TXT) -> text.
 
+Every parser returns NFKC-normalized text: PDFs draw "fi"/"fl" as ligature glyphs
+("Certiﬁed") and some CVs use full-width or compatibility characters; NFKC turns them back
+into plain letters while keeping French accents intact.
+"""
+
+import unicodedata
 from abc import ABC, abstractmethod
 from pathlib import Path
 from typing import Any
 
 from pydantic import BaseModel, Field
 
+from recruitment_ai.ingestion.ocr import OCREngine, default_engine, page_image
 from recruitment_ai.utils.logging import get_logger
 
 logger = get_logger(__name__)
+
+# A page with fewer extractable characters than this is treated as a scan and OCR'd
+MIN_TEXT_CHARS_PER_PAGE = 30
+
+
+def normalize_text(text: str) -> str:
+    return unicodedata.normalize("NFKC", text or "")
 
 
 class ParsedPage(BaseModel):
@@ -36,167 +50,105 @@ class DocumentParser(ABC):
     @abstractmethod
     def parse(self, file_path: Path) -> ParsedDocument:
         """Parse given document file and return structured text."""
-        pass
 
 
 class PdfParser(DocumentParser):
-    """PDF parser using PyMuPDF."""
+    """PDF parser: PyMuPDF text layer, with OCR for pages that have none (scans)."""
+
+    def __init__(self, ocr: OCREngine | None = None) -> None:
+        self._ocr = ocr
+
+    @property
+    def ocr(self) -> OCREngine:
+        return self._ocr or default_engine()
 
     def parse(self, file_path: Path) -> ParsedDocument:
+        import pymupdf
+
         path = Path(file_path)
-        try:
-            import pymupdf
-
-            doc = pymupdf.open(str(path))
-            pages: list[ParsedPage] = []
-            full_text_chunks: list[str] = []
-
-            for page_idx, page in enumerate(doc):
+        pages: list[ParsedPage] = []
+        with pymupdf.open(str(path)) as doc:
+            for index, page in enumerate(doc):
                 text = page.get_text("text") or ""
-                pages.append(
-                    ParsedPage(
-                        page_number=page_idx + 1,
-                        text=text,
-                        layout_info={"rect": list(page.rect)},
-                    )
-                )
-                full_text_chunks.append(text)
-
-            total_pages = len(doc)
-            doc.close()
-
-            return ParsedDocument(
-                filename=path.name,
-                file_type="pdf",
-                total_pages=total_pages,
-                raw_text="\n\n".join(full_text_chunks),
-                pages=pages,
-                metadata={"engine": "PyMuPDF"},
-            )
-        except ImportError:
-            logger.warning(
-                "PyMuPDF is not installed. Using raw text fallback parser."
-            )
-            text = path.read_text(encoding="utf-8", errors="ignore")
-            return ParsedDocument(
-                filename=path.name,
-                file_type="pdf",
-                total_pages=1,
-                raw_text=text,
-                pages=[ParsedPage(page_number=1, text=text)],
-                metadata={"engine": "fallback"},
-            )
+                method, confidence = "text_layer", None
+                if len(text.strip()) < MIN_TEXT_CHARS_PER_PAGE:
+                    result = self.ocr.image_to_text(page_image(page))
+                    text, method, confidence = result.text, "ocr", round(result.mean_confidence, 3)
+                pages.append(ParsedPage(
+                    page_number=index + 1, text=normalize_text(text),
+                    layout_info={"rect": list(page.rect), "method": method, "ocr_confidence": confidence},
+                ))
+        methods = {p.layout_info["method"] for p in pages}
+        return ParsedDocument(
+            filename=path.name,
+            file_type="pdf",
+            total_pages=len(pages),
+            raw_text="\n\n".join(p.text for p in pages),
+            pages=pages,
+            metadata={
+                "engine": "PyMuPDF+OCR" if "ocr" in methods else "PyMuPDF",
+                "input_type": "scanned_pdf" if methods == {"ocr"} else "text_pdf" if methods == {"text_layer"} else "mixed_pdf",
+            },
+        )
 
 
 class DocxParser(DocumentParser):
-    """DOCX parser using python-docx."""
+    """DOCX parser using python-docx (paragraphs, then table rows)."""
 
     def parse(self, file_path: Path) -> ParsedDocument:
+        import docx
+
         path = Path(file_path)
-        try:
-            import docx
-
-            doc = docx.Document(str(path))
-            paragraphs = [p.text for p in doc.paragraphs if p.text.strip()]
-            for table in doc.tables:
-                for row in table.rows:
-                    row_text = " | ".join(
-                        cell.text.strip() for cell in row.cells if cell.text.strip()
-                    )
-                    if row_text:
-                        paragraphs.append(row_text)
-
-            full_text = "\n\n".join(paragraphs)
-            return ParsedDocument(
-                filename=path.name,
-                file_type="docx",
-                total_pages=1,
-                raw_text=full_text,
-                pages=[ParsedPage(page_number=1, text=full_text)],
-                metadata={"engine": "python-docx"},
-            )
-        except ImportError:
-            logger.warning("python-docx is not installed. Using raw text fallback.")
-            text = path.read_text(encoding="utf-8", errors="ignore")
-            return ParsedDocument(
-                filename=path.name,
-                file_type="docx",
-                total_pages=1,
-                raw_text=text,
-                pages=[ParsedPage(page_number=1, text=text)],
-                metadata={"engine": "fallback"},
-            )
+        doc = docx.Document(str(path))
+        paragraphs = [p.text for p in doc.paragraphs if p.text.strip()]
+        for table in doc.tables:
+            for row in table.rows:
+                row_text = " | ".join(cell.text.strip() for cell in row.cells if cell.text.strip())
+                if row_text:
+                    paragraphs.append(row_text)
+        full_text = normalize_text("\n".join(paragraphs))
+        return ParsedDocument(
+            filename=path.name,
+            file_type="docx",
+            total_pages=1,
+            raw_text=full_text,
+            pages=[ParsedPage(page_number=1, text=full_text)],
+            metadata={"engine": "python-docx", "input_type": "docx"},
+        )
 
 
 class ImageOCRParser(DocumentParser):
-    """Image / scanned document parser with OCR."""
+    """Image file (photo or scan of a CV) parser with OCR."""
+
+    def __init__(self, ocr: OCREngine | None = None) -> None:
+        self._ocr = ocr
 
     def parse(self, file_path: Path) -> ParsedDocument:
+        import numpy as np
+        from PIL import Image
+
         path = Path(file_path)
-        try:
-            from paddleocr import PaddleOCR
-
-            ocr = PaddleOCR(use_angle_cls=True, lang="en")
-            result = ocr.ocr(str(path), cls=True)
-            lines: list[str] = []
-            if result and result[0]:
-                for line in result[0]:
-                    text = line[1][0]
-                    lines.append(text)
-            full_text = "\n".join(lines)
-            return ParsedDocument(
-                filename=path.name,
-                file_type=path.suffix.lstrip("."),
-                total_pages=1,
-                raw_text=full_text,
-                pages=[ParsedPage(page_number=1, text=full_text)],
-                metadata={"engine": "PaddleOCR"},
-            )
-        except ImportError:
-            logger.warning(
-                "PaddleOCR not installed. Returning placeholder OCR parsed document."
-            )
-            return ParsedDocument(
-                filename=path.name,
-                file_type=path.suffix.lstrip("."),
-                total_pages=1,
-                raw_text="[Scanned image document - PaddleOCR required for text extraction]",
-                pages=[
-                    ParsedPage(
-                        page_number=1,
-                        text="[Scanned image document - PaddleOCR required for text extraction]",
-                    )
-                ],
-                metadata={"engine": "placeholder"},
-            )
-
-
-class QwenMultimodalParser(DocumentParser):
-    """Multimodal document understanding parser powered by Qwen2.5-VL-7B-Instruct."""
-
-    def __init__(self, model_name: str = "Qwen/Qwen2.5-VL-7B-Instruct") -> None:
-        self.model_name = model_name
-
-    def parse(self, file_path: Path) -> ParsedDocument:
-        path = Path(file_path)
-        try:
-            logger.info(
-                f"Invoking {self.model_name} for multimodal document parsing: {path.name}"
-            )
-            # Real multimodal pipeline execution or fallback to OCR
-            return ImageOCRParser().parse(file_path)
-        except Exception as exc:
-            logger.warning(f"Multimodal vision parse failed: {exc}")
-            return ImageOCRParser().parse(file_path)
+        image = np.asarray(Image.open(path).convert("RGB"))
+        result = (self._ocr or default_engine()).image_to_text(image)
+        text = normalize_text(result.text)
+        return ParsedDocument(
+            filename=path.name,
+            file_type=path.suffix.lstrip(".").lower(),
+            total_pages=1,
+            raw_text=text,
+            pages=[ParsedPage(page_number=1, text=text,
+                              layout_info={"method": "ocr", "ocr_confidence": round(result.mean_confidence, 3)})],
+            metadata={"engine": "RapidOCR PP-OCRv5", "input_type": "image"},
+        )
 
 
 class UnifiedDocumentParser(DocumentParser):
-    """Router parser that chooses appropriate parser based on file extension."""
+    """Router parser that chooses the appropriate parser from the file extension."""
 
-    def __init__(self) -> None:
-        self.pdf_parser = PdfParser()
+    def __init__(self, ocr: OCREngine | None = None) -> None:
+        self.pdf_parser = PdfParser(ocr)
         self.docx_parser = DocxParser()
-        self.ocr_parser = ImageOCRParser()
+        self.ocr_parser = ImageOCRParser(ocr)
 
     def parse(self, file_path: Path) -> ParsedDocument:
         path = Path(file_path)
@@ -204,19 +156,18 @@ class UnifiedDocumentParser(DocumentParser):
 
         if ext == ".pdf":
             return self.pdf_parser.parse(path)
-        elif ext in [".docx", ".doc"]:
+        if ext == ".docx":
             return self.docx_parser.parse(path)
-        elif ext in [".png", ".jpg", ".jpeg", ".tiff"]:
+        if ext in {".png", ".jpg", ".jpeg", ".tif", ".tiff", ".bmp", ".webp"}:
             return self.ocr_parser.parse(path)
-        elif ext in [".txt", ".md"]:
-            text = path.read_text(encoding="utf-8", errors="ignore")
+        if ext in {".txt", ".md"}:
+            text = normalize_text(path.read_text(encoding="utf-8", errors="ignore"))
             return ParsedDocument(
                 filename=path.name,
                 file_type=ext.lstrip("."),
                 total_pages=1,
                 raw_text=text,
                 pages=[ParsedPage(page_number=1, text=text)],
-                metadata={"engine": "plain_text"},
+                metadata={"engine": "plain_text", "input_type": "text"},
             )
-        else:
-            raise ValueError(f"Unsupported document format: {ext}")
+        raise ValueError(f"Unsupported document format: {ext}")

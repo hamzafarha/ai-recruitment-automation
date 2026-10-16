@@ -12,7 +12,7 @@ their agreement can be measured. No model output is ever shown (no anchoring).
 
 import csv
 import json
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
@@ -31,7 +31,7 @@ _SPLIT_DIRS = {"dev": "validation", "test": "test"}  # our split -> Resume Parse
 
 
 def now() -> str:
-    return datetime.now(timezone.utc).isoformat(timespec="seconds")
+    return datetime.now(UTC).isoformat(timespec="seconds")
 
 
 def upsert(path: Path, row: dict[str, Any], keys: tuple[str, ...], columns: list[str]) -> None:

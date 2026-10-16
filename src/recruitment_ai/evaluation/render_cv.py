@@ -90,12 +90,12 @@ def _bullets(description: str | None) -> str:
 
 
 def _main_sections(p: CandidateProfile, lang: str) -> str:
-    L = LABELS[lang]
+    labels = LABELS[lang]
     parts = []
     if p.summary:
-        parts.append(f"<h2>{L['summary']}</h2><p>{_e(p.summary)}</p>")
+        parts.append(f"<h2>{labels['summary']}</h2><p>{_e(p.summary)}</p>")
     if p.experience:
-        parts.append(f"<h2>{L['experience']}</h2>")
+        parts.append(f"<h2>{labels['experience']}</h2>")
         for x in p.experience:
             head = " — ".join(_e(v) for v in (x.title, x.company) if v)
             place = f", {_e(x.location)}" if x.location else ""
@@ -105,7 +105,7 @@ def _main_sections(p: CandidateProfile, lang: str) -> str:
                 parts.append(f"<p class='dates'>{_e(dates)}</p>")
             parts.append(_bullets(x.description))
     if p.education:
-        parts.append(f"<h2>{L['education']}</h2>")
+        parts.append(f"<h2>{labels['education']}</h2>")
         for ed in p.education:
             degree = ", ".join(_e(v) for v in (ed.degree, ed.field_of_study) if v)
             line = " — ".join(v for v in (degree, _e(ed.institution)) if v)
@@ -113,7 +113,7 @@ def _main_sections(p: CandidateProfile, lang: str) -> str:
             grade = f" · {_e(ed.grade)}" if ed.grade else ""
             parts.append(f"<p class='role'>{line}</p><p class='dates'>{_e(dates)}{grade}</p>")
     if p.projects:
-        parts.append(f"<h2>{L['projects']}</h2>")
+        parts.append(f"<h2>{labels['projects']}</h2>")
         for pr in p.projects:
             tech = f" ({_e(', '.join(pr.technologies))})" if pr.technologies else ""
             parts.append(f"<p><b>{_e(pr.title)}</b>{tech}: {_e(pr.description)}</p>")
@@ -121,21 +121,21 @@ def _main_sections(p: CandidateProfile, lang: str) -> str:
 
 
 def _side_sections(p: CandidateProfile, lang: str) -> str:
-    L = LABELS[lang]
+    labels = LABELS[lang]
     parts = []
     if p.skills:
-        parts.append(f"<h2>{L['skills']}</h2><p>{_e(', '.join(s.name for s in p.skills))}</p>")
+        parts.append(f"<h2>{labels['skills']}</h2><p>{_e(', '.join(s.name for s in p.skills))}</p>")
     if p.certifications:
         items = "".join(
             f"<li>{_e(c.name)}{' (' + _e(display_date(c.issue_date, lang)) + ')' if c.issue_date else ''}</li>"
             for c in p.certifications
         )
-        parts.append(f"<h2>{L['certifications']}</h2><ul>{items}</ul>")
+        parts.append(f"<h2>{labels['certifications']}</h2><ul>{items}</ul>")
     if p.languages:
         langs = ", ".join(
             f"{_e(x.language)} ({_e(x.proficiency)})" if x.proficiency else _e(x.language) for x in p.languages
         )
-        parts.append(f"<h2>{L['languages']}</h2><p>{langs}</p>")
+        parts.append(f"<h2>{labels['languages']}</h2><p>{langs}</p>")
     return "".join(parts)
 
 
@@ -179,15 +179,15 @@ def render_docx(p: CandidateProfile, path: Path, lang: str = "en") -> None:
     """Write a Word document of the profile (single column, standard styles)."""
     from docx import Document
 
-    L = LABELS[lang]
+    labels = LABELS[lang]
     doc = Document()
     doc.add_heading(p.full_name or "", level=0)
     doc.add_paragraph(" · ".join(v for v in (p.location, p.email, p.phone) if v))
     if p.summary:
-        doc.add_heading(L["summary"], level=1)
+        doc.add_heading(labels["summary"], level=1)
         doc.add_paragraph(p.summary)
     if p.experience:
-        doc.add_heading(L["experience"], level=1)
+        doc.add_heading(labels["experience"], level=1)
         for x in p.experience:
             head = " — ".join(v for v in (x.title, x.company) if v) + (f", {x.location}" if x.location else "")
             run = doc.add_paragraph().add_run(head)
@@ -199,7 +199,7 @@ def render_docx(p: CandidateProfile, path: Path, lang: str = "en") -> None:
                 if line.strip():
                     doc.add_paragraph(line.strip().lstrip("-").strip(), style="List Bullet")
     if p.education:
-        doc.add_heading(L["education"], level=1)
+        doc.add_heading(labels["education"], level=1)
         for ed in p.education:
             degree = ", ".join(v for v in (ed.degree, ed.field_of_study) if v)
             doc.add_paragraph(" — ".join(v for v in (degree, ed.institution) if v)).runs[0].bold = True
@@ -207,20 +207,20 @@ def render_docx(p: CandidateProfile, path: Path, lang: str = "en") -> None:
             if extra.strip():
                 doc.add_paragraph(extra)
     if p.projects:
-        doc.add_heading(L["projects"], level=1)
+        doc.add_heading(labels["projects"], level=1)
         for pr in p.projects:
             tech = f" ({', '.join(pr.technologies)})" if pr.technologies else ""
             doc.add_paragraph(f"{pr.title}{tech}: {pr.description or ''}")
     if p.skills:
-        doc.add_heading(L["skills"], level=1)
+        doc.add_heading(labels["skills"], level=1)
         doc.add_paragraph(", ".join(s.name for s in p.skills))
     if p.certifications:
-        doc.add_heading(L["certifications"], level=1)
+        doc.add_heading(labels["certifications"], level=1)
         for c in p.certifications:
             date = f" ({display_date(c.issue_date, lang)})" if c.issue_date else ""
             doc.add_paragraph(f"{c.name}{date}", style="List Bullet")
     if p.languages:
-        doc.add_heading(L["languages"], level=1)
+        doc.add_heading(labels["languages"], level=1)
         doc.add_paragraph(", ".join(
             f"{x.language} ({x.proficiency})" if x.proficiency else x.language for x in p.languages
         ))

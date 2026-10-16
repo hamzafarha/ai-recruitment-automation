@@ -42,8 +42,9 @@ class DocumentCleaner:
         if not text:
             return ""
 
-        # Normalize unicode characters (e.g. smart quotes, accented chars)
-        normalized = unicodedata.normalize("NFKD", text)
+        # NFKC, not NFKD: NFKD splits "é" into "e" + a combining accent, which breaks French
+        # text matching; NFKC keeps composed accents and still unfolds ligatures ("ﬁ" -> "fi")
+        normalized = unicodedata.normalize("NFKC", text)
 
         # Replace non-breaking spaces and tabs with standard spaces
         normalized = normalized.replace("\u00a0", " ").replace("\t", " ")

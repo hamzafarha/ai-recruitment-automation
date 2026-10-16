@@ -55,3 +55,8 @@ pgdata/
 qdrant_storage/
 logs/
 *.log
+# Extraction predictions of real CVs (personal data); scores and reports are versioned
+data/evaluation/**/predictions/
+
+# Local build outputs (Kaggle packages, downloads)
+build/

@@ -1,0 +1,4 @@
+doc_id,source,input_type,language,error,seconds,exp_f1,edu_f1,skills_f1,identity_accuracy
+resume_0a01a2f51fc21218,real,scanned_pdf,en,False,44.05,0.5,1.0,0.7843803056027164,
+resume_0b3d3635f3471352,real,scanned_pdf,en,True,313.3,0.0,0.0,0.0,
+resume_0c19347e36b3a0f2,real,scanned_pdf,en,False,42.31,0.5,1.0,0.6491228070175439,0.75

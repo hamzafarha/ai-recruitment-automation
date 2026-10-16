@@ -7,7 +7,12 @@ from pathlib import Path
 
 import pytest
 
-from recruitment_ai.evaluation.render_cv import LAYOUTS, display_date, render_docx, render_pdf
+from recruitment_ai.evaluation.render_cv import (
+    LAYOUTS,
+    display_date,
+    render_docx,
+    render_pdf,
+)
 from recruitment_ai.extraction.schemas import CandidateProfile
 
 SYNTHETIC = Path(__file__).resolve().parents[2] / "data" / "processed" / "eval_v1" / "synthetic"

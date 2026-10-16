@@ -23,11 +23,13 @@ from pathlib import Path
 if hasattr(sys.stdout, "reconfigure"):
     sys.stdout.reconfigure(encoding="utf-8")
 
+from datetime import UTC
+
 from recruitment_ai.evaluation.eval_set import (
-    build_cv_pool,
-    download_pdfs,
     EXTRACTION_COLUMNS,
     PAIR_COLUMNS,
+    build_cv_pool,
+    download_pdfs,
     load_jobs,
     read_rows,
     render_synthetic,
@@ -103,7 +105,12 @@ def run_pairs(force: bool) -> None:
 
 def run_autocheck() -> None:
     from recruitment_ai.data.resume_parser import iter_split
-    from recruitment_ai.evaluation.labeling import CHECK_COLUMNS, LabelingData, auto_check, upsert
+    from recruitment_ai.evaluation.labeling import (
+        CHECK_COLUMNS,
+        LabelingData,
+        auto_check,
+        upsert,
+    )
 
     data = LabelingData()
     sample = data.extraction_sample()
@@ -121,7 +128,7 @@ def run_autocheck() -> None:
 
 def run_freeze(allow_incomplete: bool) -> None:
     import json
-    from datetime import datetime, timezone
+    from datetime import datetime
 
     labels = EVAL_DIR / "labels"
     pairs, matches = read_rows(labels / "pairs.csv"), read_rows(labels / "matches.csv")
@@ -139,7 +146,7 @@ def run_freeze(allow_incomplete: bool) -> None:
     manifest = collect_files(EVAL_DIR, INTERIM / "resume_parser", RESUME_HF / "raw", Path("."))
     write_manifest(manifest, EVAL_DIR / "manifest.csv")
     status = "frozen" if complete else "draft (labels incomplete)"
-    frozen_at = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M UTC")
+    frozen_at = datetime.now(UTC).strftime("%Y-%m-%d %H:%M UTC")
     (EVAL_DIR / "README.md").write_text(datasheet(EVAL_DIR, summary, manifest, status, frozen_at), encoding="utf-8")
 
     print(f"  status: {status} | {len(manifest)} files under checksum "

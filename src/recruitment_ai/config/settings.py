@@ -87,9 +87,14 @@ class Settings(BaseSettings):
     embedding_dimension: int = Field(default=1024, alias="EMBEDDING_DIMENSION")
 
     # LLM Settings (Architecture: Qwen/Qwen2.5-7B-Instruct & Qwen2.5-VL)
-    llm_provider: Literal["mock", "openai", "huggingface"] = Field(
+    llm_provider: Literal["mock", "openai", "huggingface", "ollama"] = Field(
         default="mock", alias="LLM_PROVIDER"
     )
+    # Local Ollama, native API (context window, JSON schema, images)
+    ollama_base_url: str = Field(default="http://localhost:11434", alias="OLLAMA_BASE_URL")
+    ollama_model: str = Field(default="qwen2.5:3b", alias="OLLAMA_MODEL")
+    ollama_vision_model: str = Field(default="qwen2.5vl:3b", alias="OLLAMA_VISION_MODEL")
+    ollama_num_ctx: int = Field(default=8192, alias="OLLAMA_NUM_CTX")
     openai_api_key: str | None = Field(default=None, alias="OPENAI_API_KEY")
     # Any OpenAI-compatible server, e.g. local Ollama: http://localhost:11434/v1
     openai_base_url: str | None = Field(default=None, alias="OPENAI_BASE_URL")

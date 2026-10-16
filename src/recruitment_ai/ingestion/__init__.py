@@ -1,12 +1,12 @@
 """Document ingestion package."""
 
+from recruitment_ai.ingestion.ocr import OCREngine, OCRResult
 from recruitment_ai.ingestion.parser import (
     DocumentParser,
     DocxParser,
     ImageOCRParser,
     ParsedDocument,
     PdfParser,
-    QwenMultimodalParser,
     UnifiedDocumentParser,
 )
 
@@ -16,6 +16,7 @@ __all__ = [
     "PdfParser",
     "DocxParser",
     "ImageOCRParser",
-    "QwenMultimodalParser",
+    "OCREngine",
+    "OCRResult",
     "UnifiedDocumentParser",
 ]

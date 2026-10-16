@@ -1,0 +1,133 @@
+{
+  "config": {
+    "run_name": "smoke",
+    "engine": "ocr_llm",
+    "model": "qwen2.5:3b",
+    "split": "dev",
+    "sources": "real,synthetic",
+    "limit": 3,
+    "num_ctx": 8192
+  },
+  "documents": 3,
+  "errors": 1,
+  "error_docs": [
+    "resume_0b3d3635f3471352"
+  ],
+  "mean_seconds_per_document": 43.2,
+  "overall": {
+    "cvs": 3,
+    "experience": {
+      "precision": 0.6666666666666666,
+      "recall": 0.25,
+      "f1": 0.36363636363636365,
+      "date_exact": 1.0,
+      "date_year": 1.0
+    },
+    "education": {
+      "precision": 1.0,
+      "recall": 0.6,
+      "f1": 0.7499999999999999
+    },
+    "skills": {
+      "precision": 0.9186046511627907,
+      "recall": 0.5059523809523809,
+      "f1": 0.6525119036050918,
+      "technical_recall": 0.5766423357664233
+    },
+    "identity": {
+      "cvs": 1,
+      "accuracy": 0.75,
+      "hallucinations": 0
+    },
+    "overall_f1": 0.5887160890804851
+  },
+  "by": {
+    "source": {
+      "real": {
+        "cvs": 3,
+        "experience": {
+          "precision": 0.6666666666666666,
+          "recall": 0.25,
+          "f1": 0.36363636363636365,
+          "date_exact": 1.0,
+          "date_year": 1.0
+        },
+        "education": {
+          "precision": 1.0,
+          "recall": 0.6,
+          "f1": 0.7499999999999999
+        },
+        "skills": {
+          "precision": 0.9186046511627907,
+          "recall": 0.5059523809523809,
+          "f1": 0.6525119036050918,
+          "technical_recall": 0.5766423357664233
+        },
+        "identity": {
+          "cvs": 1,
+          "accuracy": 0.75,
+          "hallucinations": 0
+        },
+        "overall_f1": 0.5887160890804851
+      }
+    },
+    "input_type": {
+      "scanned_pdf": {
+        "cvs": 3,
+        "experience": {
+          "precision": 0.6666666666666666,
+          "recall": 0.25,
+          "f1": 0.36363636363636365,
+          "date_exact": 1.0,
+          "date_year": 1.0
+        },
+        "education": {
+          "precision": 1.0,
+          "recall": 0.6,
+          "f1": 0.7499999999999999
+        },
+        "skills": {
+          "precision": 0.9186046511627907,
+          "recall": 0.5059523809523809,
+          "f1": 0.6525119036050918,
+          "technical_recall": 0.5766423357664233
+        },
+        "identity": {
+          "cvs": 1,
+          "accuracy": 0.75,
+          "hallucinations": 0
+        },
+        "overall_f1": 0.5887160890804851
+      }
+    },
+    "language": {
+      "en": {
+        "cvs": 3,
+        "experience": {
+          "precision": 0.6666666666666666,
+          "recall": 0.25,
+          "f1": 0.36363636363636365,
+          "date_exact": 1.0,
+          "date_year": 1.0
+        },
+        "education": {
+          "precision": 1.0,
+          "recall": 0.6,
+          "f1": 0.7499999999999999
+        },
+        "skills": {
+          "precision": 0.9186046511627907,
+          "recall": 0.5059523809523809,
+          "f1": 0.6525119036050918,
+          "technical_recall": 0.5766423357664233
+        },
+        "identity": {
+          "cvs": 1,
+          "accuracy": 0.75,
+          "hallucinations": 0
+        },
+        "overall_f1": 0.5887160890804851
+      }
+    }
+  }
+}
