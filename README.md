@@ -1,169 +1,254 @@
-# AI Recruitment Automation System
+# AI Recruitment Automation
 
-> An end-to-end, multi-agent AI system for candidate CV ingestion, structured information extraction, semantic RAG matching, and recruiter decision support.
+AI-assisted CV screening (Advanced Deep Learning project). The system reads CVs (digital PDF, scanned PDF,
+Word), extracts structured candidate profiles, retrieves the company's HR rules (RAG), compares candidates
+with job requirements and produces evidence-backed reports. **A human recruiter always makes the decision.**
 
----
+Stack: Python 3.12 · Qwen2.5 / Qwen2.5-VL via Hugging Face Transformers · PaddleOCR models (RapidOCR) · BGE-M3 embeddings ·
+BGE-reranker-v2-m3 · Qdrant · PostgreSQL · FastAPI · Streamlit · LangGraph · n8n · Kaggle (free GPUs) for every model run.
 
-## Architecture Overview
-
-```text
-Candidate CV (PDF / DOCX / Image)
-            │
-            ▼
-┌─────────────────────────────────┐
-│ 1. DOCUMENT INGESTION           │
-│    PyMuPDF, python-docx, OCR    │
-└──────────────┬──────────────────┘
-               │
-               ▼
-┌─────────────────────────────────┐
-│ 2. DOCUMENT PROCESSING          │
-│    Cleaning & Normalization     │
-└──────────────┬──────────────────┘
-               │
-               ▼
-┌─────────────────────────────────┐
-│ 3. STRUCTURED EXTRACTION        │
-│    Transformers / LLM           │
-│    Pydantic CandidateProfile    │
-└──────────────┬──────────────────┘
-               │
-         ┌─────┴──────────────┐
-         ▼                    ▼
- Structured Profile       Raw Text
-         │                    │
-         └─────────┬──────────┘
-                   ▼
-┌─────────────────────────────────┐
-│ 4. KNOWLEDGE & RAG PIPELINE     │
-│    Sentence Transformers        │
-│    Qdrant Vector Database       │
-│    Optional Cohere Reranking    │
-└──────────────┬──────────────────┘
-               │
-               ▼
-┌─────────────────────────────────┐
-│ 5. MULTI-AGENT ORCHESTRATION   │
-│    LangGraph State Machine      │
-│    Candidate, Job, Match Agents │
-└──────────────┬──────────────────┘
-               │
-               ▼
-┌─────────────────────────────────┐
-│ 6. HUMAN-IN-THE-LOOP & UI       │
-│    Recruiter Review             │
-│    Streamlit Web Interface      │
-└─────────────────────────────────┘
-```
+**Project status:** Steps 0–3 built (setup, data and frozen evaluation set, CV extraction, RAG over the HR
+knowledge base). Next: matching (Step 4).
 
 ---
 
-## Technology Stack
+## 1. Prerequisites
 
-- **Core:** Python 3.12, Pydantic v2, pytest
-- **Document Processing:** PyMuPDF, python-docx, PaddleOCR
-- **Machine Learning / NLP:** PyTorch, Hugging Face Transformers, Sentence Transformers
-- **Vector Database:** Qdrant (via Docker Compose)
-- **Relational Database:** PostgreSQL 16, SQLAlchemy 2.0, Alembic
-- **Agents & RAG:** LangChain, LangGraph
-- **Backend API:** FastAPI, Uvicorn
-- **Frontend:** Streamlit
+Install these once:
+
+| Tool | Why | Link |
+|---|---|---|
+| **Python 3.12** (exactly 3.12) | Project language | https://www.python.org/downloads/ |
+| **Git** | Clone the repo | https://git-scm.com/downloads |
+| **Docker Desktop** | Runs PostgreSQL, Qdrant and n8n | https://www.docker.com/products/docker-desktop/ |
+| **Kaggle account** | Runs the AI models on free GPUs | https://www.kaggle.com |
+
+> Commands below are for **Windows PowerShell**, run from the project root. On macOS/Linux, activate the
+> environment with `source .venv/bin/activate` and use `cp` instead of `Copy-Item`.
 
 ---
 
-## Windows Quickstart (PowerShell)
+## 2. Install
 
-### 1. Initialize Virtual Environment
 ```powershell
+git clone https://github.com/hamzafarha/ai-recruitment-automation.git
+cd ai-recruitment-automation
+
 python -m venv .venv
-.\.venv\Scripts\Activate.ps1
+.\.venv\Scripts\Activate.ps1          # your prompt now starts with (.venv)
 python -m pip install --upgrade pip
 ```
 
-### 2. Install Project in Editable Mode
+Install PyTorch **before** the project. The CPU version is enough (the models run on Kaggle), and
+`torchvision` must come from the same place as `torch`:
+
 ```powershell
-pip install -e ".[dev]"
+pip install torch torchvision --index-url https://download.pytorch.org/whl/cpu
 ```
 
-### 3. Environment Configuration
+Then the project and all its dependencies:
+
+```powershell
+pip install -e ".[all]"
+```
+
+> **Always run tools as `python -m <tool>`** (`python -m pytest`, `python -m uvicorn`, …). On Windows the
+> `.venv\Scripts\*.exe` shortcuts are sometimes missing and PowerShell then silently uses another Python.
+
+---
+
+## 3. Configure
+
 ```powershell
 Copy-Item .env.example .env
 ```
-*(Default settings run completely offline with mock LLM and CPU embeddings — no paid API key required!)*
 
-### 4. Seed Synthetic Test Data
-```powershell
-python scripts/seed_data.py
-```
+The defaults work as-is: PostgreSQL on port **5433** (not 5432, to avoid clashing with a PostgreSQL installed
+on Windows), Qdrant on 6333, and `LLM_PROVIDER=mock` (fixed fake LLM answers).
 
-### 5. Launch Background Services (Docker)
-```powershell
-docker compose up -d postgres qdrant
-```
-
-### 6. Run Tests & Health Checks
-```powershell
-# Run automated tests
-pytest
-
-# Verify system health
-python scripts/health_check.py
-```
-
-### 7. Run Applications
-
-**FastAPI Backend:**
-```powershell
-uvicorn api.main:app --host 0.0.0.0 --port 8000 --reload
-```
-- API Docs: [http://localhost:8000/docs](http://localhost:8000/docs)
-
-**Streamlit Recruiter UI:**
-```powershell
-streamlit run frontend/streamlit_app.py
-```
-- Web UI: [http://localhost:8501](http://localhost:8501)
+**The AI models do not run on our computers.** Qwen2.5-7B, Qwen2.5-VL-7B, BGE-M3 and the reranker run on
+Kaggle's free GPUs (section 9): nothing to install for them, and no RAM or GPU needed on your PC.
 
 ---
 
-## Project Structure
+## 4. Start the services and the database
+
+Open **Docker Desktop** first and wait until it says *Engine running*. Then, from the project root:
+
+```powershell
+docker compose up -d postgres qdrant n8n     # first time: downloads the images (~1 GB), then starts them
+python -m alembic upgrade head               # creates the database tables (once, and after a git pull that adds tables)
+```
+
+| Service | Container | URL / port |
+|---|---|---|
+| PostgreSQL | `recruitment_postgres` | `localhost:5433` |
+| Qdrant | `recruitment_qdrant` | http://localhost:6333/dashboard |
+| n8n | `recruitment_n8n` | http://localhost:5678 (create a local account on first visit) |
+
+Everyday Docker commands (from the project root):
+
+```powershell
+docker compose ps                             # what is running (STATUS should be "Up" / "healthy")
+docker compose logs -f qdrant                 # follow a service's log (Ctrl+C to quit); also postgres, n8n
+docker compose stop                           # stop everything (data is kept)
+docker compose up -d postgres qdrant n8n      # start again
+docker compose restart postgres               # restart one service
+docker compose down                           # stop and remove the containers (data is kept in volumes)
+```
+
+> `docker compose down -v` also **deletes all data** (database, vector index, n8n workflows). Only use it to
+> start from zero, then run `python -m alembic upgrade head` again.
+
+The other services in `docker-compose.yml` (`api`, `frontend`) are not needed for development: run the API
+and the UI with Python instead (section 8).
+
+---
+
+## 5. Download the datasets (once)
+
+The datasets contain real CVs: they stay on your machine in `hf/` folders, which **git ignores. Never commit
+them.**
+
+```powershell
+mkdir -Force data\raw\resumes\resume_parser\hf\curated, data\raw\job_descriptions\tech_jobs_2026\hf, data\raw\ontologies\esco\hf
+
+$HF = "https://huggingface.co/datasets"
+curl.exe -L -o data\raw\resumes\resume_parser\hf\curated\test.jsonl       "$HF/md-zain/resume-parser-dataset/resolve/main/curated/test.jsonl"
+curl.exe -L -o data\raw\resumes\resume_parser\hf\curated\validation.jsonl "$HF/md-zain/resume-parser-dataset/resolve/main/curated/validation.jsonl"
+curl.exe -L -o data\raw\resumes\resume_parser\hf\curated\train.jsonl      "$HF/md-zain/resume-parser-dataset/resolve/main/curated/train.jsonl"
+curl.exe -L -o data\raw\job_descriptions\tech_jobs_2026\hf\jobs.json       "$HF/Sundaydream/tech-jobs-dataset-2026/resolve/main/jobs.json"
+```
+
+Use `curl.exe`, not `curl` (in Windows PowerShell `curl` is a different command). `train.jsonl` (137 MB) is
+needed to detect CVs duplicated between splits.
+
+**ESCO** (skill dictionary, manual download): https://esco.ec.europa.eu/en/use-esco/download → version
+**v1.2.1**, **Classification**, **CSV**, once in **English** and once in **French** (download links arrive by
+e-mail). Unzip into `data\raw\ontologies\esco\hf\en\` and `data\raw\ontologies\esco\hf\fr\`.
+
+---
+
+## 6. Prepare the data and the evaluation set
+
+```powershell
+python scripts/prepare_data.py               # converts labels, cleans job postings, builds the EN/FR skill lexicon (~1-2 min)
+python scripts/build_eval_set.py pool        # downloads the 192 evaluation CV PDFs from Hugging Face (~2-5 min)
+python scripts/build_eval_set.py verify      # must print: OK: every file matches the frozen manifest
+```
+
+The evaluation set itself (`data/processed/eval_v1/`: CV ids, job descriptions, synthetic CVs, labels,
+checksums) is **already in the repo and frozen**. Its datasheet: [data/processed/eval_v1/README.md](data/processed/eval_v1/README.md).
+
+> Do **not** run `build_eval_set.py pairs --force` or `freeze`: they rebuild the frozen evaluation set, and
+> results would no longer be comparable with the team's.
+
+---
+
+## 7. Check that everything works
+
+```powershell
+python -m pytest -q                  # unit tests (no GPU, no Docker needed), all must pass
+python -m ruff check src scripts tests
+python scripts/health_check.py       # real services: PostgreSQL, Qdrant, API (models are checked on Kaggle)
+```
+
+---
+
+## 8. Run the applications
+
+```powershell
+python -m uvicorn api.main:app --reload                 # API: http://localhost:8000/docs
+python -m streamlit run frontend/streamlit_app.py       # recruiter UI: http://localhost:8501 (second terminal)
+python -m streamlit run frontend/labeling_app.py        # optional: human labeling of the evaluation pairs
+```
+
+---
+
+## 9. Run the evaluations
+
+Every evaluation runs on **Kaggle's free GPUs** ("GPU T4 x2": two 16 GB cards). Free quota: **30 GPU hours
+per week** per account, renewed weekly.
+
+One-time setup: Kaggle → *Settings* → *API Tokens* → **Generate New Token**, then save it (never share or
+commit it):
+
+```powershell
+mkdir -Force $env:USERPROFILE\.kaggle
+Set-Content -NoNewline -Path $env:USERPROFILE\.kaggle\access_token -Value "<your token>"
+python -m kaggle config view                 # shows your username if the token works
+```
+
+Your Kaggle account needs a **verified phone number** (GPU and internet access in notebooks).
+
+```powershell
+python -m kaggle quota                                        # GPU hours left this week
+python scripts/kaggle_run.py all rag                          # Step 3: retrieval evaluation (~15 min)
+python scripts/kaggle_run.py all extraction extraction-text   # Step 2: CV extraction, 2 jobs in parallel (~1-3 h)
+python scripts/kaggle_run.py all extraction-vlm               # Step 2: Qwen2.5-VL reads the page images (~2-3 h)
+python scripts/kaggle_run.py status extraction extraction-text
+python scripts/kaggle_run.py fetch extraction extraction-text # download the reports if you stopped waiting
+```
+
+`all` packages the code and the evaluation set into a **private** Kaggle dataset, starts the jobs, waits
+and downloads the reports into `data/evaluation/<folder>/`. CV PDFs are not uploaded: the jobs download them
+from the public Hugging Face dataset and check them against the frozen checksums. Follow a running job
+on kaggle.com → *View Active Events*.
+
+The extraction jobs (one per engine: `extraction` = OCR + Qwen, the real pipeline; `extraction-text` = Qwen on
+the dataset's clean text; `extraction-vlm` = Qwen2.5-VL) run the 7B models in float16, split across the two
+GPUs. As a safety net for the quota, a job stops starting new CVs after 4 hours; the CVs are ordered so that
+a partial run keeps the mix of the whole split, and the report says how many were processed.
+
+Reports: `data/evaluation/extraction/<run>/report.md`, `data/evaluation/rag/report.md`.
+
+---
+
+## 10. Project structure
 
 ```text
-ai-recruitment-automation/
-├── configs/             # Configuration defaults
-├── data/                # Data directory (raw, interim, processed)
-├── models/              # Model artifacts & weights
-├── notebooks/           # Exploratory Jupyter notebooks
-├── src/recruitment_ai/  # Core package
-│   ├── config/          # Pydantic Settings
-│   ├── ingestion/       # Document parsers (PDF, DOCX, OCR)
-│   ├── document_processing/ # Text cleaner & layout normalizer
-│   ├── extraction/      # Pydantic data contract schemas
-│   ├── embeddings/      # SentenceTransformer service
-│   ├── vectorstore/     # Qdrant vector store adapter
-│   ├── rag/             # Chunking, metadata, retrieval pipeline
-│   ├── reranking/       # Optional neural reranking
-│   ├── matching/        # Multidimensional candidate matching
-│   ├── agents/          # LangGraph state machine workflow
-│   ├── tools/           # Typed agent tools
-│   ├── llm/             # Provider-agnostic LLM adapters
-│   ├── evaluation/      # Quantitative benchmark metrics
-│   ├── database/        # SQLAlchemy models & repositories
-│   ├── services/        # Business logic services
-│   └── utils/           # Structured logging & security
-├── api/                 # FastAPI routers & application
-├── frontend/            # Streamlit recruiter web application
-├── tests/               # Pytest unit & integration test suite
-├── scripts/             # Health check & setup automation
-└── docs/                # Architecture, setup, API & data docs
+src/recruitment_ai/
+  ingestion/         CV readers: PDF (PyMuPDF), DOCX, OCR for scans (PaddleOCR PP-OCRv5 via RapidOCR)
+  extraction/        Pydantic schemas (CandidateProfile, JobDescription…) and the LLM CV extractor
+  llm/               LLM adapters: Hugging Face Transformers (Qwen2.5, Qwen2.5-VL), OpenAI-compatible, mock
+  data/              dataset preparation, EN/FR skill lexicon (ESCO + custom), knowledge-base loader
+  rag/               section chunking, knowledge index (BGE-M3 + Qdrant + reranker)
+  evaluation/        evaluation set builder, freeze/verify, labeling, extraction and retrieval metrics
+  embeddings/ vectorstore/ reranking/ matching/ agents/ tools/ database/ services/ config/ utils/
+scripts/             prepare_data, build_eval_set, eval_extraction, eval_rag, kaggle_run, health_check
+scripts/kaggle/      the jobs that run on Kaggle
+data/knowledge_base/ 15 HR documents used by RAG (rubric, job profiles, policies…; 3 in French)
+data/processed/eval_v1/  frozen evaluation set (committed; no CV content)
+data/reference/      custom skills added to ESCO
+data/raw/, data/interim/, data/evaluation/**/predictions/   git-ignored (real CVs, personal data)
+api/  frontend/  tests/  docs/  notebooks/  alembic/  configs/
 ```
+
+Reports: [data inspection report](docs/reports/data_inspection_report.md) ·
+[data layer](docs/data.md) · [architecture](docs/architecture.md).
 
 ---
 
-## Documentation
+## 11. Rules for the team
 
-- [Architecture Design](docs/architecture.md)
-- [Setup & Troubleshooting](docs/setup.md)
-- [API Specification](docs/api.md)
-- [Data & Privacy Policy](docs/data.md)
-- [Evaluation Metrics](docs/evaluation.md)
+- **Never commit personal data**: anything in `data/raw/**/hf/`, `data/interim/`, `build/`,
+  `data/evaluation/**/predictions/`, or your `.env`. Check `git status` before every commit.
+- **Clear notebook outputs before committing** (VS Code: `⋯` → *Clear All Outputs*): notebooks can show real CVs.
+- **Do not modify `data/processed/eval_v1/`**: it is the frozen exam; `build_eval_set.py verify` detects changes.
+- Tune prompts and settings on the **dev** split; report final numbers on **test** only.
+
+---
+
+## 12. Troubleshooting
+
+| Problem | Fix |
+|---|---|
+| `No module named 'recruitment_ai'`, or `pytest`/`uvicorn`/`streamlit` not found | Activate the venv and use `python -m pytest`, `python -m uvicorn`, … |
+| PostgreSQL password error mentioning port 5432 | A Windows PostgreSQL service owns 5432; the project uses **5433**: keep `POSTGRES_PORT=5433` in `.env` |
+| Qdrant `SSL: WRONG_VERSION_NUMBER` | Leave `QDRANT_API_KEY=` empty (no value) in `.env` |
+| `failed to connect to the docker API` | Start Docker Desktop, then `docker compose up -d postgres qdrant n8n` |
+| Tests very slow (minutes) | Docker stopped is fine for unit tests; make sure you run the latest code (`git pull`) |
+| `PermissionError` writing a PDF report | Close the PDF in Adobe Acrobat (the whole window), then retry |
+| `verify` reports changed files | Re-download the datasets (section 5) and run `prepare_data.py` and `build_eval_set.py pool` again |
+| Kaggle push fails with a GPU / quota message | `python -m kaggle quota`: wait for the weekly renewal, or run fewer jobs at once |
+| `pip install -e ".[all]"` replaces your torch | Install `torch torchvision` first from the PyTorch index (section 2), then the project |
