@@ -1,0 +1,21 @@
+resume_id,annotator,identity,experience,education,skills,notes,labeled_at
+resume_ce049ffa4947df3c,auto-groundedness,correct,correct,correct,minor_errors,"skills 88% found; not in text: Supervised Machine Learning, Unsupervised Machine Learning, AWS S3, AWS Athena, AWS Lambda",2026-10-16T14:38:21+00:00
+resume_88f363be1dd54af9,auto-groundedness,correct,correct,correct,correct,,2026-10-16T14:38:21+00:00
+resume_d96e710a4de31dbe,auto-groundedness,correct,correct,correct,correct,"skills 92% found; not in text: cloud migration, cloud infrastructure, infrastructure automation, software implementation, Excellent communication skills",2026-10-16T14:38:21+00:00
+resume_410b840d977c4fa1,auto-groundedness,correct,correct,correct,minor_errors,"skills 80% found; not in text: ICN network, Infrastructure assessment, IT spending management, Training and mentoring, Budget management",2026-10-16T14:38:21+00:00
+resume_ef4ee8cb8a882583,auto-groundedness,correct,correct,correct,correct,,2026-10-16T14:38:21+00:00
+resume_2339b0ac74550f2e,auto-groundedness,correct,correct,correct,correct,"skills 94% found; not in text: Asynchronous frameworks, Data engineering, Collaboration, Reliable, efficient, and user-friendly service delivery",2026-10-16T14:38:21+00:00
+resume_12c8e615947df52c,auto-groundedness,correct,correct,correct,correct,,2026-10-16T14:38:21+00:00
+resume_4d073f3dad6b06af,auto-groundedness,correct,correct,not_applicable,correct,,2026-10-16T14:38:21+00:00
+resume_52e0a0fac02f64c6,auto-groundedness,correct,correct,correct,minor_errors,"skills 89% found; not in text: Supervised Machine Learning, Unsupervised Machine Learning, Data Analytics, Data Visualization, AWS S3",2026-10-16T14:38:21+00:00
+resume_f6049ebce42a4491,auto-groundedness,correct,correct,correct,correct,,2026-10-16T14:38:21+00:00
+resume_7ea43a25f45978af,auto-groundedness,correct,correct,correct,correct,"skills 97% found; not in text: CodeBuild, AWS ECS, Amazon ECR",2026-10-16T14:38:21+00:00
+resume_cd5025660ce10e7d,auto-groundedness,correct,correct,correct,correct,"skills 94% found; not in text: Network engineering, Leadership, Microsoft System Center Configuration Manager, Cisco 2600 Routers",2026-10-16T14:38:21+00:00
+resume_10355e4023a15b00,auto-groundedness,correct,correct,correct,correct,,2026-10-16T14:38:21+00:00
+resume_b9c353fd972b12de,auto-groundedness,correct,correct,correct,correct,"skills 97% found; not in text: ICD 10, Statistical techniques",2026-10-16T14:38:21+00:00
+resume_9e02f8dc8daca958,auto-groundedness,correct,correct,correct,correct,,2026-10-16T14:38:21+00:00
+resume_c46d3d8f22150d5d,auto-groundedness,correct,correct,correct,correct,,2026-10-16T14:38:21+00:00
+resume_518b3aad5d3f647a,auto-groundedness,correct,correct,not_applicable,minor_errors,"skills 84% found; not in text: Statistical techniques, Algorithmic techniques, Mining techniques, Supervised machine learning",2026-10-16T14:38:21+00:00
+resume_cbd2fa41bf0df26f,auto-groundedness,correct,correct,correct,minor_errors,"skills 83% found; not in text: Database performance optimization, Database migration",2026-10-16T14:38:21+00:00
+resume_0f16eb8a4baa09f4,auto-groundedness,correct,correct,correct,minor_errors,"skills 75% found; not in text: Programming languages, Network troubleshooting, Highly scalable web serving environment, Cross-functional collaboration, Relationship building",2026-10-16T14:38:21+00:00
+resume_b9b310668c4f0e4e,auto-groundedness,correct,correct,correct,correct,,2026-10-16T14:38:21+00:00

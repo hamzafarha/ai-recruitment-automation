@@ -1,0 +1,68 @@
+{
+  "primary_annotator": "claude-opus-5.5",
+  "annotators": [
+    "claude-opus-5.5"
+  ],
+  "graded_pairs": 36,
+  "grades_by_job": {
+    "backend_developer": {
+      "1": 6,
+      "2": 2
+    },
+    "data_analyst_scientist": {
+      "0": 1,
+      "1": 5,
+      "3": 1
+    },
+    "devops_cloud": {
+      "1": 4,
+      "2": 2,
+      "3": 1
+    },
+    "ml_engineer": {
+      "1": 3,
+      "3": 4
+    },
+    "nlp_llm_engineer": {
+      "1": 5,
+      "3": 2
+    }
+  },
+  "grades_by_split": {
+    "dev": {
+      "1": 10,
+      "2": 2,
+      "3": 2
+    },
+    "test": {
+      "0": 1,
+      "1": 13,
+      "2": 2,
+      "3": 6
+    }
+  },
+  "requirement_labels": {
+    "missing": 98,
+    "partial": 64,
+    "met": 107
+  },
+  "pairs_with_requirement_labels": 36,
+  "extraction_checks": 20,
+  "extraction_check_results": {
+    "identity": {
+      "correct": 20
+    },
+    "experience": {
+      "correct": 20
+    },
+    "education": {
+      "correct": 18,
+      "not_applicable": 2
+    },
+    "skills": {
+      "minor_errors": 6,
+      "correct": 14
+    }
+  },
+  "agreement": []
+}

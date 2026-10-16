@@ -80,6 +80,7 @@ frontend = [
 notebooks = [
     "ipykernel>=6.29.0",
     "matplotlib>=3.8.0",
+    "reportlab>=4.0.0",  # scripts/md_to_pdf.py (report PDFs)
 ]
 
 dev = [

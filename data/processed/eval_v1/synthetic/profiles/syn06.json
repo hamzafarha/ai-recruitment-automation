@@ -1,0 +1,145 @@
+{
+  "meta": {
+    "id": "syn06",
+    "language": "fr",
+    "layout": "classic",
+    "formats": [
+      "pdf",
+      "docx"
+    ],
+    "case": "French cloud engineer on Azure (an equivalent of the AWS skills the job asks for)"
+  },
+  "profile": {
+    "schema_version": "1.0.0",
+    "id": "syn06",
+    "full_name": "Mehdi Trabelsi",
+    "email": "mehdi.trabelsi@example.fr",
+    "phone": "+33 4 00 00 01 23",
+    "location": "Lyon, France",
+    "summary": "Ingénieur cloud Azure, automatisation de l'infrastructure et des déploiements.",
+    "education": [
+      {
+        "institution": "Université de Lyon",
+        "degree": "Master",
+        "field_of_study": "Réseaux et télécommunications",
+        "start_date": "2016-09",
+        "end_date": "2018-06",
+        "grade": null
+      }
+    ],
+    "experience": [
+      {
+        "company": "Nuvia Conseil",
+        "title": "Ingénieur Cloud",
+        "location": "Lyon",
+        "start_date": "2021-03",
+        "end_date": "present",
+        "is_current": true,
+        "description": "- Déploiement d'infrastructures Azure (VNet, AKS, Azure SQL) avec Terraform\n- Pipelines CI/CD sous Azure DevOps pour 15 applications\n- Scripts PowerShell d'automatisation et supervision avec Azure Monitor"
+      },
+      {
+        "company": "Groupe Hexa",
+        "title": "Administrateur systèmes Linux",
+        "location": "Villeurbanne",
+        "start_date": "2018-09",
+        "end_date": "2021-02",
+        "is_current": false,
+        "description": "- Administration de 200 serveurs Linux, scripts Bash et sauvegardes\n- Configuration des pare-feu, sous-réseaux et VPN des sites distants"
+      }
+    ],
+    "skills": [
+      {
+        "name": "Infrastructure as Code",
+        "category": "Technical",
+        "proficiency_level": null,
+        "years_experience": null
+      },
+      {
+        "name": "CI/CD",
+        "category": "Technical",
+        "proficiency_level": null,
+        "years_experience": null
+      },
+      {
+        "name": "Réseaux (sous-réseaux, VPN, pare-feu)",
+        "category": "Technical",
+        "proficiency_level": null,
+        "years_experience": null
+      },
+      {
+        "name": "Sécurité cloud (RBAC)",
+        "category": "Technical",
+        "proficiency_level": null,
+        "years_experience": null
+      },
+      {
+        "name": "Microsoft Azure",
+        "category": "Tool",
+        "proficiency_level": null,
+        "years_experience": null
+      },
+      {
+        "name": "Terraform",
+        "category": "Tool",
+        "proficiency_level": null,
+        "years_experience": null
+      },
+      {
+        "name": "Azure DevOps",
+        "category": "Tool",
+        "proficiency_level": null,
+        "years_experience": null
+      },
+      {
+        "name": "PowerShell",
+        "category": "Tool",
+        "proficiency_level": null,
+        "years_experience": null
+      },
+      {
+        "name": "Bash",
+        "category": "Tool",
+        "proficiency_level": null,
+        "years_experience": null
+      },
+      {
+        "name": "Linux",
+        "category": "Tool",
+        "proficiency_level": null,
+        "years_experience": null
+      },
+      {
+        "name": "Kubernetes",
+        "category": "Tool",
+        "proficiency_level": null,
+        "years_experience": null
+      },
+      {
+        "name": "Docker",
+        "category": "Tool",
+        "proficiency_level": null,
+        "years_experience": null
+      }
+    ],
+    "certifications": [
+      {
+        "name": "Microsoft Certified: Azure Administrator Associate",
+        "issuer": null,
+        "issue_date": "2022-11",
+        "expiration_date": null,
+        "credential_id": null
+      }
+    ],
+    "projects": [],
+    "languages": [
+      {
+        "language": "Français",
+        "proficiency": "langue maternelle"
+      },
+      {
+        "language": "Anglais",
+        "proficiency": "courant"
+      }
+    ]
+  }
+}

@@ -50,14 +50,17 @@ SKILL_GROUPS = {
 }
 
 # Job titles that really indicate a tech profile. Kept strict on purpose:
-# "Boiler Plant Operator/REACT" must not match "react".
+# "Boiler Plant Operator/REACT" must not match "react", and "Science Teacher" must not
+# match "Data Science" (the dataset's categories were assigned by keyword, so its
+# "Data Science" category is full of science teachers).
 _TECH_TITLE = re.compile(
     r"\b("
     r"software|developer|programmer|devops|sre|site reliability|dba|"
-    r"data (scientist|analyst|engineer|architect)|machine learning|\bml\b|\bai\b engineer|"
-    r"database (administrator|developer|engineer|analyst)|"
-    r"(it|i\.t\.|information technology) (specialist|support|manager|analyst|consultant|technician|administrator|director)|"
-    r"systems? (administrator|engineer|analyst|architect)|network (engineer|administrator)|"
+    r"data (scientist|analyst|engineer|architect)|data science|machine learning|\bml\b|\bai\b engineer|"
+    r"database (administrator|administration|developer|engineer|analyst|manager|specialist|support)|"
+    r"information technology|information systems?|"
+    r"(it|i\.t\.) (specialist|support|manager|analyst|consultant|technician|administrator|director)|"
+    r"systems? (administrator|engineer|analyst|architect)|network (engineer|administrator|services)|"
     r"web (developer|designer)|front[- ]?end|back[- ]?end|full[- ]?stack|"
     r"(qa|test|automation|cloud|platform|solutions?|integration|etl|bi) (engineer|architect|developer|analyst)|"
     r"business intelligence|technical lead|tech lead"
@@ -215,7 +218,7 @@ def tag_cv(row: dict[str, Any], target: dict[str, Any], train_hashes: set[str]) 
         "resume_id": row["resume_id"],
         "category": row["category"],
         "is_tech_category": row["category"] in TECH_CATEGORIES,
-        # hint only: the final "is this a tech profile?" decision is a manual review
+        # decides whether a tech-category CV is really a tech profile (evaluation pool filter)
         "tech_title_match": bool(_TECH_TITLE.search(" | ".join(titles + [professional_title]))),
         "leak_train": text_hash(text) in train_hashes,
         "corrupted": bool(re.search(r"[a-z]Claire[a-z]", text)),

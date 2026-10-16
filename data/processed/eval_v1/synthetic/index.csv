@@ -1,0 +1,19 @@
+cv_id,language,layout,format,file,sha256,case
+syn01,en,classic,pdf,files/syn01.pdf,e9d50b611d1c8af29a58cb68be6d95360335def28e62932208bb1e7be2997f33,"LLM / RAG engineer with explicit, evaluated LLM projects (fills the NLP gap of the real data)"
+syn01,en,docx,docx,files/syn01.docx,a16bf20915974e9c648f0ad4da1c366c7140275e8889a44acc8ae2e1512d8781,"LLM / RAG engineer with explicit, evaluated LLM projects (fills the NLP gap of the real data)"
+syn02,fr,sidebar,pdf,files/syn02.pdf,8f3090f438c6ce494c03039f89fc020281bbfbe1df40e6487c137c3e237155ab,French-language CV of an LLM / RAG engineer (cross-lingual matching against an English job)
+syn03,en,compact,pdf,files/syn03.pdf,2f6b26e8df6ac495e1b5e3a348dc49db5229e9d8f87f3a57f65c99fc7e15a1f2,Production ML engineer whose LLM experience is only a recent side project
+syn04,en,classic,pdf,files/syn04.pdf,858aef489701328ab5b8b595da42530e8fc6bdfe5afb26e9bdaff48c32fc67f6,"Keyword stuffing: very long skill list, almost no experience using those skills"
+syn04,en,docx,docx,files/syn04.docx,6577ad7f33f50562e78b802affa63ceb1281511688fee28e9fb47d37b71c43a6,"Keyword stuffing: very long skill list, almost no experience using those skills"
+syn05,en,sidebar,pdf,files/syn05.pdf,0c08e39623d409a1ddd616c240708e6658581211ab79afb653e7468f042fea4b,Cloud/DevOps profile written with synonyms only (no 'AWS' or 'Terraform' keyword in the experience)
+syn06,fr,classic,pdf,files/syn06.pdf,08a9f445d01e279d811ba9295a2d725397d1dbd0efefc472220f7310f6f43c5f,French cloud engineer on Azure (an equivalent of the AWS skills the job asks for)
+syn06,fr,docx,docx,files/syn06.docx,634140b90f8e10dd0f759413cb92f254b94888ad58be7affe4c950e8bd3edca3,French cloud engineer on Azure (an equivalent of the AWS skills the job asks for)
+syn07,en,compact,pdf,files/syn07.pdf,088d98b29154f485c46c99325e16b8391d7ce226234d1b94ef0b8ec28b12ee34,Senior backend engineer in Python (not Java): transferable backend skills
+syn08,en,classic,pdf,files/syn08.pdf,9cd48ab35f7f7259ff64b840cee2e4e64022e90ae62f9c84a1b2727dd215eae2,Junior Java/Spring developer; one freelance position has no dates (missing information)
+syn08,en,docx,docx,files/syn08.docx,05eb2cf3452d00db6f1864c496b72d7e0bda283d4ee1d3f3890ddae597ec2375,Junior Java/Spring developer; one freelance position has no dates (missing information)
+syn09,fr,sidebar,pdf,files/syn09.pdf,4e20a0ef0456a6e890ba40082c1aa8127736289c2427b7402fea07c0012eefb5,"French data analyst with SQL, Power BI, ETL and data modelling"
+syn10,fr,compact,pdf,files/syn10.pdf,839856e456eb20d6a50331efe4ac14fae84fc84f06518008190bcfcfe989789e,French career changer: accountant retrained as data analyst (bootcamp + internship)
+syn10,fr,docx,docx,files/syn10.docx,fbbf874ff960e6d1ab8d8e18e73ccd45b349ec09484e7f9efdc9b4b4ecde5aea,French career changer: accountant retrained as data analyst (bootcamp + internship)
+syn11,en,classic,pdf,files/syn11.pdf,6ca6cf7f66827105b81a11d21efcf07aebb071830f0e6bc6b7788344be2dcd3c,Highly experienced ML scientist applying to a 1-3 year ML role (overqualification)
+syn12,en,compact,pdf,files/syn12.pdf,0f2464f08f9e82c9306c9b280de8f5960ac2f8adeb70f5a8e7bc196e04afd06a,"Senior frontend engineer (adjacent tech role, different core skills)"
+syn12,en,docx,docx,files/syn12.docx,1e5888c714c5a6520f1d3880f48fcd15069f88459ba0cc93be9d65b02a1582c3,"Senior frontend engineer (adjacent tech role, different core skills)"

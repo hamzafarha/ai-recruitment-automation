@@ -41,7 +41,7 @@ def run_resumes() -> None:
         print(
             f"  {split:10s} tech-category CVs: {len(tech)} | leak_train: {flag(tech, 'leak_train')} | "
             f"corrupted: {flag(tech, 'corrupted')} | template_identity: {flag(tech, 'template_identity')} | "
-            f"no tech job title (to review): {len(tech) - flag(tech, 'tech_title_match')}"
+            f"not a tech job title (excluded from eval pool): {len(tech) - flag(tech, 'tech_title_match')}"
         )
 
 

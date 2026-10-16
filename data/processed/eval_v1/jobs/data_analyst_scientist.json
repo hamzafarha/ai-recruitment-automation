@@ -1,0 +1,87 @@
+{
+  "schema_version": "1.0.0",
+  "id": "jd_data_analyst_scientist",
+  "role": "data_analyst_scientist",
+  "title": "Talent Acquisition Data Engineering & Analytics Graduate Intern",
+  "department": null,
+  "location": "Rancho Cordova, CA",
+  "employment_type": "Internship",
+  "source": {
+    "dataset": "Sundaydream/tech-jobs-dataset-2026",
+    "job_id": 128,
+    "company": "Solidigm",
+    "workplace_type": "Hybrid"
+  },
+  "requirements": [
+    {
+      "id": "M1",
+      "requirement_text": "Graduate-level education (in progress or completed) in data analytics, data science, data engineering or computer science",
+      "requirement_type": "required",
+      "importance": "medium",
+      "min_years_experience": null
+    },
+    {
+      "id": "M2",
+      "requirement_text": "SQL, Python, R or similar tools for data extraction and transformation",
+      "requirement_type": "required",
+      "importance": "high",
+      "min_years_experience": null
+    },
+    {
+      "id": "M3",
+      "requirement_text": "Building data visualizations and dashboards with Power BI",
+      "requirement_type": "required",
+      "importance": "high",
+      "min_years_experience": null
+    },
+    {
+      "id": "M4",
+      "requirement_text": "ETL / data pipelines",
+      "requirement_type": "required",
+      "importance": "medium",
+      "min_years_experience": null
+    },
+    {
+      "id": "M5",
+      "requirement_text": "Data modeling and dataset design",
+      "requirement_type": "required",
+      "importance": "medium",
+      "min_years_experience": null
+    },
+    {
+      "id": "N1",
+      "requirement_text": "Familiarity with AI / machine learning techniques",
+      "requirement_type": "preferred",
+      "importance": "medium",
+      "min_years_experience": null
+    },
+    {
+      "id": "N2",
+      "requirement_text": "Working with APIs or data integrations",
+      "requirement_type": "preferred",
+      "importance": "low",
+      "min_years_experience": null
+    },
+    {
+      "id": "N3",
+      "requirement_text": "Large datasets or cloud-based data environments (Azure, AWS, GCP)",
+      "requirement_type": "preferred",
+      "importance": "low",
+      "min_years_experience": null
+    },
+    {
+      "id": "N4",
+      "requirement_text": "Interest in HR, workforce or business operations analytics",
+      "requirement_type": "preferred",
+      "importance": "low",
+      "min_years_experience": null
+    }
+  ],
+  "not_scored": [
+    "US work authorization without visa sponsorship (checked by the recruiter, KB-RR-001)"
+  ],
+  "adaptations": [
+    "The posting is a graduate internship requiring candidates to be 'currently pursuing a graduate degree'. M1 is generalized to graduate-level education in progress or completed, so that the posting can be matched against experienced CVs as a data analytics role."
+  ],
+  "description": "Company Description\n\nJoin a multibillion-dollar global company that brings together amazing technology, people, and operational scale to become a powerhouse in the memory industry. Headquartered in Rancho Cordova, California, Solidigm combines elements of an established, successful technology company with the spirit, agility, and entrepreneurial mindset of a start-up. In addition to the U.S. headquarters and other facilities in the U.S., the company has international presence in Asia, Europe, and the Americas. Solidigm will continue to lead the world in innovating new Memory technologies with aspirations to be the #1 NAND memory company in the world. At Solidigm, we view problems as opportunities to define innovative solutions that hold the power to change the world and unleash the potential technological needs that the future holds. At Solidigm, we are One Team that fosters a diverse, equitable, and inclusive culture that embraces individual uniqueness and empowers us to bring our best selves to deliver excellence in support of Solidigm's vision and mission to be the go-to partner for optimized data storage solutions. You can be part of the takeoff of an innovative business that develops cutting-edge products, delivers strong business value for customers, provides an engaging workplace for its employees, and serves a greater impact on the world. This is a golden opportunity for the right applicant to join us and help design, build, and lead Solidigm. We want a diverse team of dedicated professionals who will not just be Solidigm team members but contribute to how we shape the future of the organization. We are seeking applicants who will grow and thrive in our culture; be customer inspired, trusting, innovative, team-oriented, inclusive, results driven, collaborative, passionate, and flexible.\n\n\n\n\n\n\n\nJob Description\n\nWe are seeking a graduate-level intern to join our Talent Acquisition (TA) team as a Talent Acquisition Data Engineering & Analytics Intern. This role is designed for a highly motivated individual who wants hands-on experience building and analyzing TA metrics that influence business decisions at a global scale. The intern will learn how to extract, transform, and visualize data from multiple HR and business systems while contributing to the foundation of our global TA reporting function.\n\n\n\n\nThe Talent Acquisition Data Engineering & Analytics Intern will help build the foundation for Talent Acquisition reporting and analytics. This internship is designed for a technically strong graduate student interested in applying data engineering, analytics, and visualization techniques to real-world recruiting and workforce challenges.\n\n\n\n\nDuring the internship, the intern will analyze recruiting workflows, explore recruiting datasets, and develop prototype dashboards that support recruiting operations and leadership decision-making.\n\nThe intern will work directly with Talent Acquisition leadership and will have the opportunity to influence how recruiting performance is measured and reported across the organization. In addition, the intern will collaborate with teams responsible for systems such as SmartRecruiters, Workday, Jira, and ServiceNow to understand how recruiting data is generated and how it can be structured for reporting and analytics.\n\n\n\n\nThis internship focuses on data exploration, metrics development, and dashboard prototyping, rather than operational recruiting activities.\n\n\n\n\nWhat You Will Work On\n\nDuring the internship, you will contribute to a project focused on building the foundation for Talent Acquisition analytics dashboards. Key project areas may include:\n\n\n\n\nRecruiting Data Discovery\n\nAnalyze the end-to-end recruiting workflow and identify where data is captured across systems\nStudy the SmartRecruiters data structure and understand key recruiting entities\nIdentify key data sources across the recruiting ecosystem including ATS, HRIS, and operational tools\n\n\n\n\nTalent Acquisition Metrics Framework\n\nHelp define key recruiting metrics and analytics used to measure hiring performance\nDocument standardized definitions for recruiting metrics such as time-to-fill, funnel conversion rates, and offer acceptance\nDevelop a Talent Acquisition data dictionary\n\n\n\n\nData Modeling & Data Preparation\n\nDevelop a conceptual data model that supports recruiting analytics\nUse SQL or Python to explore and analyze recruiting datasets\nPrepare structured datasets that can support dashboard reporting\n\n\n\n\nDashboard Development\n\nDevelop prototype recruiting dashboards using Power BI\nCreate visualizations that support recruiting operations and leadership reporting\nTranslate business questions into measurable analytics metrics\n\n\n\n\nDocumentation & Analytics Framework\n\nDocument the recruiting data ecosystem and data flows across systems\nProduce implementation-ready documentation including:\ndata model diagrams\ndashboard specifications\nrecommended data architecture approach\nLearn and practice data visualization and storytelling by preparing dashboards and reports for TA and HR leadership.\n\n\n\n\nExample Internship Deliverables\n\nTalent Acquisition Data Ecosystem Overview\nRecruiting Metrics Framework\nTA Data Dictionary\nConceptual Data Model for Recruiting Analytics\nPrototype Power BI Dashboard\nDocumentation supporting future TA analytics development\n\n\n\n\n\n\n\nQualifications\n\nCurrently pursuing a Graduate degree in Data Analytics, Data Science, Data Engineering, Computer Science\nExperience and proficiency with SQL, Python, R, or similar tools for data extraction and transformation\nProficient building data visualizations with Power BI\nFamiliarity with ETL/ETL pipelines\nData modeling and dataset design\n\nPreferred Qualifications\n\nPassion for HR and Talent Acquisition analytics, and how data informs business strategy.\nFamiliarity with AI / Machine Learning techniques\nExperience working with APIs or data integrations\nExperience working with large datasets, APIs, or cloud-based data environments (Azure, AWS, or GCP)\nInterest in workforce analytics, business operations analytics, or HR technology\n\n\n\n\n\n\n\nAdditional Information\n\nApplicants must be authorized to work in the United States without the need for current or future visa sponsorship.\nThis role is eligible to work remote with a strong preference for the candidate to work on Pacific, Mountain or Central Time Zones.\nThe compensation for this role is $35 /hour."
+}

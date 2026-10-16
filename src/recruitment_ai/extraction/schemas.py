@@ -137,6 +137,8 @@ class CandidateProfile(SchemaBase):
 class JobRequirement(SchemaBase):
     """Specific job requirement."""
 
+    # Stable reference used in analyses and labels: "M1".. must-have, "N1".. nice-to-have
+    id: str | None = Field(default=None, description="Requirement id, e.g. M1 or N2")
     requirement_text: str = Field(..., description="Text of the requirement")
     requirement_type: Literal["required", "preferred", "optional"] = Field(
         default="required", description="Requirement level"

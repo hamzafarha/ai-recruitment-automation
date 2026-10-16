@@ -1,0 +1,85 @@
+{
+  "schema_version": "1.0.0",
+  "id": "jd_ml_engineer",
+  "role": "ml_engineer",
+  "title": "AI/ML Engineer, Global Banking & Markets, Investment Banking",
+  "department": null,
+  "location": "Dallas, TX",
+  "employment_type": "Full-time",
+  "source": {
+    "dataset": "Sundaydream/tech-jobs-dataset-2026",
+    "job_id": 589,
+    "company": "Goldman Sachs",
+    "workplace_type": null
+  },
+  "requirements": [
+    {
+      "id": "M1",
+      "requirement_text": "1-3 years of AI/ML experience in industry",
+      "requirement_type": "required",
+      "importance": "high",
+      "min_years_experience": 1
+    },
+    {
+      "id": "M2",
+      "requirement_text": "Proficiency in Python and/or Java",
+      "requirement_type": "required",
+      "importance": "high",
+      "min_years_experience": null
+    },
+    {
+      "id": "M3",
+      "requirement_text": "Solid understanding of machine learning techniques and algorithms, with common data science toolkits",
+      "requirement_type": "required",
+      "importance": "high",
+      "min_years_experience": null
+    },
+    {
+      "id": "M4",
+      "requirement_text": "Advanced degree in Computer Science, Machine Learning, Quantitative Finance, Mathematics or Physics, or equivalent industry experience",
+      "requirement_type": "required",
+      "importance": "medium",
+      "min_years_experience": null
+    },
+    {
+      "id": "M5",
+      "requirement_text": "Curiosity, ownership and collaboration",
+      "requirement_type": "required",
+      "importance": "low",
+      "min_years_experience": null
+    },
+    {
+      "id": "N1",
+      "requirement_text": "Designing, implementing and deploying AI models as production-ready software",
+      "requirement_type": "preferred",
+      "importance": "medium",
+      "min_years_experience": null
+    },
+    {
+      "id": "N2",
+      "requirement_text": "Rigorous experimentation and data-driven analysis to improve model effectiveness",
+      "requirement_type": "preferred",
+      "importance": "medium",
+      "min_years_experience": null
+    },
+    {
+      "id": "N3",
+      "requirement_text": "Agentic workflows or LLM-based solutions",
+      "requirement_type": "preferred",
+      "importance": "low",
+      "min_years_experience": null
+    },
+    {
+      "id": "N4",
+      "requirement_text": "Quantitative analytics and statistics (finance context is a plus)",
+      "requirement_type": "preferred",
+      "importance": "medium",
+      "min_years_experience": null
+    }
+  ],
+  "not_scored": [],
+  "adaptations": [
+    "The qualifications list is short; N1-N4 are taken from the posting's role description and responsibilities."
+  ],
+  "description": "Job Description\n\nWhat We Do\n\nAt Goldman Sachs, our Engineers don't just make things - we make things possible. Change the world by connecting people and capital with ideas. Solve the most challenging and pressing engineering problems for our clients. Join our engineering teams that build massively scalable software and systems, architect low latency infrastructure solutions, proactively guard against cyber threats, and leverage machine learning alongside financial engineering to continuously turn data into action. Create new businesses, transform finance, and explore a world of opportunity at the speed of markets.\n\nGoldman Sachs Engineers are innovators and problem-solvers, building solutions in risk management, big data, mobile and more. We look for creative collaborators who evolve, adapt to change and thrive in a fast-paced global environment. Want to push the limit of digital possibilities? Start here.\n\nWithin our Global Banking & Markets business, Investment Banking (IB) works on some of the most complex financial challenges and transactions in the market today. Whether advising on a merger, providing financial solutions for an acquisition, or structuring an initial public offering, we handle projects that help clients at major milestones. We work with corporations, pension funds, financial sponsors, and governments and are a team of strong analytical thinkers with a passion for producing out-of-the-box ideas.\n\nWithin IB, our engineers are responsible for building next generation digital solutions and automation for banking that consists of a set of well-integrated platforms and allows us to serve our bankers and clients better.\n\nWho We Look For\n\nWe are seeking an AI/ML engineer to join our IB Engineering team. As an AI/ML engineer, you will leverage your expertise in quantitative analytics, statistics, and artificial intelligence to develop and implement AI-driven quantitative technologies with the goal to enhance revenue generation, capital saving, operational efficiency and foster innovation within the firm.\n\nIn this role, you will have the opportunity to collaborate with various teams and divisions on pioneering projects that integrate artificial intelligence with quantitative finance. As an AI/ML engineer, you will tackle the unique challenges associated with embedding intelligence in the analytics domain. Join us in pushing the boundaries of what is possible at the intersection of finance and artificial intelligence!\n\nHow You Will Fulfill Your Potential\n\n\nDesign, implement, and deploy scalable AI models & agentic workflows to drive commercial outcomes.\nLead rigorous experimentation and data-driven analysis to continuously improve AI model effectiveness for business use cases.\nCollaborate proactively with stakeholders across the equities business to accelerate the delivery of AI driven solutions to drive tangible commercial outcomes.\nChampion the development, testing, and maintenance of reliable, production-ready software solutions.\n\n\nQualifications\n\n\nAdvanced degree in Computer Science, Machine Learning, Quantitative Finance, Mathematics, Physics, or equivalent relevant industry experience.\n1-3 years of AI/ML experience in the industry that demonstrates your expertise.\nProficiency in contemporary programming languages like Python and/or Java.\nExcellent understanding of machine learning techniques and algorithms, and experience with common data science toolkits.\nDemonstrated curiosity, ownership, and a willingness to work in a collaborative environment.\n\n\nAbout Goldman Sachs\n\nAt Goldman Sachs, we commit our people, capital and ideas to help our clients, shareholders and the communities we serve to grow. Founded in 1869, we are a leading global investment banking, securities and investment management firm. Headquartered in New York, we maintain offices around the world.\n\nWe believe who you are makes you better at what you do. We're committed to fostering and advancing diversity and inclusion in our own workplace and beyond by ensuring every individual within our firm has a number of opportunities to grow professionally and personally, from our training and development opportunities and firmwide networks to benefits, wellness and personal finance offerings and mindfulness programs. Learn more about our culture, benefits, and people at GS.com/careers.\n\nWe're committed to finding reasonable accommodations for candidates with special needs or disabilities during our recruiting process. Learn more: https://www.goldmansachs.com/careers/footer/disability-statement.html\n\n© The Goldman Sachs Group, Inc., 2026. All rights reserved."
+}

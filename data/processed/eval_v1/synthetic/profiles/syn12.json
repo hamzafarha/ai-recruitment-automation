@@ -1,0 +1,121 @@
+{
+  "meta": {
+    "id": "syn12",
+    "language": "en",
+    "layout": "compact",
+    "formats": [
+      "pdf",
+      "docx"
+    ],
+    "case": "Senior frontend engineer (adjacent tech role, different core skills)"
+  },
+  "profile": {
+    "schema_version": "1.0.0",
+    "id": "syn12",
+    "full_name": "Noah Williams",
+    "email": "noah.williams@example.com",
+    "phone": "+1 555 0199",
+    "location": "Seattle, WA",
+    "summary": "Frontend engineer crafting accessible, fast React applications.",
+    "education": [
+      {
+        "institution": "Oregon State University",
+        "degree": "BSc",
+        "field_of_study": "Computer Science",
+        "start_date": "2013-09",
+        "end_date": "2017-06",
+        "grade": null
+      }
+    ],
+    "experience": [
+      {
+        "company": "Brightleaf Software",
+        "title": "Senior Frontend Engineer",
+        "location": "Seattle, WA",
+        "start_date": "2020-06",
+        "end_date": "present",
+        "is_current": true,
+        "description": "- Led the React and TypeScript rewrite of the customer dashboard used by 200,000 users\n- Built a design system and component library tested with Jest\n- Consumed REST APIs and wrote small Node.js backend-for-frontend services"
+      },
+      {
+        "company": "Pixelwave Agency",
+        "title": "Web Developer",
+        "location": "Portland, OR",
+        "start_date": "2017-07",
+        "end_date": "2020-05",
+        "is_current": false,
+        "description": "- Responsive websites with JavaScript, HTML and CSS"
+      }
+    ],
+    "skills": [
+      {
+        "name": "JavaScript",
+        "category": "Technical",
+        "proficiency_level": null,
+        "years_experience": null
+      },
+      {
+        "name": "TypeScript",
+        "category": "Technical",
+        "proficiency_level": null,
+        "years_experience": null
+      },
+      {
+        "name": "HTML",
+        "category": "Technical",
+        "proficiency_level": null,
+        "years_experience": null
+      },
+      {
+        "name": "CSS",
+        "category": "Technical",
+        "proficiency_level": null,
+        "years_experience": null
+      },
+      {
+        "name": "Accessibility",
+        "category": "Technical",
+        "proficiency_level": null,
+        "years_experience": null
+      },
+      {
+        "name": "React",
+        "category": "Tool",
+        "proficiency_level": null,
+        "years_experience": null
+      },
+      {
+        "name": "Redux",
+        "category": "Tool",
+        "proficiency_level": null,
+        "years_experience": null
+      },
+      {
+        "name": "Jest",
+        "category": "Tool",
+        "proficiency_level": null,
+        "years_experience": null
+      },
+      {
+        "name": "Node.js",
+        "category": "Tool",
+        "proficiency_level": null,
+        "years_experience": null
+      },
+      {
+        "name": "Git",
+        "category": "Tool",
+        "proficiency_level": null,
+        "years_experience": null
+      }
+    ],
+    "certifications": [],
+    "projects": [],
+    "languages": [
+      {
+        "language": "English",
+        "proficiency": "Native"
+      }
+    ]
+  }
+}

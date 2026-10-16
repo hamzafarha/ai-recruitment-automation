@@ -144,6 +144,29 @@ def test_tag_cv_tech_title():
     assert tags["tech_title_match"] and not tags["leak_train"] and not tags["corrupted"]
 
 
+@pytest.mark.parametrize(
+    ("titles", "is_tech"),
+    [
+        # real titles of misfiled or doubtful CVs found in the "tech" categories
+        (["Director of Data Science", "Data Science"], True),
+        (["Database Manager", "Database Manager"], True),
+        (["MANAGER, DATABASE ADMINISTRATION", "DATABASE ADMINISTRATION INTERN"], True),
+        (["VICE PRESIDENT INFORMATION TECHNOLOGY", "DEPLOYMENT MANAGER"], True),
+        (["Director of Information Technology", "Network Services Manager"], True),
+        (["Science Teacher", "Replenishment Warehouse Associate"], False),
+        (["SCIENCE INSTRUCTIONAL COACH", "DEAN", "TEACHER"], False),
+        (["Boiler Plant Operator/REACT", "Landscaper/Maintenance"], False),
+        (["Special Projects Coordinator", "Deputy Commander"], False),
+        (["Co-Founder & Partner", "Nevada State Data Director"], False),
+        ([], False),
+    ],
+)
+def test_tech_title_rule(titles, is_tech):
+    row = {"resume_id": "r", "category": "Data Science", "resume_text": "text"}
+    target = {"work_experience": [{"job_title": t} for t in titles]}
+    assert tag_cv(row, target, train_hashes=set())["tech_title_match"] is is_tech
+
+
 def test_groundedness():
     assert groundedness("Python and SQL", {"skills": ["Python", "SQL"]}) == 1.0
     assert groundedness("Python only", {"skills": ["Python", "Kubernetes"]}) == 0.5

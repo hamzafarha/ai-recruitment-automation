@@ -1,0 +1,134 @@
+{
+  "meta": {
+    "id": "syn09",
+    "language": "fr",
+    "layout": "sidebar",
+    "formats": [
+      "pdf"
+    ],
+    "case": "French data analyst with SQL, Power BI, ETL and data modelling"
+  },
+  "profile": {
+    "schema_version": "1.0.0",
+    "id": "syn09",
+    "full_name": "Camille Durand",
+    "email": "camille.durand@example.fr",
+    "phone": "+33 5 00 00 04 56",
+    "location": "Bordeaux, France",
+    "summary": "Analyste de données : de la requête SQL au tableau de bord utilisé par la direction.",
+    "education": [
+      {
+        "institution": "Université de Bordeaux",
+        "degree": "Master",
+        "field_of_study": "Science des données",
+        "start_date": "2018-09",
+        "end_date": "2020-07",
+        "grade": null
+      }
+    ],
+    "experience": [
+      {
+        "company": "Vinéa Distribution",
+        "title": "Analyste de données",
+        "location": "Bordeaux",
+        "start_date": "2022-02",
+        "end_date": "present",
+        "is_current": true,
+        "description": "- Tableaux de bord Power BI de suivi des ventes utilisés par 40 managers\n- Requêtes SQL avancées (fonctions de fenêtrage) et modélisation en schéma en étoile\n- Pipelines ETL avec dbt et Airflow alimentant l'entrepôt Snowflake"
+      },
+      {
+        "company": "Institut Opinea",
+        "title": "Chargée d'études statistiques",
+        "location": "Paris",
+        "start_date": "2020-09",
+        "end_date": "2022-01",
+        "is_current": false,
+        "description": "- Analyses statistiques en Python (pandas) et tests A/B pour des campagnes marketing"
+      }
+    ],
+    "skills": [
+      {
+        "name": "SQL",
+        "category": "Technical",
+        "proficiency_level": null,
+        "years_experience": null
+      },
+      {
+        "name": "Python",
+        "category": "Technical",
+        "proficiency_level": null,
+        "years_experience": null
+      },
+      {
+        "name": "Modélisation des données",
+        "category": "Technical",
+        "proficiency_level": null,
+        "years_experience": null
+      },
+      {
+        "name": "Tests A/B",
+        "category": "Technical",
+        "proficiency_level": null,
+        "years_experience": null
+      },
+      {
+        "name": "Statistiques",
+        "category": "Technical",
+        "proficiency_level": null,
+        "years_experience": null
+      },
+      {
+        "name": "Power BI",
+        "category": "Tool",
+        "proficiency_level": null,
+        "years_experience": null
+      },
+      {
+        "name": "pandas",
+        "category": "Tool",
+        "proficiency_level": null,
+        "years_experience": null
+      },
+      {
+        "name": "dbt",
+        "category": "Tool",
+        "proficiency_level": null,
+        "years_experience": null
+      },
+      {
+        "name": "Apache Airflow",
+        "category": "Tool",
+        "proficiency_level": null,
+        "years_experience": null
+      },
+      {
+        "name": "Snowflake",
+        "category": "Tool",
+        "proficiency_level": null,
+        "years_experience": null
+      },
+      {
+        "name": "Communication",
+        "category": "Soft",
+        "proficiency_level": null,
+        "years_experience": null
+      }
+    ],
+    "certifications": [],
+    "projects": [],
+    "languages": [
+      {
+        "language": "Français",
+        "proficiency": "langue maternelle"
+      },
+      {
+        "language": "Anglais",
+        "proficiency": "courant"
+      },
+      {
+        "language": "Espagnol",
+        "proficiency": "intermédiaire"
+      }
+    ]
+  }
+}

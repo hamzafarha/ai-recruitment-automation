@@ -1,0 +1,111 @@
+{
+  "schema_version": "1.0.0",
+  "id": "jd_backend_developer",
+  "role": "backend_developer",
+  "title": "Java Backend Developer - Associate Vice President",
+  "department": null,
+  "location": "Irving, TX",
+  "employment_type": "Full-time",
+  "source": {
+    "dataset": "Sundaydream/tech-jobs-dataset-2026",
+    "job_id": 480,
+    "company": "Citi",
+    "workplace_type": "Hybrid"
+  },
+  "requirements": [
+    {
+      "id": "M1",
+      "requirement_text": "5+ years of hands-on Java backend development (Java 17+)",
+      "requirement_type": "required",
+      "importance": "high",
+      "min_years_experience": 5
+    },
+    {
+      "id": "M2",
+      "requirement_text": "Strong proficiency with the Spring framework (Spring Boot, Spring Data, Spring Cloud)",
+      "requirement_type": "required",
+      "importance": "high",
+      "min_years_experience": null
+    },
+    {
+      "id": "M3",
+      "requirement_text": "SQL and database management systems, including query optimization and data modeling",
+      "requirement_type": "required",
+      "importance": "high",
+      "min_years_experience": null
+    },
+    {
+      "id": "M4",
+      "requirement_text": "Building data processing applications (in-memory data loading, efficient data joining)",
+      "requirement_type": "required",
+      "importance": "high",
+      "min_years_experience": null
+    },
+    {
+      "id": "M5",
+      "requirement_text": "Java ecosystem tooling: build tools (Maven/Gradle), testing frameworks, dependency management",
+      "requirement_type": "required",
+      "importance": "medium",
+      "min_years_experience": null
+    },
+    {
+      "id": "M6",
+      "requirement_text": "Design patterns and architecture principles (microservices, event-driven architecture)",
+      "requirement_type": "required",
+      "importance": "medium",
+      "min_years_experience": null
+    },
+    {
+      "id": "M7",
+      "requirement_text": "Test-Driven Development (TDD) methodologies",
+      "requirement_type": "required",
+      "importance": "medium",
+      "min_years_experience": null
+    },
+    {
+      "id": "M8",
+      "requirement_text": "Static code analysis tools (e.g. SonarQube) and strong coding principles",
+      "requirement_type": "required",
+      "importance": "low",
+      "min_years_experience": null
+    },
+    {
+      "id": "M9",
+      "requirement_text": "Bachelor's degree in Computer Science, Software Engineering or a related field",
+      "requirement_type": "required",
+      "importance": "low",
+      "min_years_experience": null
+    },
+    {
+      "id": "M10",
+      "requirement_text": "Communication of technical concepts to technical and non-technical stakeholders",
+      "requirement_type": "required",
+      "importance": "low",
+      "min_years_experience": null
+    },
+    {
+      "id": "N1",
+      "requirement_text": "Experience with a cloud platform (AWS, Azure or GCP)",
+      "requirement_type": "preferred",
+      "importance": "medium",
+      "min_years_experience": null
+    },
+    {
+      "id": "N2",
+      "requirement_text": "Containerization technologies (Docker, Kubernetes)",
+      "requirement_type": "preferred",
+      "importance": "medium",
+      "min_years_experience": null
+    },
+    {
+      "id": "N3",
+      "requirement_text": "Apache Spark or Flink for distributed processing",
+      "requirement_type": "preferred",
+      "importance": "low",
+      "min_years_experience": null
+    }
+  ],
+  "not_scored": [],
+  "adaptations": [],
+  "description": "We are seeking a highly skilled and experienced Java Backend Developer to join our team, focusing on building robust and scalable data processing applications.\n\nThe ideal candidate will have a strong foundation in Java development, expertise in Spring frameworks, and a deep understanding of data management principles.\n\nResponsibilities:\n\n\nDesign, develop, and maintain high-performance backend services for data processing applications.\nImplement efficient data processing architecture with scalable solutions for calculations.\nCollaborates with cross-functional teams to define, design, and ship new features.\nEnsure the best possible performance, quality, and responsiveness of applications.\nIdentify bottlenecks and bugs, and devise solutions to these problems.\nAdhere to best practices in software development, including design patterns and architectural principles.\nApply Test-Driven Development (TDD) approach in software development.\nActively utilize static code analysis tools like SonarQube to ensure code quality and maintainability.\n\n\nRequired Skills and Experience:\n\n\n5-10 years of hands-on experience in Java backend development (17+).\nBachelor's degree in Computer Science, Softwar\nEngineering, or a related field.\nProven expertise in building data processing applications.\nStrong proficiency in Java and the Spring framework (Spring Boot, Spring Data, Spring Cloud, etc.).\nExcellent knowledge of SQL and database management systems, with experience in optimizing queries and data models.\nSolid understanding of in-memory data loading techniques and efficient data joining strategies.\nIn-depth knowledge of Java tools and the ecosystem, including build tools (Maven/Gradle), testing frameworks, and dependency management.\nDemonstrable understanding and application of design patterns and architectural principles (e.g., Microservices, Event-Driven Architecture).\nProficient in Test-Driven Development (TDD) methodologies.\nActive knowledge and experience with static code analysis tools (e.g., SonarQube) and adherence to strong coding principles.\nExcellent communication skills, with the ability to articulate complex technical concepts to both technical and non-technical stakeholders.\n\n\nGood to Have:\n\n\nExperience with cloud platforms (e.g., AWS, Azure, GCP).\nFamiliarity with containerization technologies (Docker, Kubernetes).\nKnowledge of Apache Spark/Flink for distributed processing.\n\n\n------------------------------------------------------\n\nJob Family Group: \n\nTechnology\n\n------------------------------------------------------\n\nJob Family:\n\nApplications Development\n\n------------------------------------------------------\n\nTime Type:\n\nFull time\n\n------------------------------------------------------\n\nPrimary Location:\n\nIrving Texas United States\n\n------------------------------------------------------\n\nPrimary Location Full Time Salary Range:\n\n$107,120.00 - $160,680.00\n\nIn addition to salary, Citi’s offerings may also include, for eligible employees, discretionary and formulaic incentive and retention awards. Citi offers competitive employee benefits, including: medical, dental & vision coverage; 401(k); life, accident, and disability insurance; and wellness programs. Citi also offers paid time off packages, including planned time off (vacation), unplanned time off (sick leave), and paid holidays. For additional information regarding Citi employee benefits, please visit citibenefits.com. Available offerings may vary by jurisdiction, job level, and date of hire.\n\n------------------------------------------------------\n\nMost Relevant Skills\n\nPlease see the requirements listed above.\n\n------------------------------------------------------\n\nOther Relevant Skills\n\nFor complementary skills, please see above and/or contact the recruiter.\n\n------------------------------------------------------\n\nAnticipated Posting Close Date:\n\nMar 17, 2026\n\n------------------------------------------------------\n\nCiti is an equal opportunity employer, and qualified candidates will receive consideration without regard to their race, color, religion, sex, sexual orientation, gender identity, national origin, disability, status as a protected veteran, or any other characteristic protected by law.\n\nIf you are a person with a disability and need a reasonable accommodation to use our search tools and/or apply for a career opportunity review Accessibility at Citi.\n\nView Citi’s EEO Policy Statement and the Know Your Rights poster."
+}

@@ -1,0 +1,125 @@
+{
+  "meta": {
+    "id": "syn10",
+    "language": "fr",
+    "layout": "compact",
+    "formats": [
+      "pdf",
+      "docx"
+    ],
+    "case": "French career changer: accountant retrained as data analyst (bootcamp + internship)"
+  },
+  "profile": {
+    "schema_version": "1.0.0",
+    "id": "syn10",
+    "full_name": "Karim Haddad",
+    "email": "karim.haddad@example.fr",
+    "phone": "+33 3 00 00 07 89",
+    "location": "Lille, France",
+    "summary": "Ancien comptable reconverti dans l'analyse de données, à l'aise avec les chiffres et les métiers.",
+    "education": [
+      {
+        "institution": "DataCamp Bootcamp Lille",
+        "degree": "Certificat Data Analyst",
+        "field_of_study": null,
+        "start_date": "2024-01",
+        "end_date": "2024-07",
+        "grade": null
+      },
+      {
+        "institution": "Université de Lille",
+        "degree": "Licence",
+        "field_of_study": "Comptabilité et gestion",
+        "start_date": "2013-09",
+        "end_date": "2016-06",
+        "grade": null
+      }
+    ],
+    "experience": [
+      {
+        "company": "Nordis Retail",
+        "title": "Data Analyst (stage)",
+        "location": "Lille",
+        "start_date": "2024-10",
+        "end_date": "2025-03",
+        "is_current": false,
+        "description": "- Tableaux de bord Tableau sur les stocks et les marges\n- Requêtes SQL d'extraction depuis PostgreSQL"
+      },
+      {
+        "company": "Cabinet Lemaire & Associés",
+        "title": "Comptable",
+        "location": "Lille",
+        "start_date": "2016-09",
+        "end_date": "2023-12",
+        "is_current": false,
+        "description": "- Clôtures mensuelles et reporting financier sous Excel avancé"
+      }
+    ],
+    "skills": [
+      {
+        "name": "SQL",
+        "category": "Technical",
+        "proficiency_level": null,
+        "years_experience": null
+      },
+      {
+        "name": "Python (bases)",
+        "category": "Technical",
+        "proficiency_level": null,
+        "years_experience": null
+      },
+      {
+        "name": "Analyse de données",
+        "category": "Technical",
+        "proficiency_level": null,
+        "years_experience": null
+      },
+      {
+        "name": "Tableau",
+        "category": "Tool",
+        "proficiency_level": null,
+        "years_experience": null
+      },
+      {
+        "name": "Microsoft Excel",
+        "category": "Tool",
+        "proficiency_level": null,
+        "years_experience": null
+      },
+      {
+        "name": "PostgreSQL",
+        "category": "Tool",
+        "proficiency_level": null,
+        "years_experience": null
+      },
+      {
+        "name": "Comptabilité",
+        "category": "Domain",
+        "proficiency_level": null,
+        "years_experience": null
+      },
+      {
+        "name": "Reporting financier",
+        "category": "Domain",
+        "proficiency_level": null,
+        "years_experience": null
+      }
+    ],
+    "certifications": [],
+    "projects": [],
+    "languages": [
+      {
+        "language": "Français",
+        "proficiency": "langue maternelle"
+      },
+      {
+        "language": "Arabe",
+        "proficiency": "courant"
+      },
+      {
+        "language": "Anglais",
+        "proficiency": "intermédiaire"
+      }
+    ]
+  }
+}

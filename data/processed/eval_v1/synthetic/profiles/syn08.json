@@ -1,0 +1,125 @@
+{
+  "meta": {
+    "id": "syn08",
+    "language": "en",
+    "layout": "classic",
+    "formats": [
+      "pdf",
+      "docx"
+    ],
+    "case": "Junior Java/Spring developer; one freelance position has no dates (missing information)"
+  },
+  "profile": {
+    "schema_version": "1.0.0",
+    "id": "syn08",
+    "full_name": "Tomás Herrera",
+    "email": "tomas.herrera@example.net",
+    "phone": "+34 91 555 0142",
+    "location": "Madrid, Spain",
+    "summary": "Java developer focused on clean, tested Spring Boot services.",
+    "education": [
+      {
+        "institution": "Universidad Complutense de Madrid",
+        "degree": "BSc",
+        "field_of_study": "Computer Science",
+        "start_date": "2019-09",
+        "end_date": "2023-06",
+        "grade": null
+      }
+    ],
+    "experience": [
+      {
+        "company": "Iberia Payments Lab",
+        "title": "Java Developer",
+        "location": "Madrid, Spain",
+        "start_date": "2024-05",
+        "end_date": "present",
+        "is_current": true,
+        "description": "- Developed Spring Boot and Spring Data services for transaction reconciliation\n- Wrote JUnit tests first (TDD) and fixed SonarQube issues before each release\n- Built Maven multi-module projects and optimised SQL queries on Oracle"
+      },
+      {
+        "company": null,
+        "title": "Freelance Web Developer",
+        "location": "Madrid, Spain",
+        "start_date": null,
+        "end_date": null,
+        "is_current": false,
+        "description": "- Small websites for local shops"
+      }
+    ],
+    "skills": [
+      {
+        "name": "Java",
+        "category": "Technical",
+        "proficiency_level": null,
+        "years_experience": null
+      },
+      {
+        "name": "SQL",
+        "category": "Technical",
+        "proficiency_level": null,
+        "years_experience": null
+      },
+      {
+        "name": "Test-Driven Development",
+        "category": "Technical",
+        "proficiency_level": null,
+        "years_experience": null
+      },
+      {
+        "name": "Spring Boot",
+        "category": "Tool",
+        "proficiency_level": null,
+        "years_experience": null
+      },
+      {
+        "name": "Spring Data",
+        "category": "Tool",
+        "proficiency_level": null,
+        "years_experience": null
+      },
+      {
+        "name": "Maven",
+        "category": "Tool",
+        "proficiency_level": null,
+        "years_experience": null
+      },
+      {
+        "name": "JUnit",
+        "category": "Tool",
+        "proficiency_level": null,
+        "years_experience": null
+      },
+      {
+        "name": "SonarQube",
+        "category": "Tool",
+        "proficiency_level": null,
+        "years_experience": null
+      },
+      {
+        "name": "Oracle",
+        "category": "Tool",
+        "proficiency_level": null,
+        "years_experience": null
+      },
+      {
+        "name": "Git",
+        "category": "Tool",
+        "proficiency_level": null,
+        "years_experience": null
+      }
+    ],
+    "certifications": [],
+    "projects": [],
+    "languages": [
+      {
+        "language": "Spanish",
+        "proficiency": "Native"
+      },
+      {
+        "language": "English",
+        "proficiency": "Professional"
+      }
+    ]
+  }
+}

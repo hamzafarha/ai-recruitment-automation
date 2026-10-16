@@ -1,0 +1,126 @@
+{
+  "meta": {
+    "id": "syn05",
+    "language": "en",
+    "layout": "sidebar",
+    "formats": [
+      "pdf"
+    ],
+    "case": "Cloud/DevOps profile written with synonyms only (no 'AWS' or 'Terraform' keyword in the experience)"
+  },
+  "profile": {
+    "schema_version": "1.0.0",
+    "id": "syn05",
+    "full_name": "Elena Kovac",
+    "email": "elena.kovac@example.org",
+    "phone": "+385 1 555 0190",
+    "location": "Zagreb, Croatia",
+    "summary": "Site reliability engineer automating cloud platforms end to end.",
+    "education": [
+      {
+        "institution": "University of Zagreb",
+        "degree": "BSc",
+        "field_of_study": "Computer Engineering",
+        "start_date": "2012-09",
+        "end_date": "2016-07",
+        "grade": null
+      }
+    ],
+    "experience": [
+      {
+        "company": "Brightpath Payments",
+        "title": "Site Reliability Engineer",
+        "location": "Remote",
+        "start_date": "2020-04",
+        "end_date": "present",
+        "is_current": true,
+        "description": "- Provisioned 120+ Amazon Web Services resources declaratively with HCL modules and remote state\n- Ran containerised workloads on Amazon's managed Kubernetes service (EKS)\n- Built delivery pipelines as GitHub workflows with automated tests and canary releases\n- Designed VPC networking: subnets, routing tables, NAT gateways and site-to-site VPN\n- Enforced least-privilege access policies and KMS encryption at rest"
+      },
+      {
+        "company": "Adria Telecom",
+        "title": "Systems Engineer",
+        "location": "Zagreb, Croatia",
+        "start_date": "2016-09",
+        "end_date": "2020-03",
+        "is_current": false,
+        "description": "- Automated Linux server administration with shell and Python scripts\n- Led incident post-mortems for the core network platform"
+      }
+    ],
+    "skills": [
+      {
+        "name": "Python",
+        "category": "Technical",
+        "proficiency_level": null,
+        "years_experience": null
+      },
+      {
+        "name": "Shell scripting",
+        "category": "Technical",
+        "proficiency_level": null,
+        "years_experience": null
+      },
+      {
+        "name": "Declarative infrastructure (HCL)",
+        "category": "Technical",
+        "proficiency_level": null,
+        "years_experience": null
+      },
+      {
+        "name": "Network design",
+        "category": "Technical",
+        "proficiency_level": null,
+        "years_experience": null
+      },
+      {
+        "name": "Cloud security",
+        "category": "Technical",
+        "proficiency_level": null,
+        "years_experience": null
+      },
+      {
+        "name": "Amazon Web Services",
+        "category": "Tool",
+        "proficiency_level": null,
+        "years_experience": null
+      },
+      {
+        "name": "EKS",
+        "category": "Tool",
+        "proficiency_level": null,
+        "years_experience": null
+      },
+      {
+        "name": "GitHub workflows",
+        "category": "Tool",
+        "proficiency_level": null,
+        "years_experience": null
+      },
+      {
+        "name": "Linux",
+        "category": "Tool",
+        "proficiency_level": null,
+        "years_experience": null
+      }
+    ],
+    "certifications": [
+      {
+        "name": "AWS Certified DevOps Engineer – Professional",
+        "issuer": null,
+        "issue_date": "2023-05",
+        "expiration_date": null,
+        "credential_id": null
+      }
+    ],
+    "projects": [],
+    "languages": [
+      {
+        "language": "Croatian",
+        "proficiency": "Native"
+      },
+      {
+        "language": "English",
+        "proficiency": "Fluent"
+      }
+    ]
+  }
+}

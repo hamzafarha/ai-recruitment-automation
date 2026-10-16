@@ -23,11 +23,17 @@ def get_engine() -> Engine:
     global _engine
     if _engine is None:
         settings = get_settings()
+        # Fail fast when PostgreSQL is down: without a timeout, a health check
+        # can hang for minutes (e.g. when Docker Desktop is not running)
+        connect_args = (
+            {"connect_timeout": 5} if settings.database_url.startswith("postgresql") else {}
+        )
         _engine = create_engine(
             settings.database_url,
             pool_pre_ping=True,
             pool_size=5,
             max_overflow=10,
+            connect_args=connect_args,
         )
     return _engine
 

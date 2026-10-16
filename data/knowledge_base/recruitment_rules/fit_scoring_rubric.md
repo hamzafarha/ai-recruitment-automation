@@ -4,8 +4,8 @@ title: Candidate–Job Fit Scoring Rubric
 category: recruitment_rules
 language: en
 roles: [all]
-version: 1.0
-last_reviewed: 2026-10-15
+version: 1.1
+last_reviewed: 2026-10-16
 ---
 
 # Candidate–Job Fit Scoring Rubric
@@ -45,7 +45,10 @@ check in interview, never as a proven weakness.
 | 1 | Weak fit | Some relevant skills but less than 70 % must-have coverage, or an adjacent role with a different core skill set | 25–49 |
 | 0 | No fit | Different field, or a hard requirement is missing | 0–24 |
 
-Must-have coverage is the weighted sum of evidence over the must-haves, divided by the number of must-haves.
+Must-have coverage weighs each must-have by its importance in the job description (high = 3, medium = 2,
+low = 1): coverage = Σ (evidence weight × importance weight) / Σ importance weight. Example: must-haves high,
+high and low, with evidence Demonstrated, Listed and Not evidenced, give (1.0×3 + 0.5×3 + 0×1) / 7 = 64 %.
+A missing low-importance must-have (for example a degree) therefore weighs far less than a missing core skill.
 
 ## Decision guidance
 

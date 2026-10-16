@@ -1,0 +1,176 @@
+{
+  "meta": {
+    "id": "syn04",
+    "language": "en",
+    "layout": "classic",
+    "formats": [
+      "pdf",
+      "docx"
+    ],
+    "case": "Keyword stuffing: very long skill list, almost no experience using those skills"
+  },
+  "profile": {
+    "schema_version": "1.0.0",
+    "id": "syn04",
+    "full_name": "Jordan Miles",
+    "email": "jordan.miles@example.com",
+    "phone": "+1 555 0177",
+    "location": "Denver, CO",
+    "summary": "Passionate full-stack AI cloud data engineer, expert in all modern technologies.",
+    "education": [
+      {
+        "institution": "Colorado State University",
+        "degree": "BSc",
+        "field_of_study": "Information Systems",
+        "start_date": "2022-09",
+        "end_date": "2026-06",
+        "grade": null
+      }
+    ],
+    "experience": [
+      {
+        "company": "Cityline Insurance",
+        "title": "IT Support Intern",
+        "location": "Denver, CO",
+        "start_date": "2025-06",
+        "end_date": "2025-09",
+        "is_current": false,
+        "description": "- Reset passwords and installed workstation software\n- Answered helpdesk tickets"
+      }
+    ],
+    "skills": [
+      {
+        "name": "Python",
+        "category": "Technical",
+        "proficiency_level": null,
+        "years_experience": null
+      },
+      {
+        "name": "Java",
+        "category": "Technical",
+        "proficiency_level": null,
+        "years_experience": null
+      },
+      {
+        "name": "Machine learning",
+        "category": "Technical",
+        "proficiency_level": null,
+        "years_experience": null
+      },
+      {
+        "name": "Large Language Models",
+        "category": "Technical",
+        "proficiency_level": null,
+        "years_experience": null
+      },
+      {
+        "name": "RAG",
+        "category": "Technical",
+        "proficiency_level": null,
+        "years_experience": null
+      },
+      {
+        "name": "Microservices",
+        "category": "Technical",
+        "proficiency_level": null,
+        "years_experience": null
+      },
+      {
+        "name": "SQL",
+        "category": "Technical",
+        "proficiency_level": null,
+        "years_experience": null
+      },
+      {
+        "name": "Deep learning",
+        "category": "Technical",
+        "proficiency_level": null,
+        "years_experience": null
+      },
+      {
+        "name": "Spring Boot",
+        "category": "Tool",
+        "proficiency_level": null,
+        "years_experience": null
+      },
+      {
+        "name": "LangChain",
+        "category": "Tool",
+        "proficiency_level": null,
+        "years_experience": null
+      },
+      {
+        "name": "Kubernetes",
+        "category": "Tool",
+        "proficiency_level": null,
+        "years_experience": null
+      },
+      {
+        "name": "Docker",
+        "category": "Tool",
+        "proficiency_level": null,
+        "years_experience": null
+      },
+      {
+        "name": "Amazon Web Services",
+        "category": "Tool",
+        "proficiency_level": null,
+        "years_experience": null
+      },
+      {
+        "name": "Terraform",
+        "category": "Tool",
+        "proficiency_level": null,
+        "years_experience": null
+      },
+      {
+        "name": "PyTorch",
+        "category": "Tool",
+        "proficiency_level": null,
+        "years_experience": null
+      },
+      {
+        "name": "TensorFlow",
+        "category": "Tool",
+        "proficiency_level": null,
+        "years_experience": null
+      },
+      {
+        "name": "Power BI",
+        "category": "Tool",
+        "proficiency_level": null,
+        "years_experience": null
+      },
+      {
+        "name": "React",
+        "category": "Tool",
+        "proficiency_level": null,
+        "years_experience": null
+      },
+      {
+        "name": "Apache Kafka",
+        "category": "Tool",
+        "proficiency_level": null,
+        "years_experience": null
+      }
+    ],
+    "certifications": [],
+    "projects": [
+      {
+        "title": "Personal portfolio website",
+        "description": "Static personal homepage.",
+        "technologies": [
+          "HTML",
+          "CSS"
+        ],
+        "url": null
+      }
+    ],
+    "languages": [
+      {
+        "language": "English",
+        "proficiency": "Native"
+      }
+    ]
+  }
+}

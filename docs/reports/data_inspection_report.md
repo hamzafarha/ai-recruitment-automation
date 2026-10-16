@@ -2,8 +2,8 @@
 
 **Project:** AI Recruitment Automation (Advanced Deep Learning)
 **Step:** 1 — Building the evaluation set
-**Date:** 15 October 2026
-**Source:** `notebooks/00_data_inspection.ipynb` (all figures below come from its outputs)
+**Date:** 15 October 2026 (updated 16 October 2026: section 3.9)
+**Source:** `notebooks/00_data_inspection.ipynb` (all figures below come from its outputs, except section 3.9)
 
 ---
 
@@ -27,6 +27,9 @@ We inspected every dataset file of the project before building anything, to deci
   AWS, PyTorch, React. It needs a project-specific extension to be useful for matching.
 - **The in-repo HR knowledge base is far too small** (9 files, 518 words) and several in-repo sample files are
   hand-written placeholders, not real data.
+- **No usable public human-labeled matching dataset was found**: the best candidate (Vanetik & Kogan, 2023) shows
+  chance-level agreement between its two annotators. Matching labels are therefore produced in-house with a written
+  rubric, and their reliability is measured with a second annotator.
 
 ---
 
@@ -210,6 +213,30 @@ core pipeline.
   data. Example: `esco/skills_sample.json` lists "Deep Learning" as a synonym of "Machine Learning", whereas real ESCO
   has two separate concepts; `matching_benchmark_v1.json` announces 50 pairs but contains none.
 
+### 3.9 External human-labeled matching data (searched after the inspection)
+
+Because the annotators of our own matching labels are not recruiters, we looked for a public CV–job dataset with
+human labels:
+
+| Candidate | Human labels | Verdict |
+|---|---|---|
+| `resume-job-description-fit` (Hugging Face, 8,000 pairs, Good / Potential / No Fit) | Unknown: no documentation; models trained on it score near chance | Not used |
+| PJB benchmark (arXiv, 2026, ~2,000 judgments) | Yes | Not used: Chinese recruitment, positive judgments only |
+| Vanetik & Kogan vacancy–resume dataset (2023, GitHub) | Yes: 2 annotators following an HR specialist's instructions | Not used as a benchmark (below) |
+
+**Vanetik & Kogan in detail.** 30 CVs, each ranked against 5 job postings by two annotators.
+
+- 2 of annotator 1's 30 rankings are invalid (a posting listed twice, another missing).
+- Agreement between the two annotators is at chance level: mean Kendall τ = **0.14**, and they choose the same best
+  posting for only **5 of 28** CVs (about 5.6 expected by chance). Both possible readings of the ranking arrays give
+  the same conclusion.
+- The 5 postings are near-identical ("Software Developer – .Net", "Remote Software Developer", "Junior Level Software
+  Developer", "Backend Software Developer", "Software Developer"), which makes the ranking close to arbitrary.
+
+**Consequences for our design.** Scores against labels on which humans do not agree would mostly measure noise. Our
+evaluation therefore uses (1) five clearly distinct roles, (2) a written rubric applied requirement by requirement,
+and (3) inter-annotator agreement measured with a second annotator — the check that revealed the problem here.
+
 ---
 
 ## 4. Decision table
@@ -226,6 +253,7 @@ core pipeline.
 | Synthetic CVs / jobs / pairs | Valid | Only 4 / 2 / 3 items | **Seeds** for the hand-made matching set |
 | HR knowledge base | n/a | 518 words only | **Must be extended** for RAG |
 | Sample / evaluation files | Placeholders | Not real data | Replace or delete |
+| Vanetik & Kogan (external) | **No** (chance-level agreement) | Near-identical postings, 2 invalid rankings | **Not used**; cited as motivation |
 
 ---
 

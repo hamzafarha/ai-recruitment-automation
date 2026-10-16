@@ -1,0 +1,114 @@
+{
+  "schema_version": "1.0.0",
+  "id": "jd_devops_cloud",
+  "role": "devops_cloud",
+  "title": "AWS Cloud Engineer (Remote)",
+  "department": null,
+  "location": "United States",
+  "employment_type": "Full-time",
+  "source": {
+    "dataset": "Sundaydream/tech-jobs-dataset-2026",
+    "job_id": 439,
+    "company": "Mind Computing",
+    "workplace_type": "Remote"
+  },
+  "requirements": [
+    {
+      "id": "M1",
+      "requirement_text": "Extensive knowledge of core AWS services (compute, storage, networking, databases, security: e.g. EC2, S3, RDS, VPC, IAM)",
+      "requirement_type": "required",
+      "importance": "high",
+      "min_years_experience": null
+    },
+    {
+      "id": "M2",
+      "requirement_text": "Infrastructure automation with Terraform and/or AWS CloudFormation",
+      "requirement_type": "required",
+      "importance": "high",
+      "min_years_experience": null
+    },
+    {
+      "id": "M3",
+      "requirement_text": "Scripting for automation and system administration (Python, Bash or PowerShell)",
+      "requirement_type": "required",
+      "importance": "medium",
+      "min_years_experience": null
+    },
+    {
+      "id": "M4",
+      "requirement_text": "Cloud security principles (IAM, encryption, shared responsibility model)",
+      "requirement_type": "required",
+      "importance": "medium",
+      "min_years_experience": null
+    },
+    {
+      "id": "M5",
+      "requirement_text": "Networking fundamentals (subnetting, routing, load balancing, firewall rules, VPN)",
+      "requirement_type": "required",
+      "importance": "medium",
+      "min_years_experience": null
+    },
+    {
+      "id": "M6",
+      "requirement_text": "CI/CD principles and tools",
+      "requirement_type": "required",
+      "importance": "medium",
+      "min_years_experience": null
+    },
+    {
+      "id": "M7",
+      "requirement_text": "Diagnosing and resolving complex infrastructure and CI/CD issues",
+      "requirement_type": "required",
+      "importance": "medium",
+      "min_years_experience": null
+    },
+    {
+      "id": "M8",
+      "requirement_text": "Bachelor's degree in Computer Science, Information Technology or a related field",
+      "requirement_type": "required",
+      "importance": "low",
+      "min_years_experience": null
+    },
+    {
+      "id": "M9",
+      "requirement_text": "Communication and collaboration with cross-functional development teams",
+      "requirement_type": "required",
+      "importance": "low",
+      "min_years_experience": null
+    },
+    {
+      "id": "N1",
+      "requirement_text": "AWS certification (DevOps Engineer Professional or Advanced Networking Specialty)",
+      "requirement_type": "preferred",
+      "importance": "medium",
+      "min_years_experience": null
+    },
+    {
+      "id": "N2",
+      "requirement_text": "Proven experience as a Cloud Engineer",
+      "requirement_type": "preferred",
+      "importance": "medium",
+      "min_years_experience": null
+    },
+    {
+      "id": "N3",
+      "requirement_text": "Containerized workloads with Docker and Kubernetes (EKS)",
+      "requirement_type": "preferred",
+      "importance": "medium",
+      "min_years_experience": null
+    },
+    {
+      "id": "N4",
+      "requirement_text": "GitHub Actions or similar modern CI/CD tools",
+      "requirement_type": "preferred",
+      "importance": "low",
+      "min_years_experience": null
+    }
+  ],
+  "not_scored": [
+    "No visa sponsorship available (checked by the recruiter, KB-RR-001)",
+    "Fingerprinting and background check during hiring"
+  ],
+  "adaptations": [],
+  "description": "Mind Computing is seeking an experienced AWS Cloud Engineer to join our team. In this role, you will be responsible for designing, implementing, and managing scalable cloud infrastructure on Amazon Web Services (AWS). You will ensure optimal performance, security, reliability, and cost efficiency by leveraging automation, infrastructure-as-code, and DevOps best practices. This role also involves close collaboration with development teams to support the deployment and operation of cloud-based applications across multiple environments.\n\nResponsibilities\n\n\nDesign, develop, and implement AWS cloud architecture leveraging services such as EC2, S3, RDS, VPC, ELB/ALB, EKS, and other AWS-native services, with a focus on scalability, high availability, and disaster recovery.\nProvision and manage AWS resources, including compute, storage, networking, and databases, using the AWS Management Console, CLI, and infrastructure-as-code tools.\nDevelop and maintain automated deployment and provisioning of solutions using Terraform and AWS CloudFormation.\nImplement and enforce cloud security best practices, including IAM, encryption at rest and in transit, network segmentation, logging, and compliance with applicable regulatory standards.\nMonitor cloud environments for performance, availability, and cost optimization using AWS monitoring and alerting tools; proactively troubleshoot and resolve issues.\nIntegrate cloud infrastructure with CI/CD pipelines to streamline application builds and deployments, leveraging GitHub Actions.\nCollaborate closely with development teams to understand application requirements and translate them into efficient, secure AWS-based solutions.\nManage application deployments and releases with minimal downtime, using containerization technologies such as Docker and orchestration platforms like Kubernetes (EKS).\n\n\nRequired Skills & Qualifications\n\n\nBachelor's degree in Computer Science, Information Technology, or a related field.\nExtensive knowledge of core AWS services, including compute, storage, networking, databases, and security.\nStrong experience with infrastructure automation using Terraform and/or AWS CloudFormation.\nProficiency in scripting languages such as Python, Bash, or PowerShell for automation and system administration.\nSolid understanding of AWS security principles, shared responsibility model, and best practices for securing cloud environments.\nStrong networking fundamentals, including subnetting, routing, load balancing, firewall rules, and VPN connectivity.\nProven ability to diagnose and resolve complex technical issues related to AWS infrastructure and CI/CD pipelines.\nWorking knowledge of continuous integration and continuous deployment (CI/CD) principles and tools.\nStrong communication skills and the ability to collaborate effectively with cross-functional development teams.\n\n\nPreferred Qualifications\n\n\nOne or more of the following certifications:\nAWS Certified DevOps Engineer – Professional\nAWS Certified Advanced Networking – Specialty\nProven experience as Cloud Engineer.\nHands-on experience managing containerized workloads using Docker and Kubernetes (EKS).\nFamiliarity with modern CI/CD tools and practices, including GitHub Actions.\n\nBenefits\n\n\nMedical/Dental/Vision\n401k with Employer Match\nPTO + Federal Holidays\nCorporate Laptop\nTraining Opportunities\nRemote Opportunity\n\n\nNote: Selected candidates will be required to complete fingerprinting at a government facility and undergo a background check as part of the hiring process.\n\nMind Computing is an equal opportunity employer. Qualified applicants will receive consideration for employment without regard to race, color, religion, sex, national origin, sexual orientation, gender identity, disability, or protected veteran status.\n\nAt this time, we are unable to offer sponsorship."
+}

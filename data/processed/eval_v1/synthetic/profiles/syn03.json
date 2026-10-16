@@ -1,0 +1,148 @@
+{
+  "meta": {
+    "id": "syn03",
+    "language": "en",
+    "layout": "compact",
+    "formats": [
+      "pdf"
+    ],
+    "case": "Production ML engineer whose LLM experience is only a recent side project"
+  },
+  "profile": {
+    "schema_version": "1.0.0",
+    "id": "syn03",
+    "full_name": "Daniel Okoro",
+    "email": "daniel.okoro@example.net",
+    "phone": "+1 555 0134",
+    "location": "Austin, TX",
+    "summary": "Machine learning engineer shipping forecasting models to production.",
+    "education": [
+      {
+        "institution": "University of Lagos",
+        "degree": "BSc",
+        "field_of_study": "Mathematics",
+        "start_date": "2015-09",
+        "end_date": "2019-06",
+        "grade": null
+      }
+    ],
+    "experience": [
+      {
+        "company": "FreightLane",
+        "title": "Machine Learning Engineer",
+        "location": "Austin, TX",
+        "start_date": "2022-01",
+        "end_date": "present",
+        "is_current": true,
+        "description": "- Built demand-forecasting models (LightGBM, PyTorch) served through a FastAPI service on AWS\n- Ran A/B experiments to validate model impact (+6% route efficiency)\n- Side project in 2025: prototype chatbot over shipping documentation using the OpenAI API and a FAISS index"
+      },
+      {
+        "company": "Brightway Retail",
+        "title": "Data Analyst",
+        "location": "Dallas, TX",
+        "start_date": "2019-07",
+        "end_date": "2021-12",
+        "is_current": false,
+        "description": "- Weekly sales reporting with SQL, Python and Tableau"
+      }
+    ],
+    "skills": [
+      {
+        "name": "Python",
+        "category": "Technical",
+        "proficiency_level": null,
+        "years_experience": null
+      },
+      {
+        "name": "SQL",
+        "category": "Technical",
+        "proficiency_level": null,
+        "years_experience": null
+      },
+      {
+        "name": "Machine learning",
+        "category": "Technical",
+        "proficiency_level": null,
+        "years_experience": null
+      },
+      {
+        "name": "A/B Testing",
+        "category": "Technical",
+        "proficiency_level": null,
+        "years_experience": null
+      },
+      {
+        "name": "PyTorch",
+        "category": "Tool",
+        "proficiency_level": null,
+        "years_experience": null
+      },
+      {
+        "name": "scikit-learn",
+        "category": "Tool",
+        "proficiency_level": null,
+        "years_experience": null
+      },
+      {
+        "name": "LightGBM",
+        "category": "Tool",
+        "proficiency_level": null,
+        "years_experience": null
+      },
+      {
+        "name": "pandas",
+        "category": "Tool",
+        "proficiency_level": null,
+        "years_experience": null
+      },
+      {
+        "name": "FastAPI",
+        "category": "Tool",
+        "proficiency_level": null,
+        "years_experience": null
+      },
+      {
+        "name": "Docker",
+        "category": "Tool",
+        "proficiency_level": null,
+        "years_experience": null
+      },
+      {
+        "name": "Amazon Web Services",
+        "category": "Tool",
+        "proficiency_level": null,
+        "years_experience": null
+      },
+      {
+        "name": "Tableau",
+        "category": "Tool",
+        "proficiency_level": null,
+        "years_experience": null
+      },
+      {
+        "name": "OpenAI API",
+        "category": "Tool",
+        "proficiency_level": null,
+        "years_experience": null
+      },
+      {
+        "name": "FAISS",
+        "category": "Tool",
+        "proficiency_level": null,
+        "years_experience": null
+      }
+    ],
+    "certifications": [],
+    "projects": [],
+    "languages": [
+      {
+        "language": "English",
+        "proficiency": "Native"
+      },
+      {
+        "language": "Yoruba",
+        "proficiency": "Native"
+      }
+    ]
+  }
+}

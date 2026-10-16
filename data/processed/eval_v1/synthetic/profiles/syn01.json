@@ -1,0 +1,173 @@
+{
+  "meta": {
+    "id": "syn01",
+    "language": "en",
+    "layout": "classic",
+    "formats": [
+      "pdf",
+      "docx"
+    ],
+    "case": "LLM / RAG engineer with explicit, evaluated LLM projects (fills the NLP gap of the real data)"
+  },
+  "profile": {
+    "schema_version": "1.0.0",
+    "id": "syn01",
+    "full_name": "Priya Raman",
+    "email": "priya.raman@example.com",
+    "phone": "+44 20 7946 0101",
+    "location": "Manchester, United Kingdom",
+    "summary": "Generative AI engineer building retrieval-augmented assistants that are measured, grounded and deployed.",
+    "education": [
+      {
+        "institution": "University of Edinburgh",
+        "degree": "MSc",
+        "field_of_study": "Computer Science",
+        "start_date": "2019-09",
+        "end_date": "2021-05",
+        "grade": "Distinction"
+      }
+    ],
+    "experience": [
+      {
+        "company": "Northwind Analytics",
+        "title": "GenAI Engineer",
+        "location": "Remote",
+        "start_date": "2023-02",
+        "end_date": "present",
+        "is_current": true,
+        "description": "- Built a RAG assistant over 40,000 internal documents with LangChain, FAISS and Azure OpenAI; answer accuracy rose from 61% to 84% on a 300-question evaluation set\n- Designed LLM evaluation pipelines (retrieval recall@5, groundedness) and prompts with JSON-schema outputs\n- Deployed the services as FastAPI microservices on Azure Kubernetes Service"
+      },
+      {
+        "company": "Lumen Health",
+        "title": "NLP Engineer",
+        "location": "Leeds, United Kingdom",
+        "start_date": "2021-06",
+        "end_date": "2023-01",
+        "is_current": false,
+        "description": "- Fine-tuned BERT models for clinical named entity recognition (F1 0.89)\n- Built a semantic search API with sentence-transformers embeddings and Weaviate"
+      }
+    ],
+    "skills": [
+      {
+        "name": "Python",
+        "category": "Technical",
+        "proficiency_level": null,
+        "years_experience": null
+      },
+      {
+        "name": "Large Language Models",
+        "category": "Technical",
+        "proficiency_level": null,
+        "years_experience": null
+      },
+      {
+        "name": "Retrieval-Augmented Generation",
+        "category": "Technical",
+        "proficiency_level": null,
+        "years_experience": null
+      },
+      {
+        "name": "Prompt engineering",
+        "category": "Technical",
+        "proficiency_level": null,
+        "years_experience": null
+      },
+      {
+        "name": "Named entity recognition",
+        "category": "Technical",
+        "proficiency_level": null,
+        "years_experience": null
+      },
+      {
+        "name": "LangChain",
+        "category": "Tool",
+        "proficiency_level": null,
+        "years_experience": null
+      },
+      {
+        "name": "LlamaIndex",
+        "category": "Tool",
+        "proficiency_level": null,
+        "years_experience": null
+      },
+      {
+        "name": "FAISS",
+        "category": "Tool",
+        "proficiency_level": null,
+        "years_experience": null
+      },
+      {
+        "name": "Weaviate",
+        "category": "Tool",
+        "proficiency_level": null,
+        "years_experience": null
+      },
+      {
+        "name": "Hugging Face Transformers",
+        "category": "Tool",
+        "proficiency_level": null,
+        "years_experience": null
+      },
+      {
+        "name": "FastAPI",
+        "category": "Tool",
+        "proficiency_level": null,
+        "years_experience": null
+      },
+      {
+        "name": "Docker",
+        "category": "Tool",
+        "proficiency_level": null,
+        "years_experience": null
+      },
+      {
+        "name": "Kubernetes",
+        "category": "Tool",
+        "proficiency_level": null,
+        "years_experience": null
+      },
+      {
+        "name": "Microsoft Azure",
+        "category": "Tool",
+        "proficiency_level": null,
+        "years_experience": null
+      },
+      {
+        "name": "Technical writing",
+        "category": "Soft",
+        "proficiency_level": null,
+        "years_experience": null
+      }
+    ],
+    "certifications": [
+      {
+        "name": "Microsoft Certified: Azure AI Engineer Associate",
+        "issuer": null,
+        "issue_date": "2024-03",
+        "expiration_date": null,
+        "credential_id": null
+      }
+    ],
+    "projects": [
+      {
+        "title": "rag-eval-lite",
+        "description": "Open-source retrieval evaluation scripts used by 300+ developers.",
+        "technologies": [
+          "Python",
+          "pytest"
+        ],
+        "url": null
+      }
+    ],
+    "languages": [
+      {
+        "language": "English",
+        "proficiency": "Fluent"
+      },
+      {
+        "language": "Tamil",
+        "proficiency": "Native"
+      }
+    ]
+  }
+}

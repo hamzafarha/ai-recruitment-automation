@@ -1,0 +1,142 @@
+{
+  "meta": {
+    "id": "syn07",
+    "language": "en",
+    "layout": "compact",
+    "formats": [
+      "pdf"
+    ],
+    "case": "Senior backend engineer in Python (not Java): transferable backend skills"
+  },
+  "profile": {
+    "schema_version": "1.0.0",
+    "id": "syn07",
+    "full_name": "Sofia Lindqvist",
+    "email": "sofia.lindqvist@example.com",
+    "phone": "+46 8 555 0123",
+    "location": "Stockholm, Sweden",
+    "summary": "Backend engineer building high-throughput data services in Python.",
+    "education": [
+      {
+        "institution": "KTH Royal Institute of Technology",
+        "degree": "MSc",
+        "field_of_study": "Software Engineering",
+        "start_date": "2016-09",
+        "end_date": "2018-06",
+        "grade": null
+      }
+    ],
+    "experience": [
+      {
+        "company": "Klarvik Logistics",
+        "title": "Senior Backend Engineer",
+        "location": "Stockholm, Sweden",
+        "start_date": "2021-01",
+        "end_date": "present",
+        "is_current": true,
+        "description": "- Designed event-driven microservices in Python (FastAPI) processing 3 million shipments a day through Kafka\n- Optimised PostgreSQL queries and data models, cutting report latency from 40 s to 3 s\n- Introduced test-driven development and code-quality gates in the CI pipeline"
+      },
+      {
+        "company": "Nordmark Media",
+        "title": "Backend Developer",
+        "location": "Gothenburg, Sweden",
+        "start_date": "2018-08",
+        "end_date": "2020-12",
+        "is_current": false,
+        "description": "- Built REST APIs with Django and PostgreSQL\n- Containerised services with Docker and deployed them on AWS"
+      }
+    ],
+    "skills": [
+      {
+        "name": "Python",
+        "category": "Technical",
+        "proficiency_level": null,
+        "years_experience": null
+      },
+      {
+        "name": "SQL",
+        "category": "Technical",
+        "proficiency_level": null,
+        "years_experience": null
+      },
+      {
+        "name": "Microservices",
+        "category": "Technical",
+        "proficiency_level": null,
+        "years_experience": null
+      },
+      {
+        "name": "Event-driven architecture",
+        "category": "Technical",
+        "proficiency_level": null,
+        "years_experience": null
+      },
+      {
+        "name": "Test-Driven Development",
+        "category": "Technical",
+        "proficiency_level": null,
+        "years_experience": null
+      },
+      {
+        "name": "Java (university projects)",
+        "category": "Technical",
+        "proficiency_level": null,
+        "years_experience": null
+      },
+      {
+        "name": "FastAPI",
+        "category": "Tool",
+        "proficiency_level": null,
+        "years_experience": null
+      },
+      {
+        "name": "Django",
+        "category": "Tool",
+        "proficiency_level": null,
+        "years_experience": null
+      },
+      {
+        "name": "PostgreSQL",
+        "category": "Tool",
+        "proficiency_level": null,
+        "years_experience": null
+      },
+      {
+        "name": "Apache Kafka",
+        "category": "Tool",
+        "proficiency_level": null,
+        "years_experience": null
+      },
+      {
+        "name": "Docker",
+        "category": "Tool",
+        "proficiency_level": null,
+        "years_experience": null
+      },
+      {
+        "name": "Amazon Web Services",
+        "category": "Tool",
+        "proficiency_level": null,
+        "years_experience": null
+      },
+      {
+        "name": "pytest",
+        "category": "Tool",
+        "proficiency_level": null,
+        "years_experience": null
+      }
+    ],
+    "certifications": [],
+    "projects": [],
+    "languages": [
+      {
+        "language": "Swedish",
+        "proficiency": "Native"
+      },
+      {
+        "language": "English",
+        "proficiency": "Fluent"
+      }
+    ]
+  }
+}

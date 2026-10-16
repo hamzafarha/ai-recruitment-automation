@@ -1,0 +1,99 @@
+{
+  "schema_version": "1.0.0",
+  "id": "jd_nlp_llm_engineer",
+  "role": "nlp_llm_engineer",
+  "title": "GenAI Engineer",
+  "department": null,
+  "location": "Elkhart County, IN",
+  "employment_type": "Full-time",
+  "source": {
+    "dataset": "Sundaydream/tech-jobs-dataset-2026",
+    "job_id": 23,
+    "company": "Orange Business",
+    "workplace_type": "On-site"
+  },
+  "requirements": [
+    {
+      "id": "M1",
+      "requirement_text": "Strong programming skills in Python",
+      "requirement_type": "required",
+      "importance": "high",
+      "min_years_experience": null
+    },
+    {
+      "id": "M2",
+      "requirement_text": "2-5 years of experience working with Large Language Models (e.g. OpenAI)",
+      "requirement_type": "required",
+      "importance": "high",
+      "min_years_experience": 2
+    },
+    {
+      "id": "M3",
+      "requirement_text": "Hands-on knowledge of RAG (retrieval-augmented generation) architectures",
+      "requirement_type": "required",
+      "importance": "high",
+      "min_years_experience": null
+    },
+    {
+      "id": "M4",
+      "requirement_text": "Building LLM applications with frameworks such as LangChain, LlamaIndex or Semantic Kernel",
+      "requirement_type": "required",
+      "importance": "medium",
+      "min_years_experience": null
+    },
+    {
+      "id": "M5",
+      "requirement_text": "Vector databases (e.g. Pinecone, FAISS, Weaviate) and embeddings",
+      "requirement_type": "required",
+      "importance": "medium",
+      "min_years_experience": null
+    },
+    {
+      "id": "M6",
+      "requirement_text": "API integration and microservices-based applications",
+      "requirement_type": "required",
+      "importance": "medium",
+      "min_years_experience": null
+    },
+    {
+      "id": "M7",
+      "requirement_text": "Deploying AI solutions on a cloud platform (Azure, AWS or GCP)",
+      "requirement_type": "required",
+      "importance": "medium",
+      "min_years_experience": null
+    },
+    {
+      "id": "M8",
+      "requirement_text": "Communication, problem solving and collaboration",
+      "requirement_type": "required",
+      "importance": "low",
+      "min_years_experience": null
+    },
+    {
+      "id": "N1",
+      "requirement_text": "Integrating AI with enterprise platforms (GitHub, ServiceNow, Salesforce)",
+      "requirement_type": "preferred",
+      "importance": "low",
+      "min_years_experience": null
+    },
+    {
+      "id": "N2",
+      "requirement_text": "AI tools for code generation, documentation automation, ticket summarization",
+      "requirement_type": "preferred",
+      "importance": "low",
+      "min_years_experience": null
+    },
+    {
+      "id": "N3",
+      "requirement_text": "Security, compliance and responsible AI practices",
+      "requirement_type": "preferred",
+      "importance": "low",
+      "min_years_experience": null
+    }
+  ],
+  "not_scored": [],
+  "adaptations": [
+    "N1-N3 are taken from the posting's responsibilities; the 'About You' section lists only must-haves."
+  ],
+  "description": "About Us\n\nJoin us at Orange Business!\n\nWe are a network and digital integrator that understands the entire value chain of the digital world, freeing our customers to focus on the strategic initiatives that shape their business.\n\nEvery day, you will collaborate with a team dedicated to providing consistent, sustainable global solutions, no matter where our customers operate. With over 30,000 employees across Asia, the Americas, Africa, and Europe, we offer a dynamic environment to develop and perfect your skills in a field filled with exciting challenges and opportunities.\n\nAbout The Role\n\nJoin us as a GenAI Engineer to revolutionize IT operations and business workflows through the power of generative AI.\n\nYou will design cutting-edge solutions that bridge technical expertise and practical application, ensuring our enterprise leads the charge in innovation and efficiency.\n\n\n Design and develop Generative AI powered solutions for automation across IT operations, development, and business workflows.\n Build LLM-based applications using frameworks such as LangChain, LlamaIndex, or Semantic Kernel.\n Implement RAG (Retrieval Augmented Generation) solutions for enterprise knowledge systems and developer assistants.\n Develop AI-driven tools for code generation, documentation automation, ticket summarization, and knowledge retrieval.\n Integrate GenAI services with enterprise platforms such as GitHub, ServiceNow, Salesforce, and internal applications.\n Work with vector databases and embeddings to enable intelligent search and contextual AI responses.\n Collaborate with DevOps teams to deploy AI solutions on cloud platforms such as Azure, AWS, or GCP.\n Ensure security, compliance, and responsible AI practices aligned with enterprise governance.\n Not Applicable.\n\n\nAbout You\n\nYou are a proactive and innovative GenAI engineer with strong programming skills in Python. With 2 to 5 years of experience working with Large Language Models like OpenAI and hands-on knowledge of RAG architectures, you have a passion for building LLM applications using frameworks such as LangChain and LlamaIndex. Your expertise in API integration, vector databases, and cloud platforms, combined with your excellent communication skills, positions you as a valuable collaborator in any team.\n\nYour professional skills:\n\n\n You possess strong programming skills in Python, enabling you to develop complex solutions efficiently.\n Your experience with Large Language Models, such as OpenAI, equips you with the capability to create sophisticated AI applications.\n Hands-on knowledge of RAG architectures allows you to enhance information retrieval processes effectively.\n Your familiarity with LangChain and LlamaIndex provides a strong foundation for building LLM-based applications.\n Experience in integrating APIs and constructing microservices-based applications contributes to your versatility in solution design.\n You are well-versed in vector databases like Pinecone, FAISS, or Weaviate, enhancing your ability to create intelligent search mechanisms.\n An understanding of cloud platforms, including Azure, AWS, or GCP, enables you to deploy scalable AI solutions.\n\n\nYour soft skills:\n\n\n You excel in communication, fostering collaboration and clarity within your team.\n Your problem-solving skills enable you to tackle challenges proactively and creatively.\n With a focus on innovation, you continually seek new methods to improve processes and solutions.\n A strong ability to collaborate effectively within teams enhances project outcomes and fosters a supportive working environment.\n\n\nAt Orange, we empower you to turn challenges into opportunities. As a GenAI engineer, you will be surrounded by a culture that thrives on problem-solving, technological ambition, and exploration, where your curiosity will be valued and your contributions recognized. Join us to lead the way in groundbreaking AI initiatives that make a real impact on our organization and the industry at large.\n\nWhat We Offer\n\n\n Global Opportunities: Work in multi-national teams with opportunity to collaborate with colleagues and customers from all over the world.\n Flexible Work Environment: Flexible working hours and possibility to combine work from office and home (hybrid ways of working).\n Professional Development: training programs and upskilling/re-skilling opportunities.\n Career Growth: Internal growth and mobility opportunities within Orange.\n Caring and Daring Culture: Health and well-being programs and benefits, diversity & inclusion initiatives, CSR and employee connect events.\n Reward Programs: Employee Referral Program, Change Maker Awards.\n\n\nOnly Your Skills Matter\n\nRegardless of your age, gender identity, race, ethnic origin, religion/belief, sexual orientation, marital status, neuroatypia, disability, veteran status or appearance, we encourage diversity within our teams because it is a strength for the collective and a vector of innovation. Orange Group is a disabled-friendly company and equal opportunity employer: don't hesitate to tell us about your specific needs."
+}

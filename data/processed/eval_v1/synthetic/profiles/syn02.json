@@ -1,0 +1,152 @@
+{
+  "meta": {
+    "id": "syn02",
+    "language": "fr",
+    "layout": "sidebar",
+    "formats": [
+      "pdf"
+    ],
+    "case": "French-language CV of an LLM / RAG engineer (cross-lingual matching against an English job)"
+  },
+  "profile": {
+    "schema_version": "1.0.0",
+    "id": "syn02",
+    "full_name": "Yasmine Ben Salah",
+    "email": "yasmine.bensalah@example.org",
+    "phone": "+216 70 000 112",
+    "location": "Tunis, Tunisie",
+    "summary": "Ingénieure en IA générative, spécialisée dans les assistants RAG multilingues et leur évaluation.",
+    "education": [
+      {
+        "institution": "École Supérieure d'Ingénierie de Tunis",
+        "degree": "Diplôme d'ingénieur",
+        "field_of_study": "Informatique",
+        "start_date": "2015-09",
+        "end_date": "2020-06",
+        "grade": null
+      }
+    ],
+    "experience": [
+      {
+        "company": "Atlas Digital",
+        "title": "Ingénieure IA Générative",
+        "location": "Tunis",
+        "start_date": "2022-09",
+        "end_date": "present",
+        "is_current": true,
+        "description": "- Conception d'un assistant RAG multilingue (français, arabe, anglais) pour le support client avec LlamaIndex et Qdrant\n- Mise en place de l'évaluation des réponses (rappel@5, taux d'hallucination) : hallucinations réduites de 35 %\n- Déploiement des API REST sur Google Cloud (Cloud Run) et intégration à ServiceNow"
+      },
+      {
+        "company": "Banque Méditerranée",
+        "title": "Data Scientist",
+        "location": "Tunis",
+        "start_date": "2020-07",
+        "end_date": "2022-08",
+        "is_current": false,
+        "description": "- Classification automatique des réclamations clients avec CamemBERT (précision 92 %)\n- Industrialisation des modèles avec Docker et MLflow"
+      }
+    ],
+    "skills": [
+      {
+        "name": "Python",
+        "category": "Technical",
+        "proficiency_level": null,
+        "years_experience": null
+      },
+      {
+        "name": "Grands modèles de langage",
+        "category": "Technical",
+        "proficiency_level": null,
+        "years_experience": null
+      },
+      {
+        "name": "RAG",
+        "category": "Technical",
+        "proficiency_level": null,
+        "years_experience": null
+      },
+      {
+        "name": "Traitement automatique du langage naturel",
+        "category": "Technical",
+        "proficiency_level": null,
+        "years_experience": null
+      },
+      {
+        "name": "API REST",
+        "category": "Technical",
+        "proficiency_level": null,
+        "years_experience": null
+      },
+      {
+        "name": "Microservices",
+        "category": "Technical",
+        "proficiency_level": null,
+        "years_experience": null
+      },
+      {
+        "name": "LlamaIndex",
+        "category": "Tool",
+        "proficiency_level": null,
+        "years_experience": null
+      },
+      {
+        "name": "LangChain",
+        "category": "Tool",
+        "proficiency_level": null,
+        "years_experience": null
+      },
+      {
+        "name": "Qdrant",
+        "category": "Tool",
+        "proficiency_level": null,
+        "years_experience": null
+      },
+      {
+        "name": "Google Cloud Platform",
+        "category": "Tool",
+        "proficiency_level": null,
+        "years_experience": null
+      },
+      {
+        "name": "Docker",
+        "category": "Tool",
+        "proficiency_level": null,
+        "years_experience": null
+      },
+      {
+        "name": "MLflow",
+        "category": "Tool",
+        "proficiency_level": null,
+        "years_experience": null
+      },
+      {
+        "name": "Communication",
+        "category": "Soft",
+        "proficiency_level": null,
+        "years_experience": null
+      },
+      {
+        "name": "Travail en équipe",
+        "category": "Soft",
+        "proficiency_level": null,
+        "years_experience": null
+      }
+    ],
+    "certifications": [],
+    "projects": [],
+    "languages": [
+      {
+        "language": "Arabe",
+        "proficiency": "langue maternelle"
+      },
+      {
+        "language": "Français",
+        "proficiency": "courant"
+      },
+      {
+        "language": "Anglais",
+        "proficiency": "professionnel"
+      }
+    ]
+  }
+}
