@@ -1,4 +1,4 @@
-"""CV extraction (DSO1): CV document -> CandidateProfile, with a local LLM (Qwen2.5 via Ollama).
+"""CV extraction (DSO1): CV document -> CandidateProfile, with a local LLM (Qwen2.5, Transformers).
 
 Two paths, compared in the evaluation:
 - ``extract_document``: parse the file to text (PyMuPDF / OCR / python-docx), then a text LLM
@@ -13,7 +13,7 @@ import time
 from pathlib import Path
 from typing import Any
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field, ValidationInfo, field_validator
 
 from recruitment_ai.data.normalization import PRESENT, clean_value, normalize_date
 from recruitment_ai.extraction.schemas import (
@@ -25,16 +25,25 @@ from recruitment_ai.extraction.schemas import (
     Skill,
 )
 from recruitment_ai.ingestion.parser import ParsedDocument, UnifiedDocumentParser
-from recruitment_ai.llm.ollama_adapter import OllamaAdapter
+from recruitment_ai.llm.huggingface_adapter import HuggingFaceAdapter
 
-# Prompt budget: with num_ctx 8192, keep the CV text well below the window (output needs room too)
+# About 4,000 tokens of CV text: longer CVs are cut (on CPU, reading the prompt costs time too)
 MAX_INPUT_CHARS = 16000
+# Answer budget: a normal CV needs about 1,000 tokens; a model stuck repeating itself stops here
+MAX_OUTPUT_TOKENS = 2048
+# A CV too long for the GPU memory (seen on Kaggle's T4s) is retried once, cut to this length
+OOM_RETRY_CHARS = 8000
 
 
 # --------------------------------------------------------------------------- LLM-facing schema
 
 
-class ExtractedJob(BaseModel):
+class _Lenient(BaseModel):
+    # The model's JSON is not schema-constrained: accept numbers where text is expected ("end_date": 2020)
+    model_config = ConfigDict(coerce_numbers_to_str=True)
+
+
+class ExtractedJob(_Lenient):
     title: str | None = Field(default=None, description="Job title as written")
     company: str | None = Field(default=None, description="Employer name as written, null if absent")
     location: str | None = None
@@ -43,7 +52,7 @@ class ExtractedJob(BaseModel):
     description: str | None = Field(default=None, description="One or two sentences summarising the role")
 
 
-class ExtractedEducation(BaseModel):
+class ExtractedEducation(_Lenient):
     degree: str | None = None
     field_of_study: str | None = None
     institution: str | None = None
@@ -51,12 +60,15 @@ class ExtractedEducation(BaseModel):
     end_date: str | None = Field(default=None, description="End or graduation date as written")
 
 
-class ExtractedLanguage(BaseModel):
+class ExtractedLanguage(_Lenient):
     language: str
     proficiency: str | None = None
 
 
-class CVExtraction(BaseModel):
+LIST_LIMITS = {"experience": 15, "education": 8, "skills": 60, "certifications": 15, "languages": 8}
+
+
+class CVExtraction(_Lenient):
     """What the LLM must return (kept small: every field costs generation time)."""
 
     full_name: str | None = None
@@ -64,14 +76,28 @@ class CVExtraction(BaseModel):
     phone: str | None = None
     location: str | None = Field(default=None, description="City / country of the candidate")
     summary: str | None = Field(default=None, description="The CV's own summary or objective, shortened")
-    # max_length becomes "maxItems" in the JSON schema, which Ollama enforces while generating:
-    # a small model stuck repeating list items is cut off at once instead of running for minutes
-    experience: list[ExtractedJob] = Field(default_factory=list, max_length=15)
-    education: list[ExtractedEducation] = Field(default_factory=list, max_length=8)
-    skills: list[str] = Field(default_factory=list, max_length=60,
+    # max_length is shown to the model as "maxItems" in the JSON schema; longer lists are trimmed
+    experience: list[ExtractedJob] = Field(default_factory=list, max_length=LIST_LIMITS["experience"])
+    education: list[ExtractedEducation] = Field(default_factory=list, max_length=LIST_LIMITS["education"])
+    skills: list[str] = Field(default_factory=list, max_length=LIST_LIMITS["skills"],
                               description="Every skill, tool and technology, as written")
-    certifications: list[str] = Field(default_factory=list, max_length=15)
-    languages: list[ExtractedLanguage] = Field(default_factory=list, max_length=8, description="Spoken languages")
+    certifications: list[str] = Field(default_factory=list, max_length=LIST_LIMITS["certifications"])
+    languages: list[ExtractedLanguage] = Field(default_factory=list, max_length=LIST_LIMITS["languages"],
+                                               description="Spoken languages")
+
+    @field_validator(*LIST_LIMITS, mode="before")
+    @classmethod
+    def _lenient_list(cls, value: Any, info: ValidationInfo) -> Any:
+        """null -> empty list, null items dropped, "English" accepted for {"language": "English"},
+        and only the first N items kept (a small model can repeat items until the token limit)."""
+        if value is None:
+            return []
+        if not isinstance(value, list):
+            return value
+        items = [v for v in value if v is not None]
+        if info.field_name == "languages":
+            items = [{"language": v} if isinstance(v, str) else v for v in items]
+        return items[: LIST_LIMITS[info.field_name]]
 
 
 SYSTEM_PROMPT = """You extract structured information from a candidate's CV for a recruitment team.
@@ -113,6 +139,11 @@ Return only the JSON object."""
 
 USER_PROMPT = "Extract the information from this CV.\n\n=== CV ===\n{cv_text}\n=== END OF CV ==="
 VISION_PROMPT = "Extract the information from this CV. The CV is the attached image (one image per page)."
+
+
+def text_prompt(cv_text: str, max_chars: int = MAX_INPUT_CHARS) -> str:
+    """The user prompt for a CV text (cut at ``max_chars``). Shared with fine-tuning."""
+    return USER_PROMPT.format(cv_text=cv_text.strip()[:max_chars])
 
 
 # --------------------------------------------------------------------------- skill phrases
@@ -219,26 +250,43 @@ def to_profile(raw: CVExtraction, cv_id: str | None = None, normalizer: Any | No
 class CVExtractor:
     """Extract a CandidateProfile from a CV file, its text, or its page images."""
 
-    def __init__(self, llm: OllamaAdapter | None = None, parser: UnifiedDocumentParser | None = None,
-                 vision_llm: OllamaAdapter | None = None, normalizer: Any | None = None) -> None:
-        self.llm = llm or OllamaAdapter()
+    def __init__(self, llm: HuggingFaceAdapter | None = None, parser: UnifiedDocumentParser | None = None,
+                 vision_llm: HuggingFaceAdapter | None = None, normalizer: Any | None = None) -> None:
+        self.llm = llm or HuggingFaceAdapter()
         self.parser = parser or UnifiedDocumentParser()
         self._vision_llm = vision_llm
         self.normalizer = normalizer if normalizer is not None else default_normalizer()
 
     @property
-    def vision_llm(self) -> OllamaAdapter:
+    def vision_llm(self) -> HuggingFaceAdapter:
         if self._vision_llm is None:
-            self._vision_llm = OllamaAdapter(model=self.llm.settings.ollama_vision_model)
+            self._vision_llm = HuggingFaceAdapter(model=self.llm.settings.multimodal_model, vision=True)
         return self._vision_llm
 
     def extract_text(self, cv_text: str, cv_id: str | None = None) -> tuple[CandidateProfile, dict[str, Any]]:
         text = cv_text.strip()
-        truncated = len(text) > MAX_INPUT_CHARS
-        raw = self.llm.generate_structured(USER_PROMPT.format(cv_text=text[:MAX_INPUT_CHARS]), CVExtraction,
-                                           system_prompt=SYSTEM_PROMPT)
-        stats = {**self.llm.last_stats, "input_chars": len(text), "input_truncated": truncated}
+        try:
+            return self._extract_text(text, cv_id, MAX_INPUT_CHARS)
+        except Exception as exc:  # torch is not imported here: recognise the error by its name
+            if type(exc).__name__ != "OutOfMemoryError":
+                raise
+        # Out of GPU memory (a very long CV): free it, outside the except block so the failed
+        # attempt's tensors can be released, then retry once with a shorter text
+        self.free_memory()
+        profile, stats = self._extract_text(text, cv_id, OOM_RETRY_CHARS)
+        return profile, {**stats, "retried_after_out_of_memory": True}
+
+    def _extract_text(self, text: str, cv_id: str | None, max_chars: int) -> tuple[CandidateProfile, dict[str, Any]]:
+        raw = self.llm.generate_structured(text_prompt(text, max_chars), CVExtraction, system_prompt=SYSTEM_PROMPT,
+                                           max_tokens=MAX_OUTPUT_TOKENS)
+        stats = {**self.llm.last_stats, "input_chars": len(text), "input_truncated": len(text) > max_chars}
         return to_profile(raw, cv_id, self.normalizer), stats
+
+    def free_memory(self) -> None:
+        """Release the GPU memory cached by the models (after an out-of-memory error)."""
+        for llm in (self.llm, self._vision_llm):
+            if llm is not None and hasattr(llm, "free_memory"):
+                llm.free_memory()
 
     def extract_document(self, path: Path, cv_id: str | None = None) -> tuple[CandidateProfile, dict[str, Any]]:
         """Parse a CV file (OCR when needed) then structure its text."""
@@ -252,12 +300,13 @@ class CVExtractor:
     def extract_images(self, images: list[bytes], cv_id: str | None = None) -> tuple[CandidateProfile, dict[str, Any]]:
         """Vision path: the VLM reads PNG page images directly (no OCR)."""
         raw = self.vision_llm.generate_structured(VISION_PROMPT, CVExtraction, system_prompt=SYSTEM_PROMPT,
-                                                  images=images)
+                                                  images=images, max_tokens=MAX_OUTPUT_TOKENS)
         return to_profile(raw, cv_id, self.normalizer), dict(self.vision_llm.last_stats)
 
 
 def pdf_page_images(path: Path, max_side: int = 1400) -> list[bytes]:
-    """PNG bytes of each PDF page, longest side about ``max_side`` px (a VLM's sweet spot)."""
+    """PNG bytes of each PDF page, longest side about ``max_side`` px (the adapter then caps the
+    pixel count at VLM_MAX_PIXELS)."""
     import pymupdf
 
     images = []

@@ -75,31 +75,87 @@ if nav_selection == "Dashboard":
         )
 
 elif nav_selection == "Candidates":
-    st.header("Candidate Directory")
-    st.info(
-        "Upload new candidate CVs (PDF, DOCX) to trigger ingestion and structured extraction."
+    st.header("CV Extraction")
+    st.caption(
+        "Upload a CV (PDF, Word or image). It is read on this computer (OCR for scans); "
+        "Qwen then extracts the candidate profile (about a minute with the Kaggle model server)."
     )
     uploaded_file = st.file_uploader(
-        "Upload Candidate Resume", type=["pdf", "docx", "png", "jpg"]
+        "Candidate CV", type=["pdf", "docx", "png", "jpg", "jpeg"]
     )
-    if uploaded_file and st.button("Upload to Processing Pipeline"):
-        try:
-            files = {
-                "file": (
-                    uploaded_file.name,
-                    uploaded_file.getvalue(),
-                    uploaded_file.type,
+    if uploaded_file and st.button("Extract profile", type="primary"):
+        with st.spinner("Reading the CV and extracting the profile..."):
+            try:
+                res = requests.post(
+                    f"{BACKEND_API_URL}/api/v1/candidates/extract",
+                    files={"file": (uploaded_file.name, uploaded_file.getvalue(), uploaded_file.type)},
+                    timeout=900,
                 )
-            }
-            res = requests.post(
-                f"{BACKEND_API_URL}/api/v1/documents/upload", files=files, timeout=5
+                if res.ok:
+                    st.session_state["extraction"] = res.json()
+                else:
+                    detail = res.json().get("detail", res.text) if "json" in res.headers.get("content-type", "") else res.text
+                    st.error(f"Extraction failed ({res.status_code}): {detail}")
+            except requests.RequestException as e:
+                st.error(f"Backend not reachable: {e}")
+
+    result = st.session_state.get("extraction")
+    if result:
+        profile, stats = result["profile"], result["stats"]
+        if result["llm_provider"] == "mock":
+            st.warning(
+                "LLM_PROVIDER=mock: these are fake answers. To use Qwen, start the Kaggle model "
+                "server and set LLM_PROVIDER=remote in .env (README, section 8)."
             )
-            if res.status_code == 200:
-                st.success(f"File uploaded successfully: {res.json().get('filename')}")
-            else:
-                st.error(f"Upload failed: {res.text}")
-        except Exception as e:
-            st.error(f"Connection error: {e}")
+        st.subheader(profile.get("full_name") or "Name not found")
+        col1, col2, col3 = st.columns(3)
+        col1.markdown(f"**Email**  \n{profile.get('email') or '—'}")
+        col2.markdown(f"**Phone**  \n{profile.get('phone') or '—'}")
+        col3.markdown(f"**Location**  \n{profile.get('location') or '—'}")
+        if profile.get("summary"):
+            st.write(profile["summary"])
+
+        st.markdown("#### Experience")
+        jobs = [
+            {"Title": j.get("title"), "Company": j.get("company"), "Start": j.get("start_date"),
+             "End": j.get("end_date"), "Location": j.get("location")}
+            for j in profile.get("experience", [])
+        ]
+        if jobs:
+            st.dataframe(jobs, use_container_width=True, hide_index=True)
+        else:
+            st.write("—")
+
+        st.markdown("#### Education")
+        schools = [
+            {"Degree": e.get("degree"), "Field": e.get("field_of_study"),
+             "Institution": e.get("institution"), "End": e.get("end_date")}
+            for e in profile.get("education", [])
+        ]
+        if schools:
+            st.dataframe(schools, use_container_width=True, hide_index=True)
+        else:
+            st.write("—")
+
+        st.markdown("#### Skills")
+        st.write(", ".join(s["name"] for s in profile.get("skills", [])) or "—")
+        col1, col2 = st.columns(2)
+        col1.markdown("#### Languages")
+        col1.write(", ".join(
+            x["language"] + (f" ({x['proficiency']})" if x.get("proficiency") else "")
+            for x in profile.get("languages", [])
+        ) or "—")
+        col2.markdown("#### Certifications")
+        col2.write(", ".join(c["name"] for c in profile.get("certifications", [])) or "—")
+
+        st.caption(
+            f"{result['filename']} · input: {stats.get('input_type', '?')} · "
+            f"model: {stats.get('model', '?')}{' + fine-tuned adapter' if stats.get('adapter') else ''} · "
+            f"{stats.get('seconds', '?')} s generation, {stats.get('parse_seconds', '?')} s reading"
+            + (" · CV shortened (too long for the GPU)" if stats.get("retried_after_out_of_memory") else "")
+        )
+        with st.expander("Raw JSON"):
+            st.json(result)
 
 elif nav_selection == "Candidate Details":
     st.header("Candidate Profile Details")

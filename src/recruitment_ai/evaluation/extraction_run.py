@@ -7,6 +7,9 @@ Engines:
 
 Predictions are saved one file per document (resumable); predictions of real CVs contain
 personal data and live in a git-ignored folder. Only scores and the report are versioned.
+
+A run can be stopped by a time budget (GPU quota): documents are ordered so that the ones processed
+first keep the mix of input types (scanned PDF, text PDF, Word) of the whole split.
 """
 
 import csv
@@ -22,6 +25,20 @@ from recruitment_ai.evaluation.extraction_eval import score_profile, summarize
 
 ENGINES = ("ocr_llm", "text_llm", "vlm")
 _SPLIT_DIRS = {"dev": "validation", "test": "test"}
+
+
+def spread_groups(docs: list[dict[str, Any]], key: str = "input_type") -> list[dict[str, Any]]:
+    """Order documents so that any first N keep the proportions of each ``key`` group.
+
+    Each document gets its relative position inside its group (e.g. the 3rd of 6 text PDFs is
+    at 0.42): sorting on it interleaves the groups evenly, and the order stays deterministic.
+    """
+    groups: dict[str, list[dict[str, Any]]] = defaultdict(list)
+    for doc in docs:
+        groups[doc[key]].append(doc)
+    ranked = [((i + 0.5) / len(group), doc["doc_id"], doc) for group in groups.values()
+              for i, doc in enumerate(group)]
+    return [doc for *_, doc in sorted(ranked, key=lambda r: (r[0], r[1]))]
 
 
 def extraction_documents(
@@ -57,7 +74,7 @@ def extraction_documents(
                     "path": eval_dir / "synthetic" / "files" / f"{meta['id']}.{fmt}",
                     "gold": data["profile"], "score_identity": True,
                 })
-    return docs
+    return spread_groups(docs)
 
 
 def _dataset_texts(curated_dir: Path, split: str, ids: set[str]) -> dict[str, str]:
@@ -70,9 +87,13 @@ def _dataset_texts(curated_dir: Path, split: str, ids: set[str]) -> dict[str, st
 def run_extraction(
     docs: list[dict[str, Any]], engine: str, out_dir: Path, extractor: Any,
     curated_dir: Path = Path("data/raw/resumes/resume_parser/hf/curated"),
-    split: str = "dev", overwrite: bool = False, log: Any = print,
+    split: str = "dev", overwrite: bool = False, log: Any = print, deadline: float | None = None,
 ) -> list[dict[str, Any]]:
-    """Predict (or reuse) and score every document; returns one result row per document."""
+    """Predict (or reuse) and score every document; returns one result row per document.
+
+    ``deadline`` (a ``time.monotonic()`` value): no new prediction is started after it; the
+    documents not reached are left out of the results.
+    """
     from recruitment_ai.extraction.extractor import pdf_page_images
 
     pred_dir = out_dir / "predictions"
@@ -83,6 +104,9 @@ def run_extraction(
         pred_path = pred_dir / f"{doc['doc_id']}.json"
         if pred_path.exists() and not overwrite:
             record = json.loads(pred_path.read_text(encoding="utf-8"))
+        elif deadline is not None and time.monotonic() > deadline:
+            log(f"  time budget reached: {len(docs) - i + 1} documents not run")
+            break
         else:
             start = time.perf_counter()
             try:
@@ -98,6 +122,8 @@ def run_extraction(
                           "traceback": traceback.format_exc(limit=3)}
             record["total_seconds"] = round(time.perf_counter() - start, 2)
             pred_path.write_text(json.dumps(record, indent=1, ensure_ascii=False), encoding="utf-8")
+            if record["error"] and hasattr(extractor, "free_memory"):
+                extractor.free_memory()  # a failed CV must not leave GPU memory behind for the next ones
         scores = score_profile(doc["gold"], record["prediction"], extractor.normalizer, doc["score_identity"])
         rows.append({"doc": doc, "record": record, "scores": scores})
         status = "ERROR " + record["error"][:60] if record["error"] else f"{record.get('total_seconds', 0):.0f}s"
@@ -107,6 +133,13 @@ def run_extraction(
 
 def _fmt(value: float | None) -> str:
     return "—" if value is None else f"{value:.0%}"
+
+
+def partial_note(done: int, planned: int) -> list[str]:
+    if done >= planned:
+        return []
+    return [f"**Partial run:** the time budget stopped it after {done} of {planned} documents. "
+            "Documents are ordered so the processed ones keep the mix of input types.", ""]
 
 
 def write_outputs(rows: list[dict[str, Any]], out_dir: Path, config: dict[str, Any]) -> dict[str, Any]:
@@ -148,6 +181,7 @@ def write_outputs(rows: list[dict[str, Any]], out_dir: Path, config: dict[str, A
         f"# Extraction evaluation — {config['run_name']}", "",
         f"Engine `{config['engine']}` · model `{config['model']}` · split `{config['split']}` · "
         f"{len(rows)} documents · {len(errors)} errors · {metrics['mean_seconds_per_document']} s per document", "",
+        *partial_note(len(rows), config.get("planned_documents", len(rows))),
         header, line("**All**", metrics["overall"]),
     ]
     for g in groups:

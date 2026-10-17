@@ -3,7 +3,6 @@
 from recruitment_ai.llm.base import LLMMessage, LLMProvider, LLMResponse
 from recruitment_ai.llm.huggingface_adapter import HuggingFaceAdapter
 from recruitment_ai.llm.mock_adapter import MockLLMAdapter
-from recruitment_ai.llm.ollama_adapter import OllamaAdapter
 from recruitment_ai.llm.openai_adapter import OpenAIAdapter
 
 
@@ -14,14 +13,15 @@ def get_llm_provider(provider_type: str | None = None) -> LLMProvider:
     settings = get_settings()
     p_type = provider_type or settings.llm_provider
 
-    if p_type == "ollama":
-        return OllamaAdapter(settings)
+    if p_type == "huggingface":
+        return HuggingFaceAdapter(settings)
+    if p_type == "remote":
+        from recruitment_ai.llm.remote_adapter import RemoteLLMAdapter
+
+        return RemoteLLMAdapter(settings)
     if p_type == "openai":
         return OpenAIAdapter(settings)
-    elif p_type == "huggingface":
-        return HuggingFaceAdapter(settings)
-    else:
-        return MockLLMAdapter(settings)
+    return MockLLMAdapter(settings)
 
 
 __all__ = [
@@ -31,6 +31,5 @@ __all__ = [
     "OpenAIAdapter",
     "HuggingFaceAdapter",
     "MockLLMAdapter",
-    "OllamaAdapter",
     "get_llm_provider",
 ]

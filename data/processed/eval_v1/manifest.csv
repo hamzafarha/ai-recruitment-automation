@@ -10,6 +10,7 @@ data/processed/eval_v1/labels/extraction_sample.csv,labels,yes,938,76460a7d93556
 data/processed/eval_v1/labels/matches.csv,labels,yes,11255,a2d025ff02aa8a3270b16106326759e2a4f18374506e7df6f8cea36d7eee4e28
 data/processed/eval_v1/labels/pairs.csv,labels,yes,1787,a5fbe4f0e445fec321890459641dba9a9e2d87ea6f0f169ca7c35cea41c4c1ba
 data/processed/eval_v1/labels/summary.json,labels,yes,1135,9fb5823077db12841e76ababc16cdfe747c97d50a6404300c8106adcd1f7b58a
+data/processed/eval_v1/rag/queries.json,rag,yes,6921,f666e9e6c1d36743bcf4aea53bdbf4ddf930bd8f706b8c15400bfeb9bbe49bd1
 data/processed/eval_v1/synthetic/files/syn01.docx,synthetic,yes,37506,a16bf20915974e9c648f0ad4da1c366c7140275e8889a44acc8ae2e1512d8781
 data/processed/eval_v1/synthetic/files/syn01.pdf,synthetic,yes,95833,e9d50b611d1c8af29a58cb68be6d95360335def28e62932208bb1e7be2997f33
 data/processed/eval_v1/synthetic/files/syn02.pdf,synthetic,yes,145189,8f3090f438c6ce494c03039f89fc020281bbfbe1df40e6487c137c3e237155ab

@@ -95,7 +95,7 @@ class OpenAIAdapter(LLMProvider):
             messages.append({"role": "system", "content": system_prompt})
         messages.append({"role": "user", "content": prompt})
 
-        # Plain JSON-schema response_format works on both OpenAI and Ollama;
+        # Plain JSON-schema response_format works on OpenAI and compatible servers;
         # Pydantic then validates the result.
         res = client.chat.completions.create(
             model=self.settings.openai_model,

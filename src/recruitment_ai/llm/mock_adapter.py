@@ -15,6 +15,8 @@ class MockLLMAdapter(LLMProvider):
 
     def __init__(self, settings: Settings | None = None) -> None:
         self.settings = settings or get_settings()
+        self.model = "mock-engine"
+        self.last_stats: dict[str, Any] = {"model": "mock-engine", "mock": True}
 
     def generate(
         self,
@@ -49,7 +51,10 @@ class MockLLMAdapter(LLMProvider):
         prompt: str,
         schema: type[T],
         system_prompt: str | None = None,
+        images: list[bytes] | None = None,
+        max_tokens: int = 2048,
     ) -> T:
+        """Fake answer of the right shape (accepts the CV extractor's arguments)."""
         import typing
 
         data: dict[str, Any] = {}

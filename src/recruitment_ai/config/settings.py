@@ -80,32 +80,43 @@ class Settings(BaseSettings):
         default="candidate_knowledge", alias="QDRANT_COLLECTION"
     )
     qdrant_api_key: str | None = Field(default=None, alias="QDRANT_API_KEY")
+    # Embedded mode (no server, e.g. on Kaggle where Docker is unavailable): ":memory:" or a folder path
+    qdrant_location: str | None = Field(default=None, alias="QDRANT_LOCATION")
 
     # Embedding Settings (Architecture: BAAI/bge-m3)
     embedding_model: str = Field(default="BAAI/bge-m3", alias="EMBEDDING_MODEL")
     embedding_device: str = Field(default="cpu", alias="EMBEDDING_DEVICE")
     embedding_dimension: int = Field(default=1024, alias="EMBEDDING_DIMENSION")
 
-    # LLM Settings (Architecture: Qwen/Qwen2.5-7B-Instruct & Qwen2.5-VL)
-    llm_provider: Literal["mock", "openai", "huggingface", "ollama"] = Field(
+    # LLM Settings (Architecture: Qwen2.5 & Qwen2.5-VL, run in Python by Hugging Face Transformers)
+    llm_provider: Literal["mock", "openai", "huggingface", "remote"] = Field(
         default="mock", alias="LLM_PROVIDER"
     )
-    # Local Ollama, native API (context window, JSON schema, images)
-    ollama_base_url: str = Field(default="http://localhost:11434", alias="OLLAMA_BASE_URL")
-    ollama_model: str = Field(default="qwen2.5:3b", alias="OLLAMA_MODEL")
-    ollama_vision_model: str = Field(default="qwen2.5vl:3b", alias="OLLAMA_VISION_MODEL")
-    ollama_num_ctx: int = Field(default=8192, alias="OLLAMA_NUM_CTX")
-    openai_api_key: str | None = Field(default=None, alias="OPENAI_API_KEY")
-    # Any OpenAI-compatible server, e.g. local Ollama: http://localhost:11434/v1
-    openai_base_url: str | None = Field(default=None, alias="OPENAI_BASE_URL")
-    openai_model: str = Field(default="gpt-4o-mini", alias="OPENAI_MODEL")
-    llm_timeout_seconds: float = Field(default=300.0, alias="LLM_TIMEOUT_SECONDS")
+    # "remote": the model runs in a Kaggle GPU session (notebooks/kaggle/model_server.ipynb
+    # prints both values; the link changes at every session)
+    remote_llm_url: str | None = Field(default=None, alias="REMOTE_LLM_URL")
+    remote_llm_token: str | None = Field(default=None, alias="REMOTE_LLM_TOKEN")
     huggingface_model: str = Field(
         default="Qwen/Qwen2.5-7B-Instruct", alias="HUGGINGFACE_MODEL"
     )
     multimodal_model: str = Field(
         default="Qwen/Qwen2.5-VL-7B-Instruct", alias="MULTIMODAL_MODEL"
     )
+    # cuda (GPU: the Kaggle jobs set it), cpu or auto
+    llm_device: str = Field(default="cpu", alias="LLM_DEVICE")
+    # auto = float32 on CPU, float16 on GPU; bfloat16 halves the memory on CPU
+    llm_dtype: Literal["auto", "float32", "bfloat16", "float16"] = Field(
+        default="auto", alias="LLM_DTYPE"
+    )
+    # Optional LoRA adapter produced by our fine-tuning (folder with adapter_config.json)
+    llm_adapter: str | None = Field(default=None, alias="LLM_ADAPTER")
+    # Largest page image given to the vision model, in pixels (Qwen2.5-VL: 1 token per 28x28 block)
+    vlm_max_pixels: int = Field(default=1280 * 28 * 28, alias="VLM_MAX_PIXELS")
+    # "openai" provider: any OpenAI-compatible server
+    openai_api_key: str | None = Field(default=None, alias="OPENAI_API_KEY")
+    openai_base_url: str | None = Field(default=None, alias="OPENAI_BASE_URL")
+    openai_model: str = Field(default="gpt-4o-mini", alias="OPENAI_MODEL")
+    llm_timeout_seconds: float = Field(default=300.0, alias="LLM_TIMEOUT_SECONDS")
 
     # Reranking (Architecture: BAAI/bge-reranker-v2-m3)
     cohere_api_key: str | None = Field(default=None, alias="COHERE_API_KEY")

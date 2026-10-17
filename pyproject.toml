@@ -33,12 +33,17 @@ dependencies = [
 document-processing = [
     "pymupdf>=1.24.0",
     "python-docx>=1.1.0",
+    "rapidocr>=3.0",  # PaddleOCR PP-OCRv5 models on ONNX Runtime (scanned CVs)
+    "onnxruntime>=1.17",
 ]
 
 ml = [
     "torch>=2.2.0",
-    "transformers>=4.40.0",
+    "torchvision>=0.17.0",  # image processor of Qwen2.5-VL; install it with torch (README)
+    "transformers>=4.56.0",  # runs Qwen2.5 and Qwen2.5-VL (no Ollama)
+    "accelerate>=1.0.0",  # device_map="auto": a 7B model split across Kaggle's two GPUs
     "sentence-transformers>=2.6.0",
+    "pillow>=10.0.0",
 ]
 
 training = [
@@ -84,6 +89,7 @@ notebooks = [
 ]
 
 dev = [
+    "kaggle>=1.7",  # scripts/kaggle_run.py (evaluations on Kaggle)
     "pytest>=8.1.0",
     "pytest-asyncio>=0.23.0",
     "pytest-cov>=5.0.0",

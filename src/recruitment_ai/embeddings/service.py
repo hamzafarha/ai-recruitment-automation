@@ -60,6 +60,18 @@ class SentenceTransformerEmbeddingService(BaseEmbeddingService):
                 self._model = None
         return self._model
 
+    def require_model(self) -> None:
+        """Fail loudly when the real model is unavailable.
+
+        The hash-based fallback keeps unit tests offline, but vectors made from it carry no
+        meaning: indexing or evaluating retrieval with them would give garbage silently.
+        """
+        if self.model is None:
+            raise RuntimeError(
+                f"Embedding model {self.settings.embedding_model!r} could not be loaded; "
+                "refusing to use meaningless fallback vectors."
+            )
+
     def _fallback_vector(self, text: str) -> list[float]:
         """Generate deterministic pseudo-embedding when offline or model is not downloaded."""
         import hashlib

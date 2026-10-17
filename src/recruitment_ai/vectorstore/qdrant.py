@@ -13,6 +13,28 @@ from recruitment_ai.vectorstore.base import (
 logger = logging.getLogger(__name__)
 
 
+def build_filter(criteria: dict[str, Any] | None) -> Any:
+    """Payload filter from ``{"field": value}``: a list value means "any of these values".
+
+    Example: ``{"roles": ["ml_engineer", "all"], "language": "en"}`` keeps chunks for the ML
+    role or for every role, written in English. None/empty means no filter.
+    """
+    if not criteria:
+        return None
+    from qdrant_client.http import models
+
+    conditions = [
+        models.FieldCondition(
+            key=key,
+            match=models.MatchAny(any=list(value)) if isinstance(value, list | tuple | set)
+            else models.MatchValue(value=value),
+        )
+        for key, value in criteria.items()
+        if value is not None
+    ]
+    return models.Filter(must=conditions) if conditions else None
+
+
 class QdrantVectorStore(VectorStore):
     """Vector store adapter for Qdrant."""
 
@@ -26,6 +48,12 @@ class QdrantVectorStore(VectorStore):
         if self._client is None:
             try:
                 from qdrant_client import QdrantClient
+
+                location = self.settings.qdrant_location
+                if location:  # embedded mode: same API, no server
+                    self._client = (QdrantClient(location=":memory:") if location == ":memory:"
+                                    else QdrantClient(path=location))
+                    return self._client
 
                 # An empty QDRANT_API_KEY= must mean "no key": qdrant-client
                 # switches to HTTPS whenever api_key is not None.
@@ -75,6 +103,15 @@ class QdrantVectorStore(VectorStore):
             logger.error(f"Error creating Qdrant collection: {exc}")
             return False
 
+    def reset_collection(self, collection_name: str, dimension: int) -> bool:
+        """Drop and recreate a collection (a full rebuild leaves no stale chunks behind)."""
+        if not self.client:
+            logger.error("Qdrant client unavailable.")
+            return False
+        if self.client.collection_exists(collection_name):
+            self.client.delete_collection(collection_name)
+        return self.create_collection(collection_name, dimension)
+
     def upsert(self, collection_name: str, documents: list[VectorDocument]) -> bool:
         """Upsert documents into Qdrant."""
         if not self.client:
@@ -119,13 +156,15 @@ class QdrantVectorStore(VectorStore):
             logger.error("Qdrant client unavailable.")
             return []
         try:
-            results = self.client.search(
+            response = self.client.query_points(
                 collection_name=collection_name,
-                query_vector=query_vector,
+                query=query_vector,
                 limit=top_k,
+                query_filter=build_filter(filter_criteria),
+                with_payload=True,
             )
             search_results: list[VectorSearchResult] = []
-            for hit in results:
+            for hit in response.points:
                 payload = hit.payload or {}
                 text = payload.get("text", "")
                 metadata = {k: v for k, v in payload.items() if k != "text"}

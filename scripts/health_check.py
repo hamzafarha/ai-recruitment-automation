@@ -124,11 +124,11 @@ def check_llm() -> tuple[bool, str]:
         system_prompt="Return only JSON.",
     )
     elapsed = time.perf_counter() - start
-    model = (
-        settings.openai_model
-        if settings.llm_provider == "openai"
-        else settings.llm_provider
-    )
+    model = {
+        "openai": settings.openai_model,
+        "huggingface": settings.huggingface_model,
+        "remote": f"Kaggle model server {settings.remote_llm_url}",
+    }.get(settings.llm_provider, settings.llm_provider)
     return bool(result.skills), f"{model} → {result.skills} in {elapsed:.1f}s"
 
 
@@ -187,16 +187,19 @@ def main() -> int:
     if not api_ok:
         all_passed = False
 
-    # 6-9. AI models (first run downloads bge-m3 + reranker, ~4.5 GB)
+    # 6-9. AI models: they run on Kaggle's GPUs, so they are only loaded here on request
     print()
-    for name, check in [
-        ("GPU", check_gpu),
-        ("Embeddings", check_embeddings),
-        ("Reranker", check_reranker),
-        ("LLM", check_llm),
-    ]:
-        if not _run_optional(name, check):
-            all_passed = False
+    if "--with-models" not in sys.argv:
+        print("- AI models: skipped (they run on Kaggle; add --with-models to load them here)")
+    else:
+        for name, check in [
+            ("GPU", check_gpu),
+            ("Embeddings", check_embeddings),
+            ("Reranker", check_reranker),
+            ("LLM", check_llm),
+        ]:
+            if not _run_optional(name, check):
+                all_passed = False
 
     print("\n" + "-" * 55)
     if all_passed:

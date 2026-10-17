@@ -61,7 +61,8 @@ class RecursiveChunker(BaseChunker):
             chunk_meta = ChunkMetadata.model_validate(meta_dict)
             chunks.append(
                 DocumentChunk(
-                    id=str(uuid.uuid4()),
+                    # deterministic: re-indexing the same document replaces its chunks
+                    id=str(uuid.uuid5(uuid.NAMESPACE_URL, chunk_meta.chunk_id)),
                     text=chunk_text,
                     metadata=chunk_meta,
                 )

@@ -1,0 +1,247 @@
+{
+  "config": {
+    "run_name": "ocr_llm_Qwen2.5-7B-Instruct_dev",
+    "engine": "ocr_llm",
+    "model": "Qwen/Qwen2.5-7B-Instruct",
+    "adapter": null,
+    "split": "dev",
+    "sources": "real,synthetic",
+    "limit": null,
+    "max_minutes": 240.0,
+    "planned_documents": 71,
+    "device": "cuda",
+    "dtype": "float16"
+  },
+  "documents": 71,
+  "errors": 3,
+  "error_docs": [
+    "resume_2caa3439e12019c7",
+    "resume_4a66e8e614f42cd2",
+    "resume_8ebd19823195f86e"
+  ],
+  "mean_seconds_per_document": 70.4,
+  "overall": {
+    "cvs": 71,
+    "experience": {
+      "precision": 0.9213483146067416,
+      "recall": 0.8586387434554974,
+      "f1": 0.8888888888888888,
+      "date_exact": 0.95625,
+      "date_year": 0.965625
+    },
+    "education": {
+      "precision": 0.8817204301075269,
+      "recall": 0.8723404255319149,
+      "f1": 0.877005347593583
+    },
+    "skills": {
+      "precision": 0.6850104821802935,
+      "recall": 0.48985507246376814,
+      "f1": 0.5712242699779019,
+      "technical_recall": 0.5235555555555556
+    },
+    "identity": {
+      "cvs": 44,
+      "accuracy": 0.9251700680272109,
+      "hallucinations": 13
+    },
+    "overall_f1": 0.7790395021534579
+  },
+  "by": {
+    "source": {
+      "real": {
+        "cvs": 60,
+        "experience": {
+          "precision": 0.9113924050632911,
+          "recall": 0.8421052631578947,
+          "f1": 0.8753799392097265,
+          "date_exact": 0.9577464788732394,
+          "date_year": 0.9612676056338029
+        },
+        "education": {
+          "precision": 0.8625,
+          "recall": 0.8518518518518519,
+          "f1": 0.8571428571428572
+        },
+        "skills": {
+          "precision": 0.6670435274166195,
+          "recall": 0.4661339421613394,
+          "f1": 0.5487783465086326,
+          "technical_recall": 0.4976459510357815
+        },
+        "identity": {
+          "cvs": 33,
+          "accuracy": 0.8932038834951457,
+          "hallucinations": 13
+        },
+        "overall_f1": 0.7604337142870721
+      },
+      "synthetic": {
+        "cvs": 11,
+        "experience": {
+          "precision": 1.0,
+          "recall": 1.0,
+          "f1": 1.0,
+          "date_exact": 0.9444444444444444,
+          "date_year": 1.0
+        },
+        "education": {
+          "precision": 1.0,
+          "recall": 1.0,
+          "f1": 1.0
+        },
+        "skills": {
+          "precision": 0.9136690647482014,
+          "recall": 0.9621212121212122,
+          "f1": 0.937269372693727,
+          "technical_recall": 0.9603174603174603
+        },
+        "identity": {
+          "cvs": 11,
+          "accuracy": 1.0,
+          "hallucinations": 0
+        },
+        "overall_f1": 0.979089790897909
+      }
+    },
+    "input_type": {
+      "docx": {
+        "cvs": 5,
+        "experience": {
+          "precision": 1.0,
+          "recall": 1.0,
+          "f1": 1.0,
+          "date_exact": 0.9375,
+          "date_year": 1.0
+        },
+        "education": {
+          "precision": 1.0,
+          "recall": 1.0,
+          "f1": 1.0
+        },
+        "skills": {
+          "precision": 0.9047619047619048,
+          "recall": 0.9661016949152542,
+          "f1": 0.9344262295081968,
+          "technical_recall": 0.9649122807017544
+        },
+        "identity": {
+          "cvs": 5,
+          "accuracy": 1.0,
+          "hallucinations": 0
+        },
+        "overall_f1": 0.9781420765027322
+      },
+      "scanned_pdf": {
+        "cvs": 60,
+        "experience": {
+          "precision": 0.9113924050632911,
+          "recall": 0.8421052631578947,
+          "f1": 0.8753799392097265,
+          "date_exact": 0.9577464788732394,
+          "date_year": 0.9612676056338029
+        },
+        "education": {
+          "precision": 0.8625,
+          "recall": 0.8518518518518519,
+          "f1": 0.8571428571428572
+        },
+        "skills": {
+          "precision": 0.6670435274166195,
+          "recall": 0.4661339421613394,
+          "f1": 0.5487783465086326,
+          "technical_recall": 0.4976459510357815
+        },
+        "identity": {
+          "cvs": 33,
+          "accuracy": 0.8932038834951457,
+          "hallucinations": 13
+        },
+        "overall_f1": 0.7604337142870721
+      },
+      "text_pdf": {
+        "cvs": 6,
+        "experience": {
+          "precision": 1.0,
+          "recall": 1.0,
+          "f1": 1.0,
+          "date_exact": 0.95,
+          "date_year": 1.0
+        },
+        "education": {
+          "precision": 1.0,
+          "recall": 1.0,
+          "f1": 1.0
+        },
+        "skills": {
+          "precision": 0.9210526315789473,
+          "recall": 0.958904109589041,
+          "f1": 0.9395973154362416,
+          "technical_recall": 0.9565217391304348
+        },
+        "identity": {
+          "cvs": 6,
+          "accuracy": 1.0,
+          "hallucinations": 0
+        },
+        "overall_f1": 0.9798657718120806
+      }
+    },
+    "language": {
+      "en": {
+        "cvs": 66,
+        "experience": {
+          "precision": 0.9166666666666666,
+          "recall": 0.850828729281768,
+          "f1": 0.8825214899713467,
+          "date_exact": 0.96,
+          "date_year": 0.9633333333333334
+        },
+        "education": {
+          "precision": 0.872093023255814,
+          "recall": 0.8620689655172413,
+          "f1": 0.8670520231213873
+        },
+        "skills": {
+          "precision": 0.6811044937736871,
+          "recall": 0.48152254249815224,
+          "f1": 0.5641829362587422,
+          "technical_recall": 0.5154405086285195
+        },
+        "identity": {
+          "cvs": 39,
+          "accuracy": 0.9133858267716536,
+          "hallucinations": 13
+        },
+        "overall_f1": 0.7712521497838254
+      },
+      "fr": {
+        "cvs": 5,
+        "experience": {
+          "precision": 1.0,
+          "recall": 1.0,
+          "f1": 1.0,
+          "date_exact": 0.9,
+          "date_year": 1.0
+        },
+        "education": {
+          "precision": 1.0,
+          "recall": 1.0,
+          "f1": 1.0
+        },
+        "skills": {
+          "precision": 0.8032786885245902,
+          "recall": 0.9074074074074074,
+          "f1": 0.8521739130434782,
+          "technical_recall": 0.8958333333333334
+        },
+        "identity": {
+          "cvs": 5,
+          "accuracy": 1.0,
+          "hallucinations": 0
+        },
+        "overall_f1": 0.9507246376811594
+      }
+    }
+  }
+}

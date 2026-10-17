@@ -3,10 +3,11 @@
 No GPU, OCR model or LLM needed: those are replaced by small fakes.
 """
 
+import io
 import json
+import time
 from pathlib import Path
 
-import httpx
 import pytest
 
 from recruitment_ai.evaluation.extraction_eval import (
@@ -172,38 +173,165 @@ def test_summary_micro_averages():
     assert summary["identity"]["cvs"] == 0 and summary["identity"]["accuracy"] is None
 
 
-# --------------------------------------------------------------------------- Ollama adapter
+# --------------------------------------------------------------------------- Transformers adapter
 
 
-def test_ollama_adapter_sends_context_window_schema_and_images(monkeypatch):
-    from recruitment_ai.llm.ollama_adapter import OllamaAdapter
+class FakeTokenizer:
+    """Stands in for a Transformers tokenizer / processor: records what it receives."""
 
-    sent = {}
+    def __init__(self, answer: str) -> None:
+        self.answer, self.messages, self.images = answer, None, None
 
-    def fake_post(url, json=None, timeout=None):
-        sent.update(url=url, payload=json)
-        body = {"message": {"content": '{"full_name": "Jane Doe"}'}, "prompt_eval_count": 100, "eval_count": 20}
-        return httpx.Response(200, json=body, request=httpx.Request("POST", url))
+    def apply_chat_template(self, messages, tokenize=False, add_generation_prompt=True):
+        self.messages = messages
+        return "<prompt>"
 
-    monkeypatch.setattr(httpx, "post", fake_post)
-    llm = OllamaAdapter(model="qwen2.5:3b")
-    result = llm.generate_structured("Extract", CVExtraction, system_prompt="rules", images=[b"png-bytes"])
-    payload = sent["payload"]
-    assert sent["url"].endswith("/api/chat") and payload["model"] == "qwen2.5:3b"
-    assert payload["options"]["num_ctx"] == llm.settings.ollama_num_ctx and payload["options"]["num_predict"] == 3000
-    assert payload["format"]["properties"]["experience"]["maxItems"] == 15
-    assert payload["messages"][1]["images"] and result.full_name == "Jane Doe"
-    assert llm.last_stats["output_tokens"] == 20 and not llm.last_stats["truncated_prompt"]
+    def __call__(self, text=None, images=None, return_tensors=None):
+        import torch
+        from transformers import BatchEncoding
+
+        self.images = images
+        return BatchEncoding({"input_ids": torch.tensor([[1, 2, 3]])})
+
+    def decode(self, ids, skip_special_tokens=True):
+        return self.answer
 
 
-@pytest.mark.parametrize("content", ["", "   "])
-def test_ollama_adapter_rejects_empty_answers(monkeypatch, content):
-    from recruitment_ai.llm.ollama_adapter import OllamaAdapter
+class FakeModel:
+    """Stands in for Qwen: answers two new tokens after the prompt's three."""
 
-    monkeypatch.setattr(httpx, "post", lambda url, json=None, timeout=None: httpx.Response(
-        200, json={"message": {"content": content}}, request=httpx.Request("POST", url)))
+    def generate(self, input_ids, max_new_tokens, **kwargs):
+        import torch
+
+        self.max_new_tokens = max_new_tokens
+        return torch.cat([input_ids, torch.tensor([[7, 8]])], dim=1)
+
+
+def fake_llm(answer: str, model: str = "Qwen/Qwen2.5-3B-Instruct"):
+    from recruitment_ai.llm.huggingface_adapter import HuggingFaceAdapter
+
+    llm = HuggingFaceAdapter(model=model)
+    llm.settings = llm.settings.model_copy(update={"llm_device": "cpu"})  # whatever .env says
+    llm._processor, llm._model = FakeTokenizer(answer), FakeModel()
+    return llm
+
+
+def test_hf_adapter_asks_for_the_schema_and_validates_the_answer():
+    llm = fake_llm('Here it is:\n```json\n{"full_name": "Jane Doe", "skills": ["Python"]}\n```')
+    result = llm.generate_structured("Extract", CVExtraction, system_prompt="rules", max_tokens=500)
+    system, user = llm._processor.messages
+    assert system == {"role": "system", "content": "rules"}
+    assert user["content"].startswith("Extract") and '"maxItems":15' in user["content"]
+    assert result.full_name == "Jane Doe" and result.skills == ["Python"]
+    assert llm._model.max_new_tokens == 500
+    assert llm.last_stats["prompt_tokens"] == 3 and llm.last_stats["output_tokens"] == 2
+    assert not llm.last_stats["truncated_output"]
+
+
+def test_hf_adapter_sends_page_images_to_vision_models():
+    from PIL import Image
+
+    buffer = io.BytesIO()
+    Image.new("RGB", (2000, 1000), "white").save(buffer, format="PNG")
+    llm = fake_llm('{"full_name": "Jane Doe"}', model="Qwen/Qwen2.5-VL-3B-Instruct")
+    assert llm.vision
+    llm.generate_structured("Read", CVExtraction, system_prompt="rules", images=[buffer.getvalue()] * 2)
+    user = llm._processor.messages[-1]
+    assert [part["type"] for part in user["content"]] == ["image", "image", "text"]
+    assert len(llm._processor.images) == 2
+    assert all(img.width * img.height <= llm.settings.vlm_max_pixels for img in llm._processor.images)
+
+
+@pytest.mark.parametrize("answer", ["", "   "])
+def test_hf_adapter_rejects_empty_answers(answer):
     with pytest.raises(ValueError):
-        OllamaAdapter().generate_structured("x", CVExtraction)
+        fake_llm(answer).generate_structured("x", CVExtraction)
+
+
+def test_parse_json_object_repairs_an_answer_cut_by_the_token_limit():
+    from recruitment_ai.llm.huggingface_adapter import parse_json_object
+
+    cut = '{"full_name": "Jane", "skills": ["Python", "Docker", "Kube'
+    assert parse_json_object(cut) == {"full_name": "Jane", "skills": ["Python", "Docker"]}
+    cut = '{"full_name": "Jane", "experience": [{"title": "Dev", "company": "A"}, {"title": "Le'
+    assert parse_json_object(cut) == {"full_name": "Jane", "experience": [{"title": "Dev", "company": "A"}]}
+    assert parse_json_object('Sure! {"a": 1} Hope it helps {"b": 2}') == {"a": 1}
+    with pytest.raises(ValueError):
+        parse_json_object("no JSON here")
+
+
+def test_cv_extraction_accepts_loose_json():
+    raw = CVExtraction.model_validate({
+        "full_name": "Jane", "phone": 33600000000, "education": None,
+        "skills": ["Python", None] + [f"S{i}" for i in range(80)],
+        "languages": ["English", {"language": "French", "proficiency": "B2"}],
+        "experience": [{"title": "Dev", "start_date": 2019, "end_date": "Present"}],
+    })
+    assert raw.phone == "33600000000" and raw.education == []
+    assert len(raw.skills) == 60 and raw.skills[:2] == ["Python", "S0"]
+    assert [x.language for x in raw.languages] == ["English", "French"]
+    assert raw.experience[0].start_date == "2019"
+
+
+# --------------------------------------------------------------------------- evaluation runs
+
+
+def test_spread_groups_keeps_the_mix_in_any_prefix():
+    from recruitment_ai.evaluation.extraction_run import spread_groups
+
+    docs = ([{"doc_id": f"s{i}", "input_type": "scanned_pdf"} for i in range(8)]
+            + [{"doc_id": f"d{i}", "input_type": "docx"} for i in range(2)])
+    order = [d["doc_id"] for d in spread_groups(docs)]
+    assert sorted(order) == sorted(d["doc_id"] for d in docs)
+    assert "d0" in order[:5] and "d1" in order[5:]
+
+
+def test_run_extraction_starts_no_document_after_the_deadline(tmp_path):
+    from recruitment_ai.evaluation.extraction_run import partial_note, run_extraction
+
+    gold = {"experience": [], "education": [], "skills": []}
+    docs = [{"doc_id": d, "cv_id": d, "path": Path(f"{d}.pdf"), "gold": gold, "score_identity": False,
+             "input_type": "text_pdf"} for d in ("a", "b")]
+    (tmp_path / "predictions").mkdir()
+    (tmp_path / "predictions" / "a.json").write_text(json.dumps({"prediction": {}, "stats": {}, "error": None}),
+                                                     encoding="utf-8")
+
+    class NoNewDocument:
+        normalizer = FakeNormalizer()
+
+        def extract_document(self, *args):
+            raise AssertionError("no document may start after the deadline")
+
+    rows = run_extraction(docs, "ocr_llm", tmp_path, NoNewDocument(), deadline=time.monotonic() - 1,
+                          log=lambda *_: None)
+    assert [r["doc"]["doc_id"] for r in rows] == ["a"]  # the saved prediction is still used
+    assert partial_note(2, 2) == [] and "1 of 2" in partial_note(1, 2)[0]
+
+
+def test_out_of_memory_cv_is_retried_once_with_a_shorter_text():
+    from recruitment_ai.extraction.extractor import OOM_RETRY_CHARS, CVExtractor
+
+    class OutOfMemoryError(RuntimeError):  # same name as torch's CUDA error
+        pass
+
+    class LongCVLLM:
+        def __init__(self) -> None:
+            self.prompts, self.freed, self.last_stats = [], 0, {}
+
+        def generate_structured(self, prompt, schema, system_prompt=None, max_tokens=None):
+            self.prompts.append(prompt)
+            if len(self.prompts) == 1:
+                raise OutOfMemoryError("CUDA out of memory")
+            return CVExtraction(full_name="Ann Lee")
+
+        def free_memory(self):
+            self.freed += 1
+
+    llm = LongCVLLM()
+    profile, stats = CVExtractor(llm=llm, normalizer=object()).extract_text("Ann Lee " + "x" * 20000)
+    assert profile.full_name == "Ann Lee" and stats["retried_after_out_of_memory"]
+    assert llm.freed == 1 and len(llm.prompts[1]) < len(llm.prompts[0])
+    assert len(llm.prompts[1]) < OOM_RETRY_CHARS + 200  # cut to the retry length (+ the prompt's words)
 
 
 def test_json_roundtrip_of_profile():

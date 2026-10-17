@@ -163,6 +163,23 @@ python -m streamlit run frontend/streamlit_app.py       # recruiter UI: http://l
 python -m streamlit run frontend/labeling_app.py        # optional: human labeling of the evaluation pairs
 ```
 
+### Try the CV extraction in the app (Qwen on Kaggle)
+
+With `LLM_PROVIDER=mock` the app gives fake answers. To use the real model, Qwen runs in a Kaggle GPU
+session and the app on your PC talks to it through a temporary private link:
+
+1. Once: `python scripts/kaggle_run.py upload` (sends the latest code to your Kaggle dataset), then on
+   kaggle.com *Create → New Notebook → File → Import Notebook* →
+   [notebooks/kaggle/model_server.ipynb](notebooks/kaggle/model_server.ipynb). Settings: **GPU T4 x2**,
+   **Internet On**, *Add Input → Your Work → Datasets → recruitment-ai-eval-v1*.
+2. Each time: *Run All* in that notebook (~4 min). It prints `REMOTE_LLM_URL=...` and `REMOTE_LLM_TOKEN=...`.
+3. Put them in `.env` with `LLM_PROVIDER=remote`, then **restart** the API and the app (commands above).
+4. App → *Candidates* → upload a CV → *Extract profile* (about a minute).
+5. **Stop the Kaggle session when done**: the GPU quota counts while it is open, even idle.
+
+The document is read on your PC (OCR for scans); only its text goes to your Kaggle session. Use your own
+or invented CVs. The link and token change at every session.
+
 ---
 
 ## 9. Run the evaluations
@@ -202,6 +219,23 @@ a partial run keeps the mix of the whole split, and the report says how many wer
 
 Reports: `data/evaluation/extraction/<run>/report.md`, `data/evaluation/rag/report.md`.
 
+### Fine-tuning (Step 9, QLoRA on Kaggle)
+
+The notebook [notebooks/kaggle/finetune_qwen_qlora.ipynb](notebooks/kaggle/finetune_qwen_qlora.ipynb) teaches
+Qwen2.5-7B our CV format with QLoRA, on ~1,000 CVs of the Resume Parser **train** split (evaluation CVs are
+excluded). It produces a LoRA adapter (~160 MB). Run the evaluation first: its score is the "before" number.
+
+```powershell
+python scripts/kaggle_run.py all finetune         # training (~2-3 GPU hours on 2x T4 for 1,000 CVs)
+python scripts/kaggle_run.py all extraction-ft    # the same evaluation as `extraction`, with the adapter
+```
+
+Built for Kaggle's limits: every cell ends with a "saved and exported" line; a checkpoint every 15 minutes;
+training stops by itself 40 minutes before a 7-hour session budget, so outputs are always written; running it
+again resumes from the last checkpoint. To change a setting (number of CVs, session budget…), open the
+notebook on kaggle.com, edit its first cell (*PARAMETERS*), then *Save Version → Save & Run All*. Its
+header explains the settings, the optional Hugging Face backup and how to resume.
+
 ---
 
 ## 10. Project structure
@@ -214,9 +248,11 @@ src/recruitment_ai/
   data/              dataset preparation, EN/FR skill lexicon (ESCO + custom), knowledge-base loader
   rag/               section chunking, knowledge index (BGE-M3 + Qdrant + reranker)
   evaluation/        evaluation set builder, freeze/verify, labeling, extraction and retrieval metrics
+  training/          fine-tuning: training examples (data.py) and QLoRA training (qlora.py)
   embeddings/ vectorstore/ reranking/ matching/ agents/ tools/ database/ services/ config/ utils/
-scripts/             prepare_data, build_eval_set, eval_extraction, eval_rag, kaggle_run, health_check
+scripts/             prepare_data, build_eval_set, eval_extraction, eval_rag, finetune_qlora, kaggle_run, health_check
 scripts/kaggle/      the jobs that run on Kaggle
+notebooks/kaggle/    the fine-tuning notebook that runs on Kaggle
 data/knowledge_base/ 15 HR documents used by RAG (rubric, job profiles, policies…; 3 in French)
 data/processed/eval_v1/  frozen evaluation set (committed; no CV content)
 data/reference/      custom skills added to ESCO

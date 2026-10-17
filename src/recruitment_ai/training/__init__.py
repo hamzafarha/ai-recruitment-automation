@@ -1,6 +1,5 @@
-"""Fine-tuning training package (LoRA / QLoRA with PEFT, TRL, bitsandbytes)."""
+"""Fine-tuning (Step 9): QLoRA of Qwen2.5 for CV extraction, run on Kaggle's free GPUs.
 
-from recruitment_ai.training.dataset import RecruitmentDataset
-from recruitment_ai.training.qlora import QLoRATrainingConfig, build_qlora_trainer
-
-__all__ = ["RecruitmentDataset", "QLoRATrainingConfig", "build_qlora_trainer"]
+``data`` builds the training examples (light, testable without a GPU); ``qlora`` trains
+(imports torch, peft and bitsandbytes only when called).
+"""

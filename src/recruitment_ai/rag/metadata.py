@@ -10,7 +10,7 @@ class ChunkMetadata(BaseModel):
 
     document_id: str
     document_type: Literal[
-        "cv", "job_description", "policy", "skill_definition", "recruitment_document"
+        "cv", "job_description", "job_profile", "policy", "skill_definition", "recruitment_document"
     ]
     candidate_id: str | None = None
     job_id: str | None = None
@@ -18,3 +18,8 @@ class ChunkMetadata(BaseModel):
     page: int | None = Field(default=1)
     section: str | None = Field(default=None)
     chunk_id: str
+    # Knowledge-base fields: used to filter retrieval and to cite sources ("per KB-RR-002 ...")
+    title: str | None = None
+    category: str | None = None
+    language: str | None = None
+    roles: list[str] = Field(default_factory=list)  # target role keys, or ["all"]
