@@ -24,6 +24,7 @@ from recruitment_ai.extraction.extractor import (
     ExtractedEducation,
     ExtractedJob,
     ExtractedLanguage,
+    ExtractedProject,
     text_prompt,
 )
 from recruitment_ai.extraction.schemas import CandidateProfile
@@ -64,7 +65,10 @@ def profile_to_extraction(profile: CandidateProfile) -> CVExtraction:
     return CVExtraction(  # lists longer than the schema's limits are trimmed by CVExtraction itself
         full_name=profile.full_name, email=str(profile.email) if profile.email else None, phone=profile.phone,
         location=profile.location, summary=_short(profile.summary, 300),
-        experience=jobs, education=education, skills=[s.name for s in profile.skills],
+        experience=jobs, education=education,
+        projects=[ExtractedProject(name=p.title, description=_short(p.description, 200), technologies=p.technologies)
+                  for p in profile.projects],
+        skills=[s.name for s in profile.skills],
         certifications=[c.name for c in profile.certifications],
         languages=[ExtractedLanguage(language=x.language, proficiency=x.proficiency) for x in profile.languages],
     )

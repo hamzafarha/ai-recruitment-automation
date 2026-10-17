@@ -9,6 +9,7 @@ The LLM fills a compact schema (``CVExtraction``); code then normalizes dates, r
 duplicates and converts it to ``CandidateProfile``.
 """
 
+import re
 import time
 from pathlib import Path
 from typing import Any
@@ -22,6 +23,7 @@ from recruitment_ai.extraction.schemas import (
     Education,
     Experience,
     Language,
+    Project,
     Skill,
 )
 from recruitment_ai.ingestion.parser import ParsedDocument, UnifiedDocumentParser
@@ -45,11 +47,12 @@ class _Lenient(BaseModel):
 
 class ExtractedJob(_Lenient):
     title: str | None = Field(default=None, description="Job title as written")
-    company: str | None = Field(default=None, description="Employer name as written, null if absent")
+    company: str | None = Field(default=None, description="Employer organisation as written (not a project "
+                                                          "name), null if absent")
     location: str | None = None
     start_date: str | None = Field(default=None, description="Start date as written, e.g. 'Mar 2019' or '2019'")
     end_date: str | None = Field(default=None, description="End date as written, or 'Present' for a current job")
-    description: str | None = Field(default=None, description="One or two sentences summarising the role")
+    description: str | None = Field(default=None, description="The role in one sentence, at most 20 words")
 
 
 class ExtractedEducation(_Lenient):
@@ -60,12 +63,19 @@ class ExtractedEducation(_Lenient):
     end_date: str | None = Field(default=None, description="End or graduation date as written")
 
 
+class ExtractedProject(_Lenient):
+    name: str
+    description: str | None = Field(default=None, description="One sentence, at most 20 words")
+    technologies: list[str] = Field(default_factory=list, description="Tools and technologies used")
+
+
 class ExtractedLanguage(_Lenient):
     language: str
     proficiency: str | None = None
 
 
-LIST_LIMITS = {"experience": 15, "education": 8, "skills": 60, "certifications": 15, "languages": 8}
+LIST_LIMITS = {"experience": 15, "education": 8, "projects": 10, "skills": 60, "certifications": 15,
+               "languages": 8}
 
 
 class CVExtraction(_Lenient):
@@ -76,14 +86,18 @@ class CVExtraction(_Lenient):
     phone: str | None = None
     location: str | None = Field(default=None, description="City / country of the candidate")
     summary: str | None = Field(default=None, description="The CV's own summary or objective, shortened")
-    # max_length is shown to the model as "maxItems" in the JSON schema; longer lists are trimmed
+    # max_length is shown to the model as "maxItems" in the JSON schema; longer lists are trimmed.
+    # Order matters: the model writes the fields in this order, so the short lists come before
+    # the long ones (a long skills list must not crowd out the certifications or languages).
     experience: list[ExtractedJob] = Field(default_factory=list, max_length=LIST_LIMITS["experience"])
     education: list[ExtractedEducation] = Field(default_factory=list, max_length=LIST_LIMITS["education"])
-    skills: list[str] = Field(default_factory=list, max_length=LIST_LIMITS["skills"],
-                              description="Every skill, tool and technology, as written")
     certifications: list[str] = Field(default_factory=list, max_length=LIST_LIMITS["certifications"])
     languages: list[ExtractedLanguage] = Field(default_factory=list, max_length=LIST_LIMITS["languages"],
                                                description="Spoken languages")
+    projects: list[ExtractedProject] = Field(default_factory=list, max_length=LIST_LIMITS["projects"],
+                                             description="Personal, academic or team projects")
+    skills: list[str] = Field(default_factory=list, max_length=LIST_LIMITS["skills"],
+                              description="Every skill, tool and technology, as written")
 
     @field_validator(*LIST_LIMITS, mode="before")
     @classmethod
@@ -97,6 +111,8 @@ class CVExtraction(_Lenient):
         items = [v for v in value if v is not None]
         if info.field_name == "languages":
             items = [{"language": v} if isinstance(v, str) else v for v in items]
+        if info.field_name == "projects":
+            items = [{"name": v} if isinstance(v, str) else v for v in items]
         return items[: LIST_LIMITS[info.field_name]]
 
 
@@ -110,30 +126,46 @@ Rules:
    location = city and region/country only, never the street address.
 4. experience: one entry for EVERY position in the CV (CVs usually list 2 to 6), most recent first.
    Do not stop after the first one. Copy title, company and dates as written; a current position ends
-   with "Present". description = one or two short sentences, not the full bullet list.
+   with "Present". description = one sentence of at most 20 words, not the bullet list.
+   company = the employer organisation. In a heading like "Intern - Fraud Detection Platform" followed
+   by "Acme Bank", the project name is not the company: company = "Acme Bank" (and location = the
+   place only).
 5. education: one entry per degree or diploma. degree = the diploma name ("Bachelor's", "MSc", "Master");
    field_of_study = the subject ("Computer Science"); institution = the school or university.
 6. skills: short skill names of 1 to 4 words, never whole sentences. Take every technical skill, tool,
-   technology and method mentioned anywhere (skills section, job descriptions, projects), plus soft skills.
-   Split lists: "Python, Docker and AWS" gives "Python", "Docker", "AWS". No duplicates.
-7. certifications: certification names only. languages: spoken languages only (not programming languages).
+   technology and method mentioned ANYWHERE: the skills section, job descriptions, "Keywords" or
+   "Technologies" lines, and projects; plus soft skills. Split lists: "Python, Docker and AWS" gives
+   "Python", "Docker", "AWS". Group headings are not skills: in "Cloud & DevOps: Docker, AWS", keep
+   "Docker" and "AWS", not "Cloud & DevOps". No duplicates.
+7. projects: one entry per personal, academic or team project: its name, one sentence of at most 20
+   words, and the technologies it lists.
+8. certifications: certification names only. languages: spoken languages only (not programming languages).
 
 Example (shortened):
 CV:
   Jane Doe | Lyon, France | jane.doe@mail.com | +33 6 00 00 00 00
-  Data Engineer - Acme Corp (Jan 2021 - Present)
+  Data Engineer - Customer Analytics Platform                    Jan 2021 - Present
+  Acme Corp                                                      Lyon
   - Built Spark pipelines on AWS; strong experience with Airflow and dbt
+  Keywords: Kafka, Terraform
   MSc in Computer Science, Université de Lyon, 2020
-  Skills: Python, SQL, team leadership
+  Projects: Movie Recommender - collaborative filtering web app (PyTorch, FastAPI)
+  Skills: Programming: Python, SQL | Soft skills: team leadership
+  Certifications: AWS Certified Cloud Practitioner
+  Languages: French (native), English (C1)
 JSON:
   {"full_name": "Jane Doe", "email": "jane.doe@mail.com", "phone": "+33 6 00 00 00 00",
    "location": "Lyon, France", "summary": null,
-   "experience": [{"title": "Data Engineer", "company": "Acme Corp", "location": null,
+   "experience": [{"title": "Data Engineer", "company": "Acme Corp", "location": "Lyon",
      "start_date": "Jan 2021", "end_date": "Present", "description": "Builds Spark data pipelines on AWS."}],
    "education": [{"degree": "MSc", "field_of_study": "Computer Science", "institution": "Université de Lyon",
      "start_date": null, "end_date": "2020"}],
-   "skills": ["Spark", "AWS", "Airflow", "dbt", "Python", "SQL", "Team leadership"],
-   "certifications": [], "languages": []}
+   "certifications": ["AWS Certified Cloud Practitioner"],
+   "languages": [{"language": "French", "proficiency": "native"}, {"language": "English", "proficiency": "C1"}],
+   "projects": [{"name": "Movie Recommender", "description": "Collaborative filtering web app.",
+     "technologies": ["PyTorch", "FastAPI"]}],
+   "skills": ["Spark", "AWS", "Airflow", "dbt", "Kafka", "Terraform", "PyTorch", "FastAPI", "Python", "SQL",
+     "Team leadership"]}
 
 Return only the JSON object."""
 
@@ -206,9 +238,22 @@ def _date(value: str | None) -> str | None:
     return normalize_date(value) if value else None
 
 
-def to_profile(raw: CVExtraction, cv_id: str | None = None, normalizer: Any | None = None) -> CandidateProfile:
+def is_heading_only(skill: str, cv_text: str) -> bool:
+    """True when the CV writes this "skill" only as a group heading ("Databases: MySQL, Redis").
+
+    The model sometimes copies group headings into the skill list; a real skill also appears
+    without a colon right after it.
+    """
+    pattern = re.compile(rf"(?<!\w){re.escape(skill)}(?!\w)(\s*:)?", re.IGNORECASE)
+    found = [m.group(1) is not None for m in pattern.finditer(cv_text)]
+    return bool(found) and all(found)
+
+
+def to_profile(raw: CVExtraction, cv_id: str | None = None, normalizer: Any | None = None,
+               cv_text: str | None = None) -> CandidateProfile:
     """Convert the LLM output to a CandidateProfile: clean values, normalize dates, split
-    sentence-like skills, dedupe."""
+    sentence-like skills, add the projects' technologies to the skills, drop group headings
+    copied as skills (needs ``cv_text``), dedupe."""
     experience = []
     for job in raw.experience:
         title, company = clean_value(job.title), clean_value(job.company)
@@ -226,20 +271,26 @@ def to_profile(raw: CVExtraction, cv_id: str | None = None, normalizer: Any | No
                   end_date=_date(e.end_date))
         for e in raw.education if clean_value(e.degree) or clean_value(e.institution)
     ]
+    projects = [
+        Project(title=name, description=clean_value(p.description),
+                technologies=[t for t in map(clean_value, p.technologies) if t])
+        for p in raw.projects if (name := clean_value(p.name))
+    ]
     seen: set[str] = set()
     skills = []
-    for name in expand_skills(raw.skills, normalizer):
+    for name in expand_skills(raw.skills + [t for p in projects for t in p.technologies], normalizer):
         name = clean_value(name)
-        if name and name.lower() not in seen:
-            seen.add(name.lower())
-            skills.append(Skill(name=name))
+        if not name or name.lower() in seen or (cv_text and is_heading_only(name, cv_text)):
+            continue
+        seen.add(name.lower())
+        skills.append(Skill(name=name))
     certifications = [Certification(name=n) for n in dict.fromkeys(filter(None, map(clean_value, raw.certifications)))]
     languages = [Language(language=x.language.strip(), proficiency=clean_value(x.proficiency))
                  for x in raw.languages if clean_value(x.language)]
     return CandidateProfile(
         id=cv_id, full_name=clean_value(raw.full_name), email=clean_value(raw.email),
         phone=clean_value(raw.phone), location=clean_value(raw.location), summary=clean_value(raw.summary),
-        experience=experience, education=education, skills=skills,
+        experience=experience, education=education, skills=skills, projects=projects,
         certifications=certifications, languages=languages,
     )
 
@@ -280,7 +331,7 @@ class CVExtractor:
         raw = self.llm.generate_structured(text_prompt(text, max_chars), CVExtraction, system_prompt=SYSTEM_PROMPT,
                                            max_tokens=MAX_OUTPUT_TOKENS)
         stats = {**self.llm.last_stats, "input_chars": len(text), "input_truncated": len(text) > max_chars}
-        return to_profile(raw, cv_id, self.normalizer), stats
+        return to_profile(raw, cv_id, self.normalizer, cv_text=text), stats
 
     def free_memory(self) -> None:
         """Release the GPU memory cached by the models (after an out-of-memory error)."""

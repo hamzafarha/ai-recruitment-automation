@@ -334,6 +334,29 @@ def test_out_of_memory_cv_is_retried_once_with_a_shorter_text():
     assert len(llm.prompts[1]) < OOM_RETRY_CHARS + 200  # cut to the retry length (+ the prompt's words)
 
 
+def test_projects_are_kept_and_their_technologies_become_skills():
+    raw = CVExtraction.model_validate({
+        "skills": ["Python", "Machine Learning & AI", "Databases", "MySQL"],
+        "projects": [{"name": "QoSentry", "description": "Network anomaly detection.",
+                      "technologies": ["SHAP", "LangGraph", "Python"]}, "Image Captioning"],
+    })
+    cv_text = ("Keywords: Python\nMachine Learning & AI: Scikit-learn, PyTorch\nDatabases: MySQL, Redis\n"
+               "QoSentry (SHAP, LangGraph)")
+    profile = to_profile(raw, cv_text=cv_text)
+    assert [p.title for p in profile.projects] == ["QoSentry", "Image Captioning"]
+    assert profile.projects[0].technologies == ["SHAP", "LangGraph", "Python"]
+    # group headings dropped (they only appear before a colon), project technologies added, no duplicates
+    assert [s.name for s in profile.skills] == ["Python", "MySQL", "SHAP", "LangGraph"]
+
+
+def test_heading_detection_keeps_real_skills():
+    from recruitment_ai.extraction.extractor import is_heading_only
+
+    text = "Python: 5 years\nSkills: Python, Docker\nCloud: AWS"
+    assert not is_heading_only("Python", text)  # also written without a colon
+    assert is_heading_only("Cloud", text) and not is_heading_only("Kubernetes", text)
+
+
 def test_json_roundtrip_of_profile():
     profile = to_profile(CVExtraction(full_name="A", skills=["Python"]))
     assert json.loads(profile.model_dump_json())["skills"][0]["name"] == "Python"

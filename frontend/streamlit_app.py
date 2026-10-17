@@ -15,10 +15,15 @@ st.set_page_config(
 BACKEND_API_URL = os.getenv("BACKEND_API_URL", "http://localhost:8000")
 
 
+@st.cache_data(ttl=60, show_spinner=False)
 def check_backend_status() -> tuple[bool, dict]:
-    """Query FastAPI backend health endpoint."""
+    """Query FastAPI backend health endpoint (cached one minute: Streamlit reruns on every click).
+
+    The health check also tests PostgreSQL and Qdrant: when Docker is stopped each of those waits
+    for its connection timeout, so the API needs several seconds to answer.
+    """
     try:
-        res = requests.get(f"{BACKEND_API_URL}/api/v1/health", timeout=2)
+        res = requests.get(f"{BACKEND_API_URL}/api/v1/health", timeout=15)
         if res.status_code == 200:
             return True, res.json()
         return False, {"error": f"Status code {res.status_code}"}
@@ -135,6 +140,13 @@ elif nav_selection == "Candidates":
         if schools:
             st.dataframe(schools, use_container_width=True, hide_index=True)
         else:
+            st.write("—")
+
+        st.markdown("#### Projects")
+        for project in profile.get("projects", []):
+            tech = f" · *{', '.join(project['technologies'])}*" if project.get("technologies") else ""
+            st.markdown(f"- **{project['title']}**: {project.get('description') or ''}{tech}")
+        if not profile.get("projects"):
             st.write("—")
 
         st.markdown("#### Skills")

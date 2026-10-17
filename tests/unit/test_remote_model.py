@@ -54,6 +54,7 @@ def test_remote_adapter_extracts_with_the_evaluation_prompt(kaggle):
 
     qwen, _ = kaggle
     llm = RemoteLLMAdapter(url="https://kaggle.example/", token="secret")
+    llm.poll_seconds = 0.01
     result = llm.generate_structured("Extract", CVExtraction, system_prompt=SYSTEM_PROMPT, images=[b"png"],
                                      max_tokens=300)
     assert result.full_name == "Ann Lee" and result.skills == ["Python"]
@@ -62,6 +63,28 @@ def test_remote_adapter_extracts_with_the_evaluation_prompt(kaggle):
     assert '"maxItems":15' in call["messages"][1]["content"]  # same prompt as the Kaggle evaluation runs
     assert call["images"] == [b"png"] and call["max_tokens"] == 300
     assert llm.last_stats["output_tokens"] == 5 and llm.model == "Qwen/Qwen2.5-7B-Instruct"
+
+
+def test_out_of_memory_on_kaggle_is_reported_as_such(kaggle):
+    """The extractor retries such a CV with a shorter text (it recognises the error by its name)."""
+    from recruitment_ai.llm.remote_adapter import OutOfMemoryError, RemoteLLMAdapter
+
+    qwen, client = kaggle
+
+    class TorchOutOfMemoryError(RuntimeError):  # what torch raises on the Kaggle GPU
+        pass
+
+    TorchOutOfMemoryError.__name__ = "OutOfMemoryError"
+
+    def too_long(messages, images=None, max_tokens=1024, temperature=0.0):
+        raise TorchOutOfMemoryError("CUDA out of memory")
+
+    qwen._generate = too_long
+    llm = RemoteLLMAdapter(url="https://kaggle.example", token="secret")
+    llm.poll_seconds = 0.01
+    with pytest.raises(OutOfMemoryError):
+        llm.generate_structured("x", CVExtraction)
+    assert client.get("/info", headers={"Authorization": "Bearer secret"}).json()["running_jobs"] == 0
 
 
 def test_remote_adapter_explains_what_to_fix(kaggle):

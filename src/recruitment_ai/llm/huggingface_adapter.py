@@ -242,6 +242,7 @@ class HuggingFaceAdapter(LLMProvider):
         """
         messages = self._messages(structured_prompt(prompt, schema), system_prompt, len(images or []))
         answer = self._generate(messages, images, max_tokens=max_tokens)
+        self.last_stats["raw_answer"] = answer  # kept for error analysis (what the model really wrote)
         if not answer.strip():
             raise ValueError("The model returned an empty answer.")
         return schema.model_validate(parse_json_object(answer))

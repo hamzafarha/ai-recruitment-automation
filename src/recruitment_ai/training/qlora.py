@@ -134,7 +134,13 @@ def train(cfg: QLoRAConfig) -> dict[str, Any]:
     import torch
     import torch.distributed as dist
     from peft import LoraConfig, get_peft_model
-    from transformers import AutoModelForCausalLM, AutoTokenizer, BitsAndBytesConfig, Trainer, TrainingArguments
+    from transformers import (
+        AutoModelForCausalLM,
+        AutoTokenizer,
+        BitsAndBytesConfig,
+        Trainer,
+        TrainingArguments,
+    )
     from transformers.trainer_utils import get_last_checkpoint
 
     start = time.time()
