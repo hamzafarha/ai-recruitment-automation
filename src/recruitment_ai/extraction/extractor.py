@@ -68,6 +68,14 @@ class ExtractedProject(_Lenient):
     description: str | None = Field(default=None, description="One sentence, at most 20 words")
     technologies: list[str] = Field(default_factory=list, description="Tools and technologies used")
 
+    @field_validator("technologies", mode="before")
+    @classmethod
+    def _lenient_technologies(cls, value: Any) -> Any:
+        """null -> empty list, null items dropped (seen on the dev set)."""
+        if value is None:
+            return []
+        return [v for v in value if v is not None] if isinstance(value, list) else value
+
 
 class ExtractedLanguage(_Lenient):
     language: str

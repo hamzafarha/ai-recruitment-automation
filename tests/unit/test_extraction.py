@@ -349,6 +349,12 @@ def test_projects_are_kept_and_their_technologies_become_skills():
     assert [s.name for s in profile.skills] == ["Python", "MySQL", "SHAP", "LangGraph"]
 
 
+def test_projects_accept_null_technologies():
+    raw = CVExtraction.model_validate({"projects": [{"name": "A", "technologies": None},
+                                                    {"name": "B", "technologies": ["Python", None]}]})
+    assert [p.technologies for p in raw.projects] == [[], ["Python"]]
+
+
 def test_heading_detection_keeps_real_skills():
     from recruitment_ai.extraction.extractor import is_heading_only
 

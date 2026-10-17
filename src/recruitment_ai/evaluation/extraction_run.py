@@ -119,7 +119,9 @@ def run_extraction(
                 record = {"prediction": profile.model_dump(exclude={"created_at"}), "stats": stats, "error": None}
             except Exception as exc:  # one failure must not stop a long run; it is scored as an empty prediction
                 record = {"prediction": {}, "stats": {}, "error": f"{type(exc).__name__}: {exc}",
-                          "traceback": traceback.format_exc(limit=3)}
+                          "traceback": traceback.format_exc(limit=3),
+                          # what the model really wrote, when the failure came after the generation
+                          "raw_answer": getattr(getattr(extractor, "llm", None), "last_stats", {}).get("raw_answer")}
             record["total_seconds"] = round(time.perf_counter() - start, 2)
             pred_path.write_text(json.dumps(record, indent=1, ensure_ascii=False), encoding="utf-8")
             if record["error"] and hasattr(extractor, "free_memory"):
