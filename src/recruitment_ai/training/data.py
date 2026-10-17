@@ -9,6 +9,7 @@ some CVs appear in several splits under different ids. Every training CV whose n
 matches a validation/test CV is removed, so the model never trains on an evaluation CV.
 """
 
+import json
 import random
 import re
 from collections import Counter
@@ -135,6 +136,18 @@ def build_training_set(
         "labels": "silver (written by an LLM by the dataset authors)",
     }
     return train, holdout, report
+
+
+def read_jsonl(path: Any) -> list[dict[str, Any]]:
+    """Rows of a JSONL file, split on real line breaks only.
+
+    ``str.splitlines()`` also splits on rare Unicode separators (U+2028, U+0085...) that some CV
+    texts contain inside their strings: it cut a training example in half on Kaggle.
+    """
+    from pathlib import Path
+
+    text = Path(path).read_text(encoding="utf-8")
+    return [json.loads(line) for line in text.split("\n") if line.strip()]
 
 
 def tokenize_example(tokenizer: Any, messages: list[dict[str, str]], max_len: int) -> dict[str, list[int]] | None:

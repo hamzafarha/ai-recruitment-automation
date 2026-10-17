@@ -97,6 +97,15 @@ def test_build_training_set_removes_eval_cvs_and_bad_labels():
     assert [e["id"] for e in again] == [e["id"] for e in train]  # reproducible
 
 
+def test_read_jsonl_keeps_unicode_line_separators_inside_strings(tmp_path):
+    from recruitment_ai.training.data import read_jsonl
+
+    rows = [{"text": "first part second part\x85end"}, {"text": "next CV"}]
+    path = tmp_path / "train.jsonl"
+    path.write_text("".join(json.dumps(r, ensure_ascii=False) + "\n" for r in rows), encoding="utf-8")
+    assert read_jsonl(path) == rows  # str.splitlines() would cut the first row in three
+
+
 # --------------------------------------------------------------------------- tokenization
 
 
@@ -119,6 +128,21 @@ def test_tokenize_example_trains_on_the_answer_only():
     assert tokens["input_ids"] == [ord(c) for c in "SU>{}|"]
     assert tokens["labels"] == [IGNORE_INDEX] * 3 + [ord(c) for c in "{}|"]  # prompt masked, answer + end
     assert tokenize_example(CharTokenizer(), messages, max_len=5) is None  # too long: skipped, not cut
+
+
+def test_collate_keeps_only_the_answer_logits():
+    from recruitment_ai.training.qlora import collate_examples
+
+    example = {"input_ids": [5, 6, 7, 8, 9], "attention_mask": [1] * 5,
+               "labels": [IGNORE_INDEX, IGNORE_INDEX, IGNORE_INDEX, 8, 9]}
+    out = collate_examples([example], pad_id=0)
+    # the last 3 positions: the prompt's last token (predicts 8) and the 2 answer tokens
+    assert out["logits_to_keep"] == 3
+    assert out["labels"].tolist() == [[IGNORE_INDEX, 8, 9]]
+    assert out["input_ids"].tolist() == [[5, 6, 7, 8, 9]]  # the model still reads the whole text
+    two = collate_examples([example, {**example, "input_ids": [5, 6], "attention_mask": [1, 1],
+                                      "labels": [IGNORE_INDEX, 6]}], pad_id=0)
+    assert "logits_to_keep" not in two and two["labels"].shape == (2, 5)
 
 
 # --------------------------------------------------------------------------- Kaggle notebook and jobs

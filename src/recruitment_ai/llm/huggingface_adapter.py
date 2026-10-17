@@ -135,17 +135,18 @@ class HuggingFaceAdapter(LLMProvider):
         start = time.perf_counter()
         loader = AutoProcessor if self.vision else AutoTokenizer
         model_class = AutoModelForImageTextToText if self.vision else AutoModelForCausalLM
-        self._processor = loader.from_pretrained(self.model)
+        processor = loader.from_pretrained(self.model)
         if self.device == "cpu":
-            self._model = model_class.from_pretrained(self.model, dtype=getattr(torch, dtype_name)).to("cpu")
+            model = model_class.from_pretrained(self.model, dtype=getattr(torch, dtype_name)).to("cpu")
         else:  # spread the layers over every visible GPU (needs the accelerate package)
-            self._model = model_class.from_pretrained(self.model, dtype=getattr(torch, dtype_name),
-                                                      device_map="auto")
+            model = model_class.from_pretrained(self.model, dtype=getattr(torch, dtype_name), device_map="auto")
         if self.adapter:  # fine-tuned model = base model + our LoRA adapter
             from peft import PeftModel
 
-            self._model = PeftModel.from_pretrained(self._model, self.adapter)
-        self._model.eval()
+            model = PeftModel.from_pretrained(model, self.adapter)
+        # Kept only once complete: if the adapter fails to load, the next call must not silently
+        # use the base model (it happened on Kaggle: the "fine-tuned" check ran the base model)
+        self._processor, self._model = processor, model.eval()
         logger.info("Loaded %s%s on %s (%s) in %.0f s", self.model, f" + {self.adapter}" if self.adapter else "",
                     self.device, dtype_name, time.perf_counter() - start)
 

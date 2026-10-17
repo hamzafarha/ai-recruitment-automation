@@ -20,7 +20,7 @@ from typing import Any
 
 from pydantic import BaseModel, Field
 
-from recruitment_ai.training.data import IGNORE_INDEX, tokenize_example
+from recruitment_ai.training.data import IGNORE_INDEX, read_jsonl, tokenize_example
 
 LORA_TARGETS = ["q_proj", "k_proj", "v_proj", "o_proj", "gate_proj", "up_proj", "down_proj"]
 
@@ -129,6 +129,33 @@ def _callbacks(cfg: QLoRAConfig, is_main: bool) -> list[Any]:
     return callbacks
 
 
+def collate_examples(batch: list[dict[str, list[int]]], pad_id: int) -> dict[str, Any]:
+    """Pad a batch; with one example, ask the model for the answer's logits only.
+
+    The loss only covers the answer (the prompt's labels are IGNORE_INDEX), but by default the
+    model computes the logits of every position: 4,096 positions x Qwen's 152k-token vocabulary
+    is several GB and ran a T4 out of memory. ``logits_to_keep`` keeps the last positions only
+    (the answer plus the token before it, which predicts its first token); the labels are cut to
+    the same positions, so the loss is unchanged.
+    """
+    import torch
+
+    width = max(len(b["input_ids"]) for b in batch)
+
+    def pad(key: str, value: int) -> Any:
+        return torch.tensor([b[key] + [value] * (width - len(b[key])) for b in batch])
+
+    out: dict[str, Any] = {"input_ids": pad("input_ids", pad_id), "attention_mask": pad("attention_mask", 0),
+                           "labels": pad("labels", IGNORE_INDEX)}
+    if len(batch) == 1:  # with padding, answers would end at different positions
+        labels = batch[0]["labels"]
+        first_answer = next((i for i, label in enumerate(labels) if label != IGNORE_INDEX), 1)
+        keep = len(labels) - first_answer + 1
+        out["logits_to_keep"] = keep
+        out["labels"] = out["labels"][:, -keep:]
+    return out
+
+
 def train(cfg: QLoRAConfig) -> dict[str, Any]:
     """Train (or resume) and write ``state_file``; returns the same summary."""
     import torch
@@ -155,7 +182,7 @@ def train(cfg: QLoRAConfig) -> dict[str, Any]:
     tokenizer = AutoTokenizer.from_pretrained(cfg.model_path)
     if tokenizer.pad_token is None:
         tokenizer.pad_token = tokenizer.eos_token
-    examples = [json.loads(line) for line in Path(cfg.train_file).read_text(encoding="utf-8").splitlines() if line]
+    examples = read_jsonl(cfg.train_file)
     dataset = [t for t in (tokenize_example(tokenizer, e["messages"], cfg.max_seq_len) for e in examples) if t]
     skipped = len(examples) - len(dataset)
     log(f"{len(dataset)} training examples ({skipped} longer than {cfg.max_seq_len} tokens skipped), "
@@ -168,12 +195,11 @@ def train(cfg: QLoRAConfig) -> dict[str, Any]:
             bnb_4bit_compute_dtype=torch.float16),
     )
     model.config.use_cache = False  # incompatible with gradient checkpointing
-    # Like peft's prepare_model_for_kbit_training, except the embeddings and the output layer stay
-    # in float16: in float32 they would cost ~2.2 GB more per GPU (Qwen's 152k-token vocabulary)
+    # Unlike peft's prepare_model_for_kbit_training, nothing is cast to float32: a float32 norm
+    # weight turns Qwen's activations into float32 (weight * fp16 -> fp32), doubling the memory of
+    # every layer; it ran a T4 out of memory. The trained LoRA weights are still float32.
     for param in model.parameters():
         param.requires_grad = False
-        if param.ndim == 1 and param.dtype == torch.float16:  # norm weights: float32 for stability
-            param.data = param.data.float()
     model.gradient_checkpointing_enable(gradient_checkpointing_kwargs={"use_reentrant": False})
     model.enable_input_require_grads()
     model = get_peft_model(model, LoraConfig(r=cfg.lora_r, lora_alpha=cfg.lora_alpha, lora_dropout=cfg.lora_dropout,
@@ -182,13 +208,7 @@ def train(cfg: QLoRAConfig) -> dict[str, Any]:
         model.print_trainable_parameters()
 
     def collate(batch: list[dict[str, list[int]]]) -> dict[str, Any]:
-        width = max(len(b["input_ids"]) for b in batch)
-
-        def pad(key: str, value: int) -> Any:
-            return torch.tensor([b[key] + [value] * (width - len(b[key])) for b in batch])
-
-        return {"input_ids": pad("input_ids", tokenizer.pad_token_id), "attention_mask": pad("attention_mask", 0),
-                "labels": pad("labels", IGNORE_INDEX)}
+        return collate_examples(batch, tokenizer.pad_token_id)
 
     steps = math.ceil(len(dataset) / (cfg.batch_size * cfg.grad_accum * world) * cfg.epochs)
     args = TrainingArguments(

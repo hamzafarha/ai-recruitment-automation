@@ -85,6 +85,9 @@ def main() -> None:
         sys.exit("This job evaluates the fine-tuned model, but no adapter is attached: run the finetune job "
                  "until it completes, then push this job again.")
     # torch (with CUDA) and torchvision come with Kaggle's image; transformers is upgraded for Qwen2.5-VL
+    # Kaggle's image ships an old torchao that PEFT refuses when it loads the fine-tuned adapter;
+    # the project does not use torchao, so it is removed
+    sh("pip uninstall -y -q torchao", check=False)
     sh("pip install -q -U 'transformers>=4.56' 'accelerate>=1.0' 'peft>=0.13' && pip install -q pymupdf "
        "python-docx 'rapidocr>=3.0' onnxruntime pydantic-settings email-validator huggingface_hub httpx pyyaml pillow")
     # Use the code from src/ directly instead of "pip install -e .": pyproject pins Python 3.12,
