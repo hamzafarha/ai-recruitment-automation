@@ -1,0 +1,122 @@
+{
+ "status": "complete",
+ "global_step": 110,
+ "max_steps": 110,
+ "examples": 873,
+ "skipped_too_long": 127,
+ "gpu_processes": 2,
+ "resumed_from": null,
+ "minutes_this_session": 141.5,
+ "losses": [
+  {
+   "step": 5,
+   "loss": 0.39850029945373533
+  },
+  {
+   "step": 10,
+   "loss": 0.23648653030395508
+  },
+  {
+   "step": 15,
+   "loss": 0.18404924869537354
+  },
+  {
+   "step": 20,
+   "loss": 0.17765953540802001
+  },
+  {
+   "step": 25,
+   "loss": 0.17223258018493653
+  },
+  {
+   "step": 30,
+   "loss": 0.20466914176940917
+  },
+  {
+   "step": 35,
+   "loss": 0.14906643629074096
+  },
+  {
+   "step": 40,
+   "loss": 0.18746246099472047
+  },
+  {
+   "step": 45,
+   "loss": 0.18022546768188477
+  },
+  {
+   "step": 50,
+   "loss": 0.15907618999481202
+  },
+  {
+   "step": 55,
+   "loss": 0.15809545516967774
+  },
+  {
+   "step": 60,
+   "loss": 0.1684253454208374
+  },
+  {
+   "step": 65,
+   "loss": 0.14651360511779785
+  },
+  {
+   "step": 70,
+   "loss": 0.13897454738616943
+  },
+  {
+   "step": 75,
+   "loss": 0.13861753940582275
+  },
+  {
+   "step": 80,
+   "loss": 0.12886407375335693
+  },
+  {
+   "step": 85,
+   "loss": 0.13594624996185303
+  },
+  {
+   "step": 90,
+   "loss": 0.14128694534301758
+  },
+  {
+   "step": 95,
+   "loss": 0.16943992376327516
+  },
+  {
+   "step": 100,
+   "loss": 0.16205971240997313
+  },
+  {
+   "step": 105,
+   "loss": 0.14466543197631837
+  },
+  {
+   "step": 110,
+   "loss": 0.18242379426956176
+  }
+ ],
+ "config": {
+  "model_path": "/root/.cache/huggingface/hub/models--Qwen--Qwen2.5-7B-Instruct/snapshots/a09a35458c702b33eeacc393d103063234e8bc28",
+  "train_file": "/kaggle/working/data/train.jsonl",
+  "output_dir": "/kaggle/working/checkpoints",
+  "adapter_dir": "/kaggle/working/adapter",
+  "state_file": "/kaggle/working/finetune/training_state.json",
+  "max_seq_len": 4096,
+  "epochs": 1.0,
+  "learning_rate": 0.0002,
+  "lora_r": 16,
+  "lora_alpha": 32,
+  "lora_dropout": 0.05,
+  "batch_size": 1,
+  "grad_accum": 4,
+  "warmup_fraction": 0.03,
+  "max_grad_norm": 0.3,
+  "seed": 42,
+  "logging_steps": 5,
+  "stop_at": 1792247910.6583872,
+  "save_every_minutes": 15.0,
+  "hub_backup_repo": null
+ }
+}

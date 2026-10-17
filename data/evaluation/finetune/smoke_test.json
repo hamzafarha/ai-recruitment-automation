@@ -1,3 +1,186 @@
 {
- "skipped": "no adapter yet"
+ "adapter": "/kaggle/working/adapter",
+ "cvs": 5,
+ "errors": 1,
+ "experience_f1": 0.8421052631578948,
+ "education_f1": 1.0,
+ "skills_f1": 0.5352948155178551,
+ "overall_f1": 0.7924666928919167,
+ "per_cv": [
+  {
+   "id": "resume_c6adc373e38efedd",
+   "error": "ImportError: Found an incompatible version of torchao. Found version 0.10.0, but only versions above 0.16.0 are supported",
+   "seconds": null,
+   "scores": {
+    "experience": {
+     "gold": 1,
+     "pred": 0,
+     "matched": 0,
+     "dates": 0,
+     "dates_exact": 0,
+     "dates_year": 0
+    },
+    "education": {
+     "gold": 0,
+     "pred": 0,
+     "matched": 0
+    },
+    "skills": {
+     "gold": 20,
+     "pred": 0,
+     "gold_found": 0,
+     "pred_correct": 0,
+     "gold_technical": 16,
+     "technical_found": 0
+    },
+    "identity": {
+     "correct": 0,
+     "wrong": 0,
+     "missed": 3,
+     "hallucinated": 0,
+     "gold_fields": 3
+    }
+   }
+  },
+  {
+   "id": "resume_e6845b1feb439ef1",
+   "error": null,
+   "seconds": 44.79,
+   "scores": {
+    "experience": {
+     "gold": 2,
+     "pred": 2,
+     "matched": 2,
+     "dates": 4,
+     "dates_exact": 4,
+     "dates_year": 4
+    },
+    "education": {
+     "gold": 0,
+     "pred": 0,
+     "matched": 0
+    },
+    "skills": {
+     "gold": 26,
+     "pred": 23,
+     "gold_found": 15,
+     "pred_correct": 15,
+     "gold_technical": 21,
+     "technical_found": 15
+    },
+    "identity": {
+     "correct": 4,
+     "wrong": 0,
+     "missed": 0,
+     "hallucinated": 0,
+     "gold_fields": 4
+    }
+   }
+  },
+  {
+   "id": "resume_7c78e716a3fd5e62",
+   "error": null,
+   "seconds": 72.2,
+   "scores": {
+    "experience": {
+     "gold": 4,
+     "pred": 4,
+     "matched": 4,
+     "dates": 7,
+     "dates_exact": 7,
+     "dates_year": 7
+    },
+    "education": {
+     "gold": 1,
+     "pred": 1,
+     "matched": 1
+    },
+    "skills": {
+     "gold": 41,
+     "pred": 21,
+     "gold_found": 21,
+     "pred_correct": 21,
+     "gold_technical": 30,
+     "technical_found": 10
+    },
+    "identity": {
+     "correct": 3,
+     "wrong": 0,
+     "missed": 0,
+     "hallucinated": 1,
+     "gold_fields": 3
+    }
+   }
+  },
+  {
+   "id": "resume_4844f3216e346728",
+   "error": null,
+   "seconds": 34.59,
+   "scores": {
+    "experience": {
+     "gold": 2,
+     "pred": 2,
+     "matched": 2,
+     "dates": 4,
+     "dates_exact": 4,
+     "dates_year": 4
+    },
+    "education": {
+     "gold": 1,
+     "pred": 1,
+     "matched": 1
+    },
+    "skills": {
+     "gold": 4,
+     "pred": 7,
+     "gold_found": 1,
+     "pred_correct": 1,
+     "gold_technical": 4,
+     "technical_found": 1
+    },
+    "identity": {
+     "correct": 4,
+     "wrong": 0,
+     "missed": 0,
+     "hallucinated": 0,
+     "gold_fields": 4
+    }
+   }
+  },
+  {
+   "id": "resume_111e2a04a7a792b5",
+   "error": null,
+   "seconds": 50.85,
+   "scores": {
+    "experience": {
+     "gold": 1,
+     "pred": 1,
+     "matched": 0,
+     "dates": 0,
+     "dates_exact": 0,
+     "dates_year": 0
+    },
+    "education": {
+     "gold": 3,
+     "pred": 3,
+     "matched": 3
+    },
+    "skills": {
+     "gold": 19,
+     "pred": 16,
+     "gold_found": 10,
+     "pred_correct": 11,
+     "gold_technical": 9,
+     "technical_found": 6
+    },
+    "identity": {
+     "correct": 3,
+     "wrong": 1,
+     "missed": 0,
+     "hallucinated": 0,
+     "gold_fields": 4
+    }
+   }
+  }
+ ]
 }

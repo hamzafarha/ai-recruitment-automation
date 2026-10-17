@@ -13,7 +13,7 @@
  "batch_size": 1,
  "grad_accum": 4,
  "seed": 42,
- "stop_at": 1792246297.061273,
+ "stop_at": 1792247910.6583872,
  "save_every_minutes": 15,
  "hub_backup_repo": null
 }

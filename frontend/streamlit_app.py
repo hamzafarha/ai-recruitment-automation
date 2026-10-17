@@ -1,6 +1,8 @@
 """Recruiter Web UI built with Streamlit."""
 
+import json
 import os
+from pathlib import Path
 
 import requests
 import streamlit as st
@@ -31,6 +33,121 @@ def check_backend_status() -> tuple[bool, dict]:
         return False, {"error": str(e)}
 
 
+EVAL_DIR = Path(__file__).resolve().parents[1] / "data" / "evaluation"
+
+
+def _pct(x: float | None) -> str:
+    return "—" if x is None else f"{x:.0%}"
+
+
+def _pts(x: float | None) -> str:
+    return "—" if x is None else f"{x * 100:+.1f} pts"
+
+
+def show_evaluation() -> None:
+    """Before / after fine-tuning: two extraction evaluation runs side by side (files on this PC)."""
+    import pandas as pd
+
+    from recruitment_ai.evaluation.compare import (
+        compare_documents,
+        compare_groups,
+        compare_metrics,
+        default_pair,
+        list_runs,
+        load_run,
+    )
+
+    st.header("Extraction: before vs after fine-tuning")
+    st.caption(
+        "Same frozen evaluation CVs, same code and same scoring: only the model differs. The runs are "
+        "made on Kaggle and downloaded with `python scripts/kaggle_run.py fetch <job>`."
+    )
+    root = EVAL_DIR / "extraction"
+    names = list_runs(root)
+    if not names:
+        st.info("No evaluation report on this computer yet: `python scripts/kaggle_run.py fetch extraction`.")
+        return
+    default_before, default_after = default_pair(names)
+    col1, col2 = st.columns(2)
+    before_name = col1.selectbox("Before", names, index=names.index(default_before))
+    after_options = [n for n in names if n != before_name]
+    if not after_options:
+        st.info("Only one run so far. The fine-tuned run appears here after "
+                "`python scripts/kaggle_run.py all extraction-ft`.")
+        return
+    after_name = col2.selectbox("After", after_options, index=after_options.index(default_after)
+                                if default_after in after_options else 0)
+    before, after = load_run(root, before_name), load_run(root, after_name)
+    mb, ma = before["metrics"], after["metrics"]
+
+    rows = compare_metrics(before, after)
+    cards = st.columns(4)
+    for i, row in enumerate(rows):
+        cards[i % 4].metric(row["metric"], _pct(row["after"]),
+                            delta=None if row["delta"] is None else _pts(row["delta"]))
+    halluc_b = (mb["overall"].get("identity") or {}).get("hallucinations")
+    halluc_a = (ma["overall"].get("identity") or {}).get("hallucinations")
+    sec_b, sec_a = mb.get("mean_seconds_per_document"), ma.get("mean_seconds_per_document")
+    c1, c2, c3, c4 = st.columns(4)
+    c1.metric("Documents", ma.get("documents"))
+    c2.metric("Errors", ma.get("errors"), delta=(ma.get("errors") or 0) - (mb.get("errors") or 0),
+              delta_color="inverse")
+    c3.metric("Identity hallucinations", halluc_a, delta_color="inverse",
+              delta=halluc_a - halluc_b if halluc_a is not None and halluc_b is not None else None)
+    c4.metric("Seconds per CV", sec_a, delta_color="inverse",
+              delta=round(sec_a - sec_b, 1) if sec_a and sec_b else None)
+
+    import altair as alt
+
+    # Axis from 0 to 100% and metrics in the cards' order: a truncated axis exaggerates small gaps
+    bars = pd.DataFrame([{"metric": r["metric"], "run": run, "score": r[key] * 100}
+                         for r in rows for run, key in (("Before", "before"), ("After", "after"))
+                         if r[key] is not None])
+    st.altair_chart(
+        alt.Chart(bars).mark_bar().encode(
+            y=alt.Y("metric:N", sort=[r["metric"] for r in rows], title=None),
+            yOffset=alt.YOffset("run:N", sort=["Before", "After"]),
+            x=alt.X("score:Q", scale=alt.Scale(domain=[0, 100]), title="score (%)"),
+            color=alt.Color("run:N", sort=["Before", "After"], title=None,
+                            scale=alt.Scale(range=["#9ecae9", "#1f77b4"])),
+            tooltip=["metric", "run", alt.Tooltip("score:Q", format=".1f")],
+        ),
+        use_container_width=True,
+    )
+
+    tab_groups, tab_docs, tab_training = st.tabs(["By document type", "Per CV", "Fine-tuning run"])
+    with tab_groups:
+        for group, label in (("input_type", "Input type"), ("source", "Source"), ("language", "Language")):
+            st.markdown(f"**{label}** — overall F1")
+            st.dataframe(
+                [{label: r[group], "Documents": r["documents"], "Before": _pct(r["before"]),
+                  "After": _pct(r["after"]), "Change": _pts(r["delta"])} for r in compare_groups(before, after, group)],
+                hide_index=True, use_container_width=True)
+    with tab_docs:
+        docs = compare_documents(before, after)
+        better = sum(1 for d in docs if (d["delta"] or 0) > 0.005)
+        worse = sum(1 for d in docs if (d["delta"] or 0) < -0.005)
+        st.write(f"**{better}** CVs improved, **{worse}** got worse, **{len(docs) - better - worse}** unchanged "
+                 "(overall F1 per CV).")
+        st.dataframe(
+            [{"CV": d["doc_id"], "Type": d["input_type"], "Language": d["language"], "Before": _pct(d["before"]),
+              "After": _pct(d["after"]), "Change": _pts(d["delta"]),
+              "Error": "before" if d["error_before"] else ("after" if d["error_after"] else "")} for d in docs],
+            hide_index=True, use_container_width=True)
+    with tab_training:
+        report = EVAL_DIR / "finetune" / "report.md"
+        state = EVAL_DIR / "finetune" / "training_state.json"
+        if report.exists():
+            st.markdown(report.read_text(encoding="utf-8"))
+        if state.exists():
+            losses = json.loads(state.read_text(encoding="utf-8")).get("losses", [])
+            if losses:
+                st.markdown("**Training loss** (lower = the model fits the training answers better)")
+                st.line_chart(pd.DataFrame(losses).set_index("step")["loss"])
+        else:
+            st.info("Training details not downloaded yet: `python scripts/kaggle_run.py fetch finetune`.")
+
+
 # Sidebar Navigation
 st.sidebar.title("💼 AI Recruitment")
 backend_alive, backend_info = check_backend_status()
@@ -47,6 +164,7 @@ nav_selection = st.sidebar.radio(
     [
         "Dashboard",
         "Candidates",
+        "Evaluation",
         "Candidate Details",
         "Jobs",
         "Candidate Matching",
@@ -168,6 +286,9 @@ elif nav_selection == "Candidates":
         )
         with st.expander("Raw JSON"):
             st.json(result)
+
+elif nav_selection == "Evaluation":
+    show_evaluation()
 
 elif nav_selection == "Candidate Details":
     st.header("Candidate Profile Details")
