@@ -1,0 +1,112 @@
+{
+  "id": "RecruitNewJob001",
+  "name": "Recruitment — New job (advertisement intake)",
+  "nodes": [
+    {
+      "parameters": {
+        "content": "## New job\nPOST a job advertisement here: `{\"text\": \"...\", \"title\": optional, \"company\": optional}` (e.g. from a form or a careers mailbox).\n\nThe API turns it into structured requirements with Qwen (must-have / nice-to-have, importance, minimum years), stores and indexes the job; the app then notifies the recruiters.",
+        "height": 220,
+        "width": 420
+      },
+      "id": "de8821a5-4538-58ac-bf9b-889dad304a67",
+      "name": "About",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -40,
+        -300
+      ]
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "new-job",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "3da25e31-27df-5f95-bf86-958ab31b3ea9",
+      "name": "Job advertisement received",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        0,
+        0
+      ],
+      "webhookId": "286f7fb3-0673-5c02-b792-b42a345864cd"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://host.docker.internal:8000/api/v1/webhooks/n8n/job",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ text: $json.body.text, title: $json.body.title || null, company: $json.body.company || null }) }}",
+        "options": {
+          "timeout": 900000,
+          "response": {
+            "response": {
+              "neverError": true,
+              "fullResponse": true
+            }
+          }
+        }
+      },
+      "id": "ef1b9c1f-69f1-51c2-8b7c-1d129c1b9f19",
+      "name": "Structure and store the job",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        260,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify($json.body) }}",
+        "options": {
+          "responseCode": "={{ $json.statusCode }}"
+        }
+      },
+      "id": "5aa1e451-2133-57f4-9841-96ad39de97ab",
+      "name": "Answer",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        520,
+        0
+      ]
+    }
+  ],
+  "connections": {
+    "Job advertisement received": {
+      "main": [
+        [
+          {
+            "node": "Structure and store the job",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Structure and store the job": {
+      "main": [
+        [
+          {
+            "node": "Answer",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "errorWorkflow": "RecruitErrAlert1"
+  },
+  "active": false,
+  "pinData": {},
+  "tags": []
+}

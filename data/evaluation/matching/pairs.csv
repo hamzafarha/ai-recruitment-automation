@@ -1,0 +1,145 @@
+system,pair_id,split,job_role,cv_id,cv_source,reference_grade,predicted_grade,score,warnings
+semantic (default thresholds),P01,dev,backend_developer,syn04,synthetic,1,1,28.3,
+semantic (default thresholds),P02,dev,backend_developer,syn08,synthetic,2,1,49.0,
+semantic (default thresholds),P03,test,backend_developer,resume_072d5c5e36d5bf4a,real,1,1,31.3,
+semantic (default thresholds),P04,test,backend_developer,syn07,synthetic,2,1,40.3,
+semantic (default thresholds),P05,dev,backend_developer,resume_de422f4e08059b5c,real,1,1,37.9,
+semantic (default thresholds),P06,dev,backend_developer,syn12,synthetic,1,0,0.0,
+semantic (default thresholds),P07,test,backend_developer,resume_10355e4023a15b00,real,1,1,29.8,
+semantic (default thresholds),P08,test,backend_developer,resume_5e6dafcd0ad6e829,real,1,0,8.1,
+semantic (default thresholds),P09,test,data_analyst_scientist,syn03,synthetic,1,1,30.2,
+semantic (default thresholds),P10,test,data_analyst_scientist,resume_641f95f66aa9bdf6,real,0,0,0.0,
+semantic (default thresholds),P11,test,data_analyst_scientist,resume_4d073f3dad6b06af,real,1,1,25.0,
+semantic (default thresholds),P12,dev,data_analyst_scientist,resume_257780038de667ad,real,1,1,42.9,
+semantic (default thresholds),P13,dev,data_analyst_scientist,syn10,synthetic,1,1,28.3,
+semantic (default thresholds),P14,test,data_analyst_scientist,syn09,synthetic,3,2,63.7,
+semantic (default thresholds),P15,test,data_analyst_scientist,resume_047360d8d19a0da9,real,1,0,17.7,
+semantic (default thresholds),P16,dev,devops_cloud,syn04,synthetic,1,1,32.6,
+semantic (default thresholds),P17,test,devops_cloud,resume_a23abb2ec16c9adf,real,1,0,9.4,
+semantic (default thresholds),P18,dev,devops_cloud,syn06,synthetic,2,1,49.0,
+semantic (default thresholds),P19,test,devops_cloud,resume_7ea43a25f45978af,real,2,2,74.0,
+semantic (default thresholds),P20,dev,devops_cloud,resume_b4c8313e592846fb,real,1,0,24.0,
+semantic (default thresholds),P21,test,devops_cloud,resume_7dd08e298826bb63,real,1,0,7.1,
+semantic (default thresholds),P22,test,devops_cloud,syn05,synthetic,3,1,49.0,
+semantic (default thresholds),P23,test,ml_engineer,syn01,synthetic,3,1,25.0,
+semantic (default thresholds),P24,test,ml_engineer,syn03,synthetic,3,1,49.0,
+semantic (default thresholds),P25,dev,ml_engineer,syn04,synthetic,1,1,28.3,
+semantic (default thresholds),P26,test,ml_engineer,syn11,synthetic,3,1,48.2,
+semantic (default thresholds),P27,dev,ml_engineer,resume_586ec4393d3caf9b,real,3,1,46.0,
+semantic (default thresholds),P28,test,ml_engineer,resume_1e2b6603d0fdbc13,real,1,1,25.0,
+semantic (default thresholds),P29,test,ml_engineer,resume_377f4092a0bba616,real,1,0,10.6,
+semantic (default thresholds),P30,test,nlp_llm_engineer,resume_6a4a1759d0497497,real,1,1,28.6,
+semantic (default thresholds),P31,dev,nlp_llm_engineer,syn04,synthetic,1,1,30.7,
+semantic (default thresholds),P32,test,nlp_llm_engineer,syn11,synthetic,1,0,18.9,
+semantic (default thresholds),P33,dev,nlp_llm_engineer,syn02,synthetic,3,1,42.5,
+semantic (default thresholds),P34,dev,nlp_llm_engineer,resume_71af00e1aadacd42,real,1,0,12.1,
+semantic (default thresholds),P35,test,nlp_llm_engineer,syn01,synthetic,3,2,61.4,
+semantic (default thresholds),P36,test,nlp_llm_engineer,syn03,synthetic,1,1,25.0,
+semantic (calibrated on dev),P01,dev,backend_developer,syn04,synthetic,1,1,28.3,
+semantic (calibrated on dev),P02,dev,backend_developer,syn08,synthetic,2,1,49.0,
+semantic (calibrated on dev),P03,test,backend_developer,resume_072d5c5e36d5bf4a,real,1,1,31.3,
+semantic (calibrated on dev),P04,test,backend_developer,syn07,synthetic,2,1,45.4,
+semantic (calibrated on dev),P05,dev,backend_developer,resume_de422f4e08059b5c,real,1,1,44.0,
+semantic (calibrated on dev),P06,dev,backend_developer,syn12,synthetic,1,0,0.0,
+semantic (calibrated on dev),P07,test,backend_developer,resume_10355e4023a15b00,real,1,1,40.0,
+semantic (calibrated on dev),P08,test,backend_developer,resume_5e6dafcd0ad6e829,real,1,0,8.1,
+semantic (calibrated on dev),P09,test,data_analyst_scientist,syn03,synthetic,1,1,30.2,
+semantic (calibrated on dev),P10,test,data_analyst_scientist,resume_641f95f66aa9bdf6,real,0,0,0.0,
+semantic (calibrated on dev),P11,test,data_analyst_scientist,resume_4d073f3dad6b06af,real,1,1,25.0,
+semantic (calibrated on dev),P12,dev,data_analyst_scientist,resume_257780038de667ad,real,1,1,42.9,
+semantic (calibrated on dev),P13,dev,data_analyst_scientist,syn10,synthetic,1,1,28.3,
+semantic (calibrated on dev),P14,test,data_analyst_scientist,syn09,synthetic,3,2,63.7,
+semantic (calibrated on dev),P15,test,data_analyst_scientist,resume_047360d8d19a0da9,real,1,0,17.7,
+semantic (calibrated on dev),P16,dev,devops_cloud,syn04,synthetic,1,1,32.6,
+semantic (calibrated on dev),P17,test,devops_cloud,resume_a23abb2ec16c9adf,real,1,0,9.4,
+semantic (calibrated on dev),P18,dev,devops_cloud,syn06,synthetic,2,1,49.0,
+semantic (calibrated on dev),P19,test,devops_cloud,resume_7ea43a25f45978af,real,2,2,74.0,
+semantic (calibrated on dev),P20,dev,devops_cloud,resume_b4c8313e592846fb,real,1,0,24.0,
+semantic (calibrated on dev),P21,test,devops_cloud,resume_7dd08e298826bb63,real,1,0,11.8,
+semantic (calibrated on dev),P22,test,devops_cloud,syn05,synthetic,3,1,49.0,
+semantic (calibrated on dev),P23,test,ml_engineer,syn01,synthetic,3,1,25.0,
+semantic (calibrated on dev),P24,test,ml_engineer,syn03,synthetic,3,1,49.0,
+semantic (calibrated on dev),P25,dev,ml_engineer,syn04,synthetic,1,1,28.3,
+semantic (calibrated on dev),P26,test,ml_engineer,syn11,synthetic,3,1,49.0,
+semantic (calibrated on dev),P27,dev,ml_engineer,resume_586ec4393d3caf9b,real,3,1,46.0,
+semantic (calibrated on dev),P28,test,ml_engineer,resume_1e2b6603d0fdbc13,real,1,1,25.0,
+semantic (calibrated on dev),P29,test,ml_engineer,resume_377f4092a0bba616,real,1,0,10.6,
+semantic (calibrated on dev),P30,test,nlp_llm_engineer,resume_6a4a1759d0497497,real,1,1,38.1,
+semantic (calibrated on dev),P31,dev,nlp_llm_engineer,syn04,synthetic,1,1,30.7,
+semantic (calibrated on dev),P32,test,nlp_llm_engineer,syn11,synthetic,1,0,18.9,
+semantic (calibrated on dev),P33,dev,nlp_llm_engineer,syn02,synthetic,3,1,47.2,
+semantic (calibrated on dev),P34,dev,nlp_llm_engineer,resume_71af00e1aadacd42,real,1,0,14.4,
+semantic (calibrated on dev),P35,test,nlp_llm_engineer,syn01,synthetic,3,2,68.5,
+semantic (calibrated on dev),P36,test,nlp_llm_engineer,syn03,synthetic,1,1,34.2,
+llm (Qwen2.5-7B + RAG),P01,dev,backend_developer,syn04,synthetic,1,0,20.2,
+llm (Qwen2.5-7B + RAG),P02,dev,backend_developer,syn08,synthetic,2,1,49.0,
+llm (Qwen2.5-7B + RAG),P03,test,backend_developer,resume_072d5c5e36d5bf4a,real,1,1,43.5,
+llm (Qwen2.5-7B + RAG),P04,test,backend_developer,syn07,synthetic,2,1,45.5,
+llm (Qwen2.5-7B + RAG),P05,dev,backend_developer,resume_de422f4e08059b5c,real,1,1,44.5,
+llm (Qwen2.5-7B + RAG),P06,dev,backend_developer,syn12,synthetic,1,0,17.2,
+llm (Qwen2.5-7B + RAG),P07,test,backend_developer,resume_10355e4023a15b00,real,1,1,38.5,
+llm (Qwen2.5-7B + RAG),P08,test,backend_developer,resume_5e6dafcd0ad6e829,real,1,0,13.2,
+llm (Qwen2.5-7B + RAG),P09,test,data_analyst_scientist,syn03,synthetic,1,1,49.0,
+llm (Qwen2.5-7B + RAG),P10,test,data_analyst_scientist,resume_641f95f66aa9bdf6,real,0,0,0.0,
+llm (Qwen2.5-7B + RAG),P11,test,data_analyst_scientist,resume_4d073f3dad6b06af,real,1,0,15.9,
+llm (Qwen2.5-7B + RAG),P12,dev,data_analyst_scientist,resume_257780038de667ad,real,1,1,49.0,
+llm (Qwen2.5-7B + RAG),P13,dev,data_analyst_scientist,syn10,synthetic,1,1,33.6,
+llm (Qwen2.5-7B + RAG),P14,test,data_analyst_scientist,syn09,synthetic,3,2,74.0,
+llm (Qwen2.5-7B + RAG),P15,test,data_analyst_scientist,resume_047360d8d19a0da9,real,1,1,26.6,
+llm (Qwen2.5-7B + RAG),P16,dev,devops_cloud,syn04,synthetic,1,0,10.6,
+llm (Qwen2.5-7B + RAG),P17,test,devops_cloud,resume_a23abb2ec16c9adf,real,1,0,10.6,
+llm (Qwen2.5-7B + RAG),P18,dev,devops_cloud,syn06,synthetic,2,1,49.0,
+llm (Qwen2.5-7B + RAG),P19,test,devops_cloud,resume_7ea43a25f45978af,real,2,1,49.0,
+llm (Qwen2.5-7B + RAG),P20,dev,devops_cloud,resume_b4c8313e592846fb,real,1,1,34.2,
+llm (Qwen2.5-7B + RAG),P21,test,devops_cloud,resume_7dd08e298826bb63,real,1,0,10.6,
+llm (Qwen2.5-7B + RAG),P22,test,devops_cloud,syn05,synthetic,3,2,60.2,
+llm (Qwen2.5-7B + RAG),P23,test,ml_engineer,syn01,synthetic,3,2,74.0,
+llm (Qwen2.5-7B + RAG),P24,test,ml_engineer,syn03,synthetic,3,2,74.0,
+llm (Qwen2.5-7B + RAG),P25,dev,ml_engineer,syn04,synthetic,1,1,33.6,
+llm (Qwen2.5-7B + RAG),P26,test,ml_engineer,syn11,synthetic,3,2,74.0,
+llm (Qwen2.5-7B + RAG),P27,dev,ml_engineer,resume_586ec4393d3caf9b,real,3,2,74.0,
+llm (Qwen2.5-7B + RAG),P28,test,ml_engineer,resume_1e2b6603d0fdbc13,real,1,2,70.8,
+llm (Qwen2.5-7B + RAG),P29,test,ml_engineer,resume_377f4092a0bba616,real,1,2,70.8,
+llm (Qwen2.5-7B + RAG),P30,test,nlp_llm_engineer,resume_6a4a1759d0497497,real,1,1,29.5,
+llm (Qwen2.5-7B + RAG),P31,dev,nlp_llm_engineer,syn04,synthetic,1,1,44.9,Some excerpts quoted by the model were not found in the CV: those requirements were counted as only listed
+llm (Qwen2.5-7B + RAG),P32,test,nlp_llm_engineer,syn11,synthetic,1,1,27.1,
+llm (Qwen2.5-7B + RAG),P33,dev,nlp_llm_engineer,syn02,synthetic,3,1,47.2,
+llm (Qwen2.5-7B + RAG),P34,dev,nlp_llm_engineer,resume_71af00e1aadacd42,real,1,1,29.5,
+llm (Qwen2.5-7B + RAG),P35,test,nlp_llm_engineer,syn01,synthetic,3,1,49.0,
+llm (Qwen2.5-7B + RAG),P36,test,nlp_llm_engineer,syn03,synthetic,1,1,34.2,
+agent (LangGraph screening),P01,dev,backend_developer,syn04,synthetic,1,0,19.2,The agent's checks changed 3 requirement(s) of the model's judgement (see the report's trace)
+agent (LangGraph screening),P02,dev,backend_developer,syn08,synthetic,2,1,39.5,The agent's checks changed 2 requirement(s) of the model's judgement (see the report's trace)
+agent (LangGraph screening),P03,test,backend_developer,resume_072d5c5e36d5bf4a,real,1,1,31.3,AI analysis failed (OutOfMemoryError: CUDA out of memory. Tried to allocate 2.81 GiB. GPU 0 has a total capacity of 14.56 GiB of which 1.81 GiB is free. Including non-PyTorch memor); the fast semantic estimate is shown instead
+agent (LangGraph screening),P04,test,backend_developer,syn07,synthetic,2,1,32.4,The agent's checks changed 2 requirement(s) of the model's judgement (see the report's trace)
+agent (LangGraph screening),P05,dev,backend_developer,resume_de422f4e08059b5c,real,1,1,34.4,The agent's checks changed 1 requirement(s) of the model's judgement (see the report's trace)
+agent (LangGraph screening),P06,dev,backend_developer,syn12,synthetic,1,0,4.0,The agent's checks changed 1 requirement(s) of the model's judgement (see the report's trace)
+agent (LangGraph screening),P07,test,backend_developer,resume_10355e4023a15b00,real,1,1,40.0,AI analysis failed (OutOfMemoryError: CUDA out of memory. Tried to allocate 546.00 MiB. GPU 0 has a total capacity of 14.56 GiB of which 452.81 MiB is free. Including non-PyTorch m); the fast semantic estimate is shown instead
+agent (LangGraph screening),P08,test,backend_developer,resume_5e6dafcd0ad6e829,real,1,0,8.1,AI analysis failed (OutOfMemoryError: CUDA out of memory. Tried to allocate 2.47 GiB. GPU 0 has a total capacity of 14.56 GiB of which 2.18 GiB is free. Including non-PyTorch memor); the fast semantic estimate is shown instead
+agent (LangGraph screening),P09,test,data_analyst_scientist,syn03,synthetic,1,0,10.6,The agent's checks changed 6 requirement(s) of the model's judgement (see the report's trace)
+agent (LangGraph screening),P10,test,data_analyst_scientist,resume_641f95f66aa9bdf6,real,0,0,4.5,
+agent (LangGraph screening),P11,test,data_analyst_scientist,resume_4d073f3dad6b06af,real,1,0,15.9,The agent's checks changed 2 requirement(s) of the model's judgement (see the report's trace)
+agent (LangGraph screening),P12,dev,data_analyst_scientist,resume_257780038de667ad,real,1,1,40.7,The agent's checks changed 1 requirement(s) of the model's judgement (see the report's trace)
+agent (LangGraph screening),P13,dev,data_analyst_scientist,syn10,synthetic,1,1,29.8,
+agent (LangGraph screening),P14,test,data_analyst_scientist,syn09,synthetic,3,2,72.6,The agent's checks changed 2 requirement(s) of the model's judgement (see the report's trace)
+agent (LangGraph screening),P15,test,data_analyst_scientist,resume_047360d8d19a0da9,real,1,1,30.1,
+agent (LangGraph screening),P16,dev,devops_cloud,syn04,synthetic,1,0,7.1,The agent's checks changed 2 requirement(s) of the model's judgement (see the report's trace)
+agent (LangGraph screening),P17,test,devops_cloud,resume_a23abb2ec16c9adf,real,1,0,9.4,The agent's checks changed 2 requirement(s) of the model's judgement (see the report's trace)
+agent (LangGraph screening),P18,dev,devops_cloud,syn06,synthetic,2,1,49.0,AI analysis failed (OutOfMemoryError: CUDA out of memory. Tried to allocate 518.00 MiB. GPU 0 has a total capacity of 14.56 GiB of which 512.81 MiB is free. Including non-PyTorch m); the fast semantic estimate is shown instead
+agent (LangGraph screening),P19,test,devops_cloud,resume_7ea43a25f45978af,real,2,2,74.0,AI analysis failed (OutOfMemoryError: CUDA out of memory. Tried to allocate 3.68 GiB. GPU 0 has a total capacity of 14.56 GiB of which 852.81 MiB is free. Including non-PyTorch mem); the fast semantic estimate is shown instead
+agent (LangGraph screening),P20,dev,devops_cloud,resume_b4c8313e592846fb,real,1,1,37.8,The agent's checks changed 4 requirement(s) of the model's judgement (see the report's trace)
+agent (LangGraph screening),P21,test,devops_cloud,resume_7dd08e298826bb63,real,1,0,11.8,AI analysis failed (OutOfMemoryError: CUDA out of memory. Tried to allocate 2.97 GiB. GPU 0 has a total capacity of 14.56 GiB of which 1.65 GiB is free. Including non-PyTorch memor); the fast semantic estimate is shown instead
+agent (LangGraph screening),P22,test,devops_cloud,syn05,synthetic,3,1,45.4,The agent's checks changed 5 requirement(s) of the model's judgement (see the report's trace)
+agent (LangGraph screening),P23,test,ml_engineer,syn01,synthetic,3,0,14.9,The agent's checks changed 5 requirement(s) of the model's judgement (see the report's trace)
+agent (LangGraph screening),P24,test,ml_engineer,syn03,synthetic,3,0,4.3,The agent's checks changed 5 requirement(s) of the model's judgement (see the report's trace)
+agent (LangGraph screening),P25,dev,ml_engineer,syn04,synthetic,1,1,26.6,
+agent (LangGraph screening),P26,test,ml_engineer,syn11,synthetic,3,1,30.9,The agent's checks changed 4 requirement(s) of the model's judgement (see the report's trace)
+agent (LangGraph screening),P27,dev,ml_engineer,resume_586ec4393d3caf9b,real,3,2,74.0,
+agent (LangGraph screening),P28,test,ml_engineer,resume_1e2b6603d0fdbc13,real,1,1,25.0,The agent's checks changed 3 requirement(s) of the model's judgement (see the report's trace)
+agent (LangGraph screening),P29,test,ml_engineer,resume_377f4092a0bba616,real,1,1,29.8,The agent's checks changed 2 requirement(s) of the model's judgement (see the report's trace)
+agent (LangGraph screening),P30,test,nlp_llm_engineer,resume_6a4a1759d0497497,real,1,1,38.1,AI analysis failed (OutOfMemoryError: CUDA out of memory. Tried to allocate 2.66 GiB. GPU 0 has a total capacity of 14.56 GiB of which 2.00 GiB is free. Including non-PyTorch memor); the fast semantic estimate is shown instead
+agent (LangGraph screening),P31,dev,nlp_llm_engineer,syn04,synthetic,1,0,13.0,The agent's checks changed 1 requirement(s) of the model's judgement (see the report's trace)
+agent (LangGraph screening),P32,test,nlp_llm_engineer,syn11,synthetic,1,0,13.0,The agent's checks changed 2 requirement(s) of the model's judgement (see the report's trace)
+agent (LangGraph screening),P33,dev,nlp_llm_engineer,syn02,synthetic,3,1,25.0,The agent's checks changed 5 requirement(s) of the model's judgement (see the report's trace)
+agent (LangGraph screening),P34,dev,nlp_llm_engineer,resume_71af00e1aadacd42,real,1,1,25.0,The agent's checks changed 1 requirement(s) of the model's judgement (see the report's trace)
+agent (LangGraph screening),P35,test,nlp_llm_engineer,syn01,synthetic,3,1,49.0,The agent's checks changed 4 requirement(s) of the model's judgement (see the report's trace)
+agent (LangGraph screening),P36,test,nlp_llm_engineer,syn03,synthetic,1,1,27.4,The agent's checks changed 5 requirement(s) of the model's judgement (see the report's trace)

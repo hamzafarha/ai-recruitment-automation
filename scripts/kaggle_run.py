@@ -7,12 +7,16 @@ Usage (from the project root; needs the Kaggle token in ~/.kaggle/access_token):
   python scripts/kaggle_run.py all <job> [<job> ...]   # package + push + wait + fetch (jobs run in parallel)
   python scripts/kaggle_run.py package                 # build the private dataset (shared by all jobs)
   python scripts/kaggle_run.py upload                  # send the latest code to Kaggle, start no job
-  python scripts/kaggle_run.py push <job> [<job> ...]  # upload the dataset (new version) and start the jobs
+  python scripts/kaggle_run.py push <job> [<job> ...]  # package + upload (new version) + start the jobs, no waiting
   python scripts/kaggle_run.py status <job> [<job> ...]
   python scripts/kaggle_run.py fetch <job> [<job> ...] # download the reports into data/evaluation/<folder>/
 
 Jobs: extraction, extraction-text, extraction-vlm (Step 2, one engine each), rag (Step 3),
-finetune (Step 9: QLoRA notebook) and extraction-ft (Step 9: evaluation of the fine-tuned model).
+finetune (Step 9: QLoRA notebook), extraction-ft (Step 9: evaluation of the fine-tuned model),
+matching (DSO3: matching vs the graded pairs), screening (DSO4: the application pipeline's screening
+agent on the same pairs, next to the fixed analysis), agent (the AI assistant on scripted questions)
+and server (the AI server notebook used by the app: "push server" creates it on Kaggle with the
+fine-tuned adapter attached; then open it on kaggle.com and run it interactively).
 
 What is uploaded: code, knowledge base, the frozen evaluation set (ids, labels, answer keys,
 synthetic CVs) and the skill lexicon, as one PRIVATE dataset. Real CV PDFs are not uploaded:
@@ -55,6 +59,16 @@ JOBS: dict[str, dict] = {
     # the real pipeline again, with Qwen + the LoRA adapter produced by the "finetune" job
     "extraction-ft": {"slug": "recruitment-ai-extraction-ft-eval", "code": KERNELS / "extraction_kernel.py",
                       "output": "extraction", "set": {"ENGINE": "ocr_llm", "ADAPTER": "auto"}, "inputs": ["finetune"]},
+    "matching": {"slug": "recruitment-ai-matching-eval", "code": KERNELS / "app_eval_kernel.py",
+                 "output": "matching", "set": {"TASK": "matching"}},
+    # the screening agent on the matching pairs; the fixed analysis' saved predictions are reused
+    "screening": {"slug": "recruitment-ai-screening-eval", "code": KERNELS / "app_eval_kernel.py",
+                  "output": "matching", "set": {"TASK": "screening"}},
+    "agent": {"slug": "recruitment-ai-agent-eval", "code": KERNELS / "app_eval_kernel.py",
+              "output": "agent", "set": {"TASK": "agent"}},
+    # interactive only: the batch run started by the push stops at once (see the notebook)
+    "server": {"slug": "recruitment-ai-model-server", "code": ROOT / "notebooks" / "kaggle" / "model_server.ipynb",
+               "output": "server", "inputs": ["finetune"]},
 }
 
 
@@ -85,10 +99,15 @@ def project_files() -> list[Path]:
     """Everything the jobs need; nothing personal beyond the (public-dataset) answer keys."""
     files = [ROOT / "pyproject.toml", ROOT / "README.md", ROOT / "scripts" / "eval_extraction.py",
              ROOT / "scripts" / "eval_rag.py", ROOT / "scripts" / "finetune_qlora.py",
+             ROOT / "scripts" / "eval_matching.py", ROOT / "scripts" / "eval_agent.py",
              ROOT / "data" / "interim" / "skills" / "skill_lexicon.json"]
-    for folder in (ROOT / "src", ROOT / "data" / "knowledge_base", ROOT / "data" / "processed" / "eval_v1"):
+    for folder in (ROOT / "src", ROOT / "data" / "knowledge_base", ROOT / "data" / "processed" / "eval_v1",
+                   ROOT / "data" / "processed" / "agent_eval"):
         files += [p for p in folder.rglob("*") if p.is_file() and "__pycache__" not in p.parts
                   and ".egg-info" not in str(p)]
+    # the fixed analysis' saved answers on the matching pairs (CV excerpts of the public dataset): the
+    # "screening" job compares the agent with them without running the fixed analysis again
+    files += sorted((ROOT / "data" / "evaluation" / "matching" / "predictions" / "llm").glob("*.json"))
     split_dirs = {"dev": "validation", "test": "test"}
     with (ROOT / "data" / "processed" / "eval_v1" / "cv_pool.csv").open(encoding="utf-8") as f:
         for row in csv.DictReader(f):
@@ -221,7 +240,7 @@ def main() -> None:
     args = parser.parse_args()
     if unknown := [job for job in args.jobs if job not in JOBS]:
         parser.error(f"unknown job(s) {', '.join(unknown)}; choose from {', '.join(JOBS)}")
-    if args.command in ("all", "package", "upload"):
+    if args.command in ("all", "package", "upload", "push"):  # always send the current code
         package()
     if args.command == "upload":  # code only, no job: e.g. for notebooks/kaggle/model_server.ipynb
         upload_dataset("code update")

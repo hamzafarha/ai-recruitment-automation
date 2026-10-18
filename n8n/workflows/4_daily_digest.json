@@ -1,0 +1,170 @@
+{
+  "id": "RecruitDigest001",
+  "name": "Recruitment — Daily digest",
+  "nodes": [
+    {
+      "parameters": {
+        "content": "## Daily digest\nEvery day at 9:00 (or on demand from the app: Notifications → Run the daily digest now): what waits for a recruiter decision, candidates not analysed yet, and the service levels at risk (first analysis within one working day, an answer within ten).",
+        "height": 200,
+        "width": 420
+      },
+      "id": "de8821a5-4538-58ac-bf9b-889dad304a67",
+      "name": "About",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -40,
+        -300
+      ]
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "triggerAtHour": 9
+            }
+          ]
+        }
+      },
+      "id": "3a9946f1-5ef8-56eb-b84b-ef071f6d14c9",
+      "name": "Every day at 9:00",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        0,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "daily-digest",
+        "responseMode": "onReceived",
+        "options": {}
+      },
+      "id": "3d120c3b-14fd-5600-8661-31e312d79e0a",
+      "name": "Run now",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        0,
+        200
+      ],
+      "webhookId": "e734fba7-cf3a-5b14-9ba5-ab6b89a95f24"
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "http://host.docker.internal:8000/api/v1/webhooks/n8n/digest",
+        "options": {
+          "timeout": 60000,
+          "response": {
+            "response": {
+              "neverError": true
+            }
+          }
+        }
+      },
+      "id": "db10885e-36e8-5b6d-9f99-02c1d8ee7872",
+      "name": "Get the digest",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        260,
+        100
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const d = $input.first().json;\nreturn [{ json: { event: 'digest', title: d.title || 'Recruiting digest', message: d.message || JSON.stringify(d), payload: d.figures || {} } }];"
+      },
+      "id": "808ebaed-2595-569e-9e24-2521b7394306",
+      "name": "Prepare the notification",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        520,
+        100
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://host.docker.internal:8000/api/v1/notifications",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ event: $json.event, title: $json.title, message: $json.message, payload: $json.payload, source: 'n8n' }) }}",
+        "options": {
+          "timeout": 30000,
+          "response": {
+            "response": {
+              "neverError": true
+            }
+          }
+        }
+      },
+      "id": "d4a0ef49-a3b6-5fda-a3e3-c85506e5efca",
+      "name": "Show it in the app",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        780,
+        100
+      ]
+    }
+  ],
+  "connections": {
+    "Every day at 9:00": {
+      "main": [
+        [
+          {
+            "node": "Get the digest",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Run now": {
+      "main": [
+        [
+          {
+            "node": "Get the digest",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get the digest": {
+      "main": [
+        [
+          {
+            "node": "Prepare the notification",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare the notification": {
+      "main": [
+        [
+          {
+            "node": "Show it in the app",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "errorWorkflow": "RecruitErrAlert1"
+  },
+  "active": false,
+  "pinData": {},
+  "tags": []
+}

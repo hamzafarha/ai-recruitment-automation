@@ -1,9 +1,24 @@
-"""SQLAlchemy models for recruitment automation."""
+"""PostgreSQL tables of the application (diagram part 8, Data Storage).
+
+Profiles, job requirements and reports are stored whole as JSON (they are produced and read as
+documents by the pipeline); the columns next to them are the fields the app filters and sorts on.
+Works on PostgreSQL and on SQLite (unit tests).
+
+- candidates: the structured CV (CandidateProfile) + the CV text used as evidence;
+- jobs: the job and its requirements (M1.. must-haves, N1.. nice-to-haves);
+- applications: one application through the recruitment pipeline, from the CV received to the
+  final decision, with the log of every step (services/pipeline.py);
+- analyses: one candidate-job report (MatchReport), with its review status;
+- reviews: the recruiter's decisions on an analysis (human validation, part 9);
+- notifications: events shown in the app and sent to n8n;
+- agent_runs: questions asked to the AI assistant, with the tools it used (traceability).
+"""
 
 import uuid
 from datetime import datetime
 
 from sqlalchemy import (
+    JSON,
     Boolean,
     Column,
     DateTime,
@@ -19,255 +34,141 @@ from recruitment_ai.database.connection import Base
 
 
 def generate_uuid() -> str:
-    """Generate string UUID."""
     return str(uuid.uuid4())
 
 
 class Candidate(Base):
-    """Candidate entity."""
-
     __tablename__ = "candidates"
 
     id = Column(String(36), primary_key=True, default=generate_uuid)
-    full_name = Column(String(255), nullable=False)
-    email = Column(String(255), unique=True, index=True, nullable=True)
+    external_id = Column(String(100), index=True, nullable=True)  # e.g. "syn01" for demo data (no duplicates)
+    full_name = Column(String(255), nullable=True)
+    email = Column(String(255), index=True, nullable=True)
     phone = Column(String(50), nullable=True)
     location = Column(String(255), nullable=True)
     summary = Column(Text, nullable=True)
-    raw_cv_path = Column(String(512), nullable=True)
+    profile = Column(JSON, nullable=False, default=dict)
+    cv_text = Column(Text, nullable=True)
+    cv_filename = Column(String(255), nullable=True)
+    source = Column(String(30), nullable=False, default="upload")  # upload | demo | n8n | portal
+    extraction = Column(JSON, nullable=True)  # model, timings, input type...
     created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
-    updated_at = Column(
-        DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False
-    )
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
 
-    documents = relationship(
-        "CandidateDocument", back_populates="candidate", cascade="all, delete-orphan"
-    )
-    educations = relationship(
-        "Education", back_populates="candidate", cascade="all, delete-orphan"
-    )
-    experiences = relationship(
-        "Experience", back_populates="candidate", cascade="all, delete-orphan"
-    )
-    skills = relationship(
-        "Skill", back_populates="candidate", cascade="all, delete-orphan"
-    )
-    certifications = relationship(
-        "Certification", back_populates="candidate", cascade="all, delete-orphan"
-    )
-    projects = relationship(
-        "Project", back_populates="candidate", cascade="all, delete-orphan"
-    )
-    languages = relationship(
-        "Language", back_populates="candidate", cascade="all, delete-orphan"
-    )
-    matches = relationship(
-        "CandidateMatch", back_populates="candidate", cascade="all, delete-orphan"
-    )
-
-
-class CandidateDocument(Base):
-    """Uploaded and parsed candidate CV document."""
-
-    __tablename__ = "candidate_documents"
-
-    id = Column(String(36), primary_key=True, default=generate_uuid)
-    candidate_id = Column(String(36), ForeignKey("candidates.id"), nullable=True)
-    filename = Column(String(255), nullable=False)
-    file_path = Column(String(512), nullable=False)
-    file_type = Column(String(50), nullable=False)
-    file_size_bytes = Column(Integer, nullable=False)
-    page_count = Column(Integer, default=1)
-    extracted_text = Column(Text, nullable=True)
-    created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
-
-    candidate = relationship("Candidate", back_populates="documents")
-
-
-class Education(Base):
-    """Candidate education history."""
-
-    __tablename__ = "educations"
-
-    id = Column(String(36), primary_key=True, default=generate_uuid)
-    candidate_id = Column(String(36), ForeignKey("candidates.id"), nullable=False)
-    institution = Column(String(255), nullable=False)
-    degree = Column(String(255), nullable=False)
-    field_of_study = Column(String(255), nullable=True)
-    start_date = Column(String(50), nullable=True)
-    end_date = Column(String(50), nullable=True)
-    grade = Column(String(50), nullable=True)
-
-    candidate = relationship("Candidate", back_populates="educations")
-
-
-class Experience(Base):
-    """Candidate work experience."""
-
-    __tablename__ = "experiences"
-
-    id = Column(String(36), primary_key=True, default=generate_uuid)
-    candidate_id = Column(String(36), ForeignKey("candidates.id"), nullable=False)
-    company = Column(String(255), nullable=False)
-    title = Column(String(255), nullable=False)
-    location = Column(String(255), nullable=True)
-    start_date = Column(String(50), nullable=True)
-    end_date = Column(String(50), nullable=True)
-    is_current = Column(Boolean, default=False)
-    description = Column(Text, nullable=True)
-
-    candidate = relationship("Candidate", back_populates="experiences")
-
-
-class Skill(Base):
-    """Candidate skill."""
-
-    __tablename__ = "skills"
-
-    id = Column(String(36), primary_key=True, default=generate_uuid)
-    candidate_id = Column(String(36), ForeignKey("candidates.id"), nullable=False)
-    name = Column(String(100), nullable=False, index=True)
-    category = Column(String(100), nullable=True)
-    proficiency_level = Column(String(50), nullable=True)
-    years_experience = Column(Float, nullable=True)
-
-    candidate = relationship("Candidate", back_populates="skills")
-
-
-class Certification(Base):
-    """Candidate certification."""
-
-    __tablename__ = "certifications"
-
-    id = Column(String(36), primary_key=True, default=generate_uuid)
-    candidate_id = Column(String(36), ForeignKey("candidates.id"), nullable=False)
-    name = Column(String(255), nullable=False)
-    issuer = Column(String(255), nullable=True)
-    issue_date = Column(String(50), nullable=True)
-    expiration_date = Column(String(50), nullable=True)
-    credential_id = Column(String(255), nullable=True)
-
-    candidate = relationship("Candidate", back_populates="certifications")
-
-
-class Project(Base):
-    """Candidate projects."""
-
-    __tablename__ = "projects"
-
-    id = Column(String(36), primary_key=True, default=generate_uuid)
-    candidate_id = Column(String(36), ForeignKey("candidates.id"), nullable=False)
-    title = Column(String(255), nullable=False)
-    description = Column(Text, nullable=True)
-    technologies = Column(String(512), nullable=True)
-    url = Column(String(512), nullable=True)
-
-    candidate = relationship("Candidate", back_populates="projects")
-
-
-class Language(Base):
-    """Candidate languages."""
-
-    __tablename__ = "languages"
-
-    id = Column(String(36), primary_key=True, default=generate_uuid)
-    candidate_id = Column(String(36), ForeignKey("candidates.id"), nullable=False)
-    language = Column(String(100), nullable=False)
-    proficiency = Column(String(50), nullable=True)
-
-    candidate = relationship("Candidate", back_populates="languages")
+    analyses = relationship("Analysis", back_populates="candidate", cascade="all, delete-orphan")
+    applications = relationship("Application", back_populates="candidate", cascade="all, delete-orphan")
 
 
 class Job(Base):
-    """Job vacancy description."""
-
     __tablename__ = "jobs"
 
     id = Column(String(36), primary_key=True, default=generate_uuid)
+    external_id = Column(String(100), index=True, nullable=True)
     title = Column(String(255), nullable=False)
-    department = Column(String(255), nullable=True)
+    company = Column(String(255), nullable=True)
     location = Column(String(255), nullable=True)
     employment_type = Column(String(100), nullable=True)
-    description = Column(Text, nullable=False)
-    status = Column(String(50), default="active")
+    role = Column(String(80), nullable=True)  # knowledge-base role key, e.g. "ml_engineer"
+    description = Column(Text, nullable=False, default="")
+    requirements = Column(JSON, nullable=False, default=list)
+    status = Column(String(20), nullable=False, default="open")
+    source = Column(String(30), nullable=False, default="manual")  # manual | demo | n8n
     created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
-    updated_at = Column(
-        DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False
-    )
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
 
-    requirements = relationship(
-        "JobRequirement", back_populates="job", cascade="all, delete-orphan"
-    )
-    matches = relationship(
-        "CandidateMatch", back_populates="job", cascade="all, delete-orphan"
-    )
+    analyses = relationship("Analysis", back_populates="job", cascade="all, delete-orphan")
+    applications = relationship("Application", back_populates="job")
 
 
-class JobRequirement(Base):
-    """Specific job requirement item."""
+class Application(Base):
+    """One application through the recruitment pipeline (CV received -> final decision)."""
 
-    __tablename__ = "job_requirements"
+    __tablename__ = "applications"
 
     id = Column(String(36), primary_key=True, default=generate_uuid)
-    job_id = Column(String(36), ForeignKey("jobs.id"), nullable=False)
-    requirement_text = Column(Text, nullable=False)
-    requirement_type = Column(String(50), default="required")
-    importance = Column(String(50), default="high")
-    min_years_experience = Column(Float, nullable=True)
+    candidate_id = Column(String(36), ForeignKey("candidates.id", ondelete="CASCADE"), nullable=True, index=True)
+    job_id = Column(String(36), ForeignKey("jobs.id", ondelete="SET NULL"), nullable=True, index=True)  # None = spontaneous
+    source = Column(String(30), nullable=False, default="upload")  # upload | portal | email | n8n
+    filename = Column(String(255), nullable=True)
+    orchestrator = Column(String(20), nullable=False, default="api")  # n8n | api: who runs the next steps
+    status = Column(String(30), nullable=False, default="running")  # running | waiting_review | closed | failed
+    stage = Column(String(30), nullable=False, default="intake")  # the step running, waiting or failed
+    steps = Column(JSON, nullable=False, default=list)  # one entry per step: status, timings, result, error
+    work = Column(JSON, nullable=True)  # what passes between steps (CV text, profile, reports), removed once stored
+    decision = Column(String(30), nullable=True)  # final decision: interview | shortlist | reject
+    resume_url = Column(String(1000), nullable=True)  # n8n Wait node: the recruiter's decision resumes the workflow
+    error = Column(Text, nullable=True)
+    created_at = Column(DateTime, default=datetime.utcnow, nullable=False, index=True)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
 
-    job = relationship("Job", back_populates="requirements")
-
-
-class CandidateMatch(Base):
-    """Match calculation between Candidate and Job."""
-
-    __tablename__ = "candidate_matches"
-
-    id = Column(String(36), primary_key=True, default=generate_uuid)
-    candidate_id = Column(String(36), ForeignKey("candidates.id"), nullable=False)
-    job_id = Column(String(36), ForeignKey("jobs.id"), nullable=False)
-    overall_score = Column(Float, nullable=False)
-    semantic_score = Column(Float, nullable=True)
-    skill_score = Column(Float, nullable=True)
-    experience_score = Column(Float, nullable=True)
-    recommendation = Column(String(100), nullable=True)
-    match_status = Column(String(50), default="pending_review")
-    created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
-
-    candidate = relationship("Candidate", back_populates="matches")
-    job = relationship("Job", back_populates="matches")
-    feedback = relationship(
-        "RecruiterFeedback", back_populates="match", cascade="all, delete-orphan"
-    )
+    candidate = relationship("Candidate", back_populates="applications")
+    job = relationship("Job", back_populates="applications")
+    analyses = relationship("Analysis", back_populates="application", order_by="Analysis.created_at")
 
 
 class Analysis(Base):
-    """Deep candidate-job qualitative analysis."""
-
     __tablename__ = "analyses"
 
     id = Column(String(36), primary_key=True, default=generate_uuid)
-    candidate_id = Column(String(36), ForeignKey("candidates.id"), nullable=False)
-    job_id = Column(String(36), ForeignKey("jobs.id"), nullable=False)
-    strengths = Column(Text, nullable=True)
-    weaknesses = Column(Text, nullable=True)
-    missing_skills = Column(Text, nullable=True)
-    summary_report = Column(Text, nullable=True)
-    agent_trace_id = Column(String(255), nullable=True)
+    candidate_id = Column(String(36), ForeignKey("candidates.id", ondelete="CASCADE"), nullable=False, index=True)
+    job_id = Column(String(36), ForeignKey("jobs.id", ondelete="CASCADE"), nullable=False, index=True)
+    # the application whose screening produced it (None: analysis asked from the Matching page)
+    application_id = Column(String(36), ForeignKey("applications.id", ondelete="SET NULL"), nullable=True, index=True)
+    method = Column(String(20), nullable=False, default="llm")  # llm | agent | semantic
+    grade = Column(Integer, nullable=False)
+    score = Column(Float, nullable=False)
+    must_coverage = Column(Float, nullable=True)
+    nice_coverage = Column(Float, nullable=True)
+    action = Column(String(30), nullable=True)
+    report = Column(JSON, nullable=False, default=dict)
+    # pending_review | shortlisted | interview | on_hold | rejected
+    status = Column(String(30), nullable=False, default="pending_review")
+    final_grade = Column(Integer, nullable=True)  # grade after the recruiter's adjustment
     created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
+
+    candidate = relationship("Candidate", back_populates="analyses")
+    job = relationship("Job", back_populates="analyses")
+    application = relationship("Application", back_populates="analyses")
+    reviews = relationship("Review", back_populates="analysis", cascade="all, delete-orphan",
+                           order_by="Review.created_at")
 
 
-class RecruiterFeedback(Base):
-    """Human-in-the-loop recruiter validation and feedback."""
-
-    __tablename__ = "recruiter_feedbacks"
+class Review(Base):
+    __tablename__ = "reviews"
 
     id = Column(String(36), primary_key=True, default=generate_uuid)
-    match_id = Column(String(36), ForeignKey("candidate_matches.id"), nullable=False)
-    recruiter_id = Column(String(100), default="default_recruiter")
-    decision = Column(String(50), nullable=False)  # Approved, Rejected, Modified
-    rating = Column(Integer, nullable=True)
-    comments = Column(Text, nullable=True)
+    analysis_id = Column(String(36), ForeignKey("analyses.id", ondelete="CASCADE"), nullable=False, index=True)
+    reviewer = Column(String(100), nullable=False, default="recruiter")
+    decision = Column(String(30), nullable=False)  # shortlist | interview | hold | reject
+    adjusted_grade = Column(Integer, nullable=True)
+    interview_at = Column(String(50), nullable=True)
+    notes = Column(Text, nullable=True)
     created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
 
-    match = relationship("CandidateMatch", back_populates="feedback")
+    analysis = relationship("Analysis", back_populates="reviews")
+
+
+class Notification(Base):
+    __tablename__ = "notifications"
+
+    id = Column(String(36), primary_key=True, default=generate_uuid)
+    event = Column(String(60), nullable=False)
+    title = Column(String(255), nullable=False)
+    message = Column(Text, nullable=True)
+    payload = Column(JSON, nullable=True)
+    source = Column(String(30), nullable=False, default="app")  # app | n8n
+    read = Column(Boolean, nullable=False, default=False)
+    created_at = Column(DateTime, default=datetime.utcnow, nullable=False, index=True)
+
+
+class AgentRun(Base):
+    __tablename__ = "agent_runs"
+
+    id = Column(String(36), primary_key=True, default=generate_uuid)
+    question = Column(Text, nullable=False)
+    answer = Column(Text, nullable=True)
+    steps = Column(JSON, nullable=True)
+    sources = Column(JSON, nullable=True)
+    seconds = Column(Float, nullable=True)
+    created_at = Column(DateTime, default=datetime.utcnow, nullable=False)

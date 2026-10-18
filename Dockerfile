@@ -18,11 +18,12 @@ COPY pyproject.toml README.md ./
 
 # Install python dependencies with minimal build
 RUN pip install --no-cache-dir --upgrade pip && \
-    pip install --no-cache-dir ".[api,database,vectorstore]"
+    pip install --no-cache-dir ".[api,database,vectorstore,document-processing,agents,frontend]" reportlab
 
 # Copy source code
 COPY src/ ./src/
 COPY api/ ./api/
+COPY frontend/ ./frontend/
 COPY configs/ ./configs/
 COPY alembic/ ./alembic/
 COPY alembic.ini ./
@@ -30,6 +31,6 @@ COPY alembic.ini ./
 # Install package in editable mode
 RUN pip install --no-cache-dir -e .
 
-EXPOSE 8000
+EXPOSE 8000 8501
 
 CMD ["uvicorn", "api.main:app", "--host", "0.0.0.0", "--port", "8000"]

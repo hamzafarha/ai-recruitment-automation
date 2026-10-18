@@ -31,6 +31,10 @@ class BaseReranker(ABC):
         """Rerank candidates based on semantic cross-attention or model score."""
         pass
 
+    def score_pairs(self, pairs: list[list[str]]) -> list[float] | None:
+        """Relevance (0..1) of each (query, document) pair, or None without a cross-encoder."""
+        return None
+
 
 class OptionalReranker(BaseReranker):
     """Optional reranker that uses Cohere if API key is provided, or passes through safely."""
@@ -46,7 +50,7 @@ class OptionalReranker(BaseReranker):
             from sentence_transformers import CrossEncoder
 
             device = self.settings.embedding_device
-            model_kwargs = {"torch_dtype": "float16"} if device == "cuda" else {}
+            model_kwargs = {"torch_dtype": "float16"} if str(device).startswith("cuda") else {}
             self._cross_encoder = CrossEncoder(
                 self.settings.reranking_model,
                 device=device,
@@ -54,6 +58,16 @@ class OptionalReranker(BaseReranker):
                 model_kwargs=model_kwargs,
             )
         return self._cross_encoder
+
+    def score_pairs(self, pairs: list[list[str]]) -> list[float] | None:
+        """BGE cross-encoder relevance of (query, document) pairs; None when it is not available."""
+        if not pairs or "bge-reranker" not in self.settings.reranking_model.lower():
+            return None
+        try:
+            return [float(s) for s in self.cross_encoder.predict(pairs)]
+        except Exception as exc:
+            logger.info(f"BGE reranker unavailable ({exc}).")
+            return None
 
     def rerank(
         self, query: str, documents: list[VectorSearchResult], top_n: int = 3

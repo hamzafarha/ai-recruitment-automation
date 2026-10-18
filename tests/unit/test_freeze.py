@@ -82,3 +82,18 @@ def test_verify_detects_changed_and_missing_files(tmp_path: Path):
     edited.write_text("modified", encoding="utf-8")
     deleted.unlink()
     assert verify(tmp_path / "manifest.csv", tmp_path) == {"changed": ["edited.txt"], "missing": ["deleted.txt"]}
+
+
+def test_verify_skips_the_kinds_a_job_does_not_read(tmp_path: Path):
+    key, pdf = tmp_path / "answer_key.json", tmp_path / "cv.pdf"
+    for f in (key, pdf):
+        f.write_text("original", encoding="utf-8")
+    rows = [{"path": f.name, "kind": kind, "in_git": "no", "bytes": 8, "sha256": sha256(f)}
+            for f, kind in ((key, "real_cv_answer_key"), (pdf, "real_cv_pdf"))]
+    write_manifest(rows, tmp_path / "manifest.csv")
+    pdf.unlink()  # the real CVs' PDFs are not uploaded to Kaggle
+
+    assert verify(tmp_path / "manifest.csv", tmp_path)["missing"] == ["cv.pdf"]
+    assert verify(tmp_path / "manifest.csv", tmp_path, skip_kinds={"real_cv_pdf"}) == {"changed": [], "missing": []}
+    key.write_text("modified", encoding="utf-8")  # the files still checked must not change
+    assert verify(tmp_path / "manifest.csv", tmp_path, skip_kinds={"real_cv_pdf"})["changed"] == ["answer_key.json"]

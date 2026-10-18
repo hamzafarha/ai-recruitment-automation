@@ -322,22 +322,26 @@ class CVExtractor:
             self._vision_llm = HuggingFaceAdapter(model=self.llm.settings.multimodal_model, vision=True)
         return self._vision_llm
 
-    def extract_text(self, cv_text: str, cv_id: str | None = None) -> tuple[CandidateProfile, dict[str, Any]]:
+    def extract_text(self, cv_text: str, cv_id: str | None = None,
+                     use_adapter: bool = True) -> tuple[CandidateProfile, dict[str, Any]]:
+        """``use_adapter=False``: the base model, without the fine-tuned adapter (to compare them)."""
         text = cv_text.strip()
         try:
-            return self._extract_text(text, cv_id, MAX_INPUT_CHARS)
+            return self._extract_text(text, cv_id, MAX_INPUT_CHARS, use_adapter)
         except Exception as exc:  # torch is not imported here: recognise the error by its name
             if type(exc).__name__ != "OutOfMemoryError":
                 raise
         # Out of GPU memory (a very long CV): free it, outside the except block so the failed
         # attempt's tensors can be released, then retry once with a shorter text
         self.free_memory()
-        profile, stats = self._extract_text(text, cv_id, OOM_RETRY_CHARS)
+        profile, stats = self._extract_text(text, cv_id, OOM_RETRY_CHARS, use_adapter)
         return profile, {**stats, "retried_after_out_of_memory": True}
 
-    def _extract_text(self, text: str, cv_id: str | None, max_chars: int) -> tuple[CandidateProfile, dict[str, Any]]:
+    def _extract_text(self, text: str, cv_id: str | None, max_chars: int,
+                      use_adapter: bool = True) -> tuple[CandidateProfile, dict[str, Any]]:
+        options = {} if use_adapter else {"use_adapter": False}  # LLMs without adapters take no such option
         raw = self.llm.generate_structured(text_prompt(text, max_chars), CVExtraction, system_prompt=SYSTEM_PROMPT,
-                                           max_tokens=MAX_OUTPUT_TOKENS)
+                                           max_tokens=MAX_OUTPUT_TOKENS, **options)
         stats = {**self.llm.last_stats, "input_chars": len(text), "input_truncated": len(text) > max_chars}
         return to_profile(raw, cv_id, self.normalizer, cv_text=text), stats
 
@@ -349,12 +353,17 @@ class CVExtractor:
 
     def extract_document(self, path: Path, cv_id: str | None = None) -> tuple[CandidateProfile, dict[str, Any]]:
         """Parse a CV file (OCR when needed) then structure its text."""
+        profile, stats, _ = self.extract_file(path, cv_id)
+        return profile, stats
+
+    def extract_file(self, path: Path, cv_id: str | None = None) -> tuple[CandidateProfile, dict[str, Any], str]:
+        """Like ``extract_document``, plus the CV text (kept by the app as the evidence source)."""
         start = time.perf_counter()
         parsed: ParsedDocument = self.parser.parse(Path(path))
         parse_seconds = round(time.perf_counter() - start, 2)
         profile, stats = self.extract_text(parsed.raw_text, cv_id)
         return profile, {**stats, "parse_seconds": parse_seconds, "input_type": parsed.metadata.get("input_type"),
-                         "parser": parsed.metadata.get("engine")}
+                         "parser": parsed.metadata.get("engine")}, parsed.raw_text
 
     def extract_images(self, images: list[bytes], cv_id: str | None = None) -> tuple[CandidateProfile, dict[str, Any]]:
         """Vision path: the VLM reads PNG page images directly (no OCR)."""

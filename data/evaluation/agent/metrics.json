@@ -1,0 +1,140 @@
+{
+ "summary": {
+  "overall": {
+   "scenarios": 20,
+   "success": 0.65,
+   "tool_choice": 0.8333,
+   "answer": 0.8,
+   "grounded": 0.9,
+   "mean_tool_calls": 1.7,
+   "mean_llm_calls": 3.6,
+   "mean_seconds": 50.7,
+   "with_warnings": 5
+  },
+  "refusals": {
+   "scenarios": 2,
+   "success": 0.5,
+   "tool_choice": null,
+   "answer": 0.5,
+   "grounded": 1.0,
+   "mean_tool_calls": 2.0,
+   "mean_llm_calls": 4.0,
+   "mean_seconds": 82.0,
+   "with_warnings": 0
+  },
+  "by_category": {
+   "candidate": {
+    "scenarios": 1,
+    "success": 1.0,
+    "tool_choice": 1.0,
+    "answer": 1.0,
+    "grounded": 1.0,
+    "mean_tool_calls": 2.0,
+    "mean_llm_calls": 4.0,
+    "mean_seconds": 31.9,
+    "with_warnings": 0
+   },
+   "conversation": {
+    "scenarios": 1,
+    "success": 1.0,
+    "tool_choice": 1.0,
+    "answer": 1.0,
+    "grounded": 1.0,
+    "mean_tool_calls": 0.0,
+    "mean_llm_calls": 2.0,
+    "mean_seconds": 13.6,
+    "with_warnings": 0
+   },
+   "fairness": {
+    "scenarios": 2,
+    "success": 0.5,
+    "tool_choice": null,
+    "answer": 0.5,
+    "grounded": 1.0,
+    "mean_tool_calls": 2.0,
+    "mean_llm_calls": 4.0,
+    "mean_seconds": 82.0,
+    "with_warnings": 0
+   },
+   "job": {
+    "scenarios": 2,
+    "success": 0.5,
+    "tool_choice": 0.5,
+    "answer": 1.0,
+    "grounded": 1.0,
+    "mean_tool_calls": 1.5,
+    "mean_llm_calls": 3.5,
+    "mean_seconds": 34.1,
+    "with_warnings": 1
+   },
+   "knowledge": {
+    "scenarios": 5,
+    "success": 0.8,
+    "tool_choice": 0.8,
+    "answer": 0.8,
+    "grounded": 1.0,
+    "mean_tool_calls": 0.8,
+    "mean_llm_calls": 2.8,
+    "mean_seconds": 25.4,
+    "with_warnings": 0
+   },
+   "matching": {
+    "scenarios": 2,
+    "success": 0.0,
+    "tool_choice": 0.5,
+    "answer": 0.5,
+    "grounded": 0.5,
+    "mean_tool_calls": 3.0,
+    "mean_llm_calls": 4.5,
+    "mean_seconds": 50.5,
+    "with_warnings": 1
+   },
+   "ranking": {
+    "scenarios": 3,
+    "success": 0.6667,
+    "tool_choice": 1.0,
+    "answer": 0.6667,
+    "grounded": 1.0,
+    "mean_tool_calls": 2.0,
+    "mean_llm_calls": 4.0,
+    "mean_seconds": 104.2,
+    "with_warnings": 1
+   },
+   "reranking": {
+    "scenarios": 1,
+    "success": 0.0,
+    "tool_choice": 1.0,
+    "answer": 1.0,
+    "grounded": 0.0,
+    "mean_tool_calls": 1.0,
+    "mean_llm_calls": 3.0,
+    "mean_seconds": 26.9,
+    "with_warnings": 0
+   },
+   "robustness": {
+    "scenarios": 1,
+    "success": 1.0,
+    "tool_choice": 1.0,
+    "answer": 1.0,
+    "grounded": 1.0,
+    "mean_tool_calls": 2.0,
+    "mean_llm_calls": 4.0,
+    "mean_seconds": 29.9,
+    "with_warnings": 1
+   },
+   "search": {
+    "scenarios": 2,
+    "success": 1.0,
+    "tool_choice": 1.0,
+    "answer": 1.0,
+    "grounded": 1.0,
+    "mean_tool_calls": 3.0,
+    "mean_llm_calls": 4.5,
+    "mean_seconds": 69.6,
+    "with_warnings": 1
+   }
+  }
+ },
+ "model": "Qwen/Qwen2.5-7B-Instruct",
+ "scenarios": 20
+}

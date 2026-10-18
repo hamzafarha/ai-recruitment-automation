@@ -53,6 +53,7 @@ class MockLLMAdapter(LLMProvider):
         system_prompt: str | None = None,
         images: list[bytes] | None = None,
         max_tokens: int = 2048,
+        use_adapter: bool = True,
     ) -> T:
         """Fake answer of the right shape (accepts the CV extractor's arguments)."""
         import typing

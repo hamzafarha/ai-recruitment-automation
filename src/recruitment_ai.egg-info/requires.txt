@@ -13,7 +13,7 @@ langgraph>=0.0.39
 langchain-openai>=0.1.3
 
 [all]
-recruitment-ai[agents,api,database,dev,document-processing,frontend,ml,vectorstore]
+recruitment-ai[agents,api,database,dev,document-processing,frontend,ml,notebooks,vectorstore]
 
 [api]
 fastapi>=0.111.0
@@ -27,6 +27,7 @@ psycopg2-binary>=2.9.9
 asyncpg>=0.29.0
 
 [dev]
+kaggle>=1.7
 pytest>=8.1.0
 pytest-asyncio>=0.23.0
 pytest-cov>=5.0.0
@@ -39,14 +40,24 @@ types-requests>=2.31.0
 [document-processing]
 pymupdf>=1.24.0
 python-docx>=1.1.0
+rapidocr>=3.0
+onnxruntime>=1.17
 
 [frontend]
-streamlit>=1.33.0
+streamlit>=1.50.0
 
 [ml]
 torch>=2.2.0
-transformers>=4.40.0
+torchvision>=0.17.0
+transformers>=4.56.0
+accelerate>=1.0.0
 sentence-transformers>=2.6.0
+pillow>=10.0.0
+
+[notebooks]
+ipykernel>=6.29.0
+matplotlib>=3.8.0
+reportlab>=4.0.0
 
 [training]
 peft>=0.10.0
@@ -55,4 +66,4 @@ bitsandbytes>=0.43.0
 accelerate>=0.29.0
 
 [vectorstore]
-qdrant-client>=1.8.0
+qdrant-client<1.20.0,>=1.19.0

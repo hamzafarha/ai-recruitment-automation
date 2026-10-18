@@ -47,7 +47,7 @@ class SentenceTransformerEmbeddingService(BaseEmbeddingService):
                 )
                 device = self.settings.embedding_device
                 # fp16 halves VRAM (bge-m3: ~2.2 GB -> ~1.1 GB on a 4 GB GPU)
-                model_kwargs = {"torch_dtype": "float16"} if device == "cuda" else {}
+                model_kwargs = {"torch_dtype": "float16"} if str(device).startswith("cuda") else {}
                 self._model = SentenceTransformer(
                     self.settings.embedding_model,
                     device=device,

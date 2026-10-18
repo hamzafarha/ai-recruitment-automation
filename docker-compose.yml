@@ -35,38 +35,41 @@ services:
       retries: 5
       start_period: 5s
 
+  # Optional: the API and the interface can also run in Docker (by default we run them with Python
+  # on the PC, README "Try everything"). Model settings (LLM_PROVIDER, REMOTE_LLM_URL...) come from .env.
   api:
     build:
       context: .
       dockerfile: Dockerfile
     container_name: recruitment_api
     restart: unless-stopped
+    profiles: ["app"]
     depends_on:
       postgres:
         condition: service_healthy
       qdrant:
         condition: service_healthy
+    env_file:
+      - path: .env
+        required: false
     environment:
+      # inside Docker the database is the "postgres" service on its internal port (not 127.0.0.1:5433)
       POSTGRES_SERVER: postgres
       POSTGRES_PORT: 5432
-      POSTGRES_USER: ${POSTGRES_USER:-postgres}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
-      POSTGRES_DB: ${POSTGRES_DB:-recruitment_db}
       QDRANT_HOST: qdrant
       QDRANT_PORT: 6333
-      QDRANT_COLLECTION: ${QDRANT_COLLECTION:-candidate_knowledge}
-      LLM_PROVIDER: ${LLM_PROVIDER:-mock}
+      QDRANT_LOCATION: ""
+      N8N_URL: http://n8n:5678
     ports:
       - "8000:8000"
     volumes:
       - ./data:/app/data
-      - ./configs:/app/configs
     healthcheck:
       test: ["CMD-SHELL", "curl -f http://localhost:8000/health || exit 1"]
       interval: 10s
       timeout: 5s
       retries: 5
-      start_period: 10s
+      start_period: 20s
 
   frontend:
     build:
@@ -74,16 +77,24 @@ services:
       dockerfile: Dockerfile
     container_name: recruitment_frontend
     restart: unless-stopped
+    profiles: ["app"]
     command: ["streamlit", "run", "frontend/streamlit_app.py", "--server.port=8501", "--server.address=0.0.0.0"]
     depends_on:
       - api
+    env_file:
+      - path: .env
+        required: false
     environment:
       BACKEND_API_URL: http://api:8000
+      N8N_URL: http://n8n:5678
     ports:
       - "8501:8501"
     volumes:
       - ./frontend:/app/frontend
+      - ./data:/app/data
 
+  # n8n orchestrator (diagram part 2). Workflows: n8n/workflows/ (import + activate: python scripts/n8n_setup.py).
+  # They call the API at http://host.docker.internal:8000: start the API with --host 0.0.0.0.
   n8n:
     image: docker.n8n.io/n8nio/n8n:latest
     container_name: recruitment_n8n
@@ -95,8 +106,27 @@ services:
       - N8N_PORT=5678
       - N8N_PROTOCOL=http
       - WEBHOOK_URL=http://localhost:5678/
+      - GENERIC_TIMEZONE=Africa/Tunis
+      - N8N_DIAGNOSTICS_ENABLED=false
+    extra_hosts:
+      - "host.docker.internal:host-gateway"  # needed on Linux; Docker Desktop already provides it
     volumes:
       - n8n_data:/home/node/.n8n
+      - ./n8n/workflows:/workflows:ro
+
+  # Optional: browse the PostgreSQL tables in a web page (docs/reports/observe_the_data.md).
+  # Start it with: docker compose --profile tools up -d adminer -> http://localhost:8080
+  adminer:
+    image: adminer:latest
+    container_name: recruitment_adminer
+    restart: unless-stopped
+    profiles: ["tools"]
+    depends_on:
+      - postgres
+    environment:
+      ADMINER_DEFAULT_SERVER: postgres
+    ports:
+      - "${ADMINER_PORT:-8080}:8080"
 
 volumes:
   postgres_data:

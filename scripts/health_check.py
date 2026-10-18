@@ -132,6 +132,18 @@ def check_llm() -> tuple[bool, str]:
     return bool(result.skills), f"{model} → {result.skills} in {elapsed:.1f}s"
 
 
+def check_ai_server() -> tuple[bool, str]:
+    """The Kaggle AI server (notebooks/kaggle/model_server.ipynb), when .env uses it."""
+    from recruitment_ai.llm.remote_client import AIServerClient
+
+    try:
+        info = AIServerClient(get_settings()).info()
+    except RuntimeError as exc:
+        return False, str(exc)
+    return True, (f"{info.get('model')} (adapter: {'yes' if info.get('adapter') else 'no'}), embeddings: "
+                  f"{info.get('embedding_model') or 'none'}, reranker: {info.get('reranking_model') or 'none'}")
+
+
 def _run_optional(name: str, check: Any) -> bool:
     """Run a check that may fail on import or load; never crash the report."""
     try:
@@ -187,7 +199,14 @@ def main() -> int:
     if not api_ok:
         all_passed = False
 
-    # 6-9. AI models: they run on Kaggle's GPUs, so they are only loaded here on request
+    # 6. The Kaggle AI server, when the app is configured to use it
+    if "remote" in (settings.llm_provider, settings.embedding_provider):
+        ai_ok, ai_msg = check_ai_server()
+        print(f"{'✓' if ai_ok else '✗'} Kaggle AI server: {ai_msg}")
+        if not ai_ok:
+            all_passed = False
+
+    # 7-10. AI models: they run on Kaggle's GPUs, so they are only loaded here on request
     print()
     if "--with-models" not in sys.argv:
         print("- AI models: skipped (they run on Kaggle; add --with-models to load them here)")

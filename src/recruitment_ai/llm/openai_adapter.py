@@ -88,6 +88,7 @@ class OpenAIAdapter(LLMProvider):
         prompt: str,
         schema: type[T],
         system_prompt: str | None = None,
+        **kwargs: Any,  # images, max_tokens, use_adapter: accepted for interface compatibility, unused here
     ) -> T:
         client = self._get_client()
         messages = []

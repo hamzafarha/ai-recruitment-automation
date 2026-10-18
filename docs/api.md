@@ -1,93 +1,90 @@
-# REST API Documentation
+# REST API
 
-The backend service is powered by **FastAPI** with modular routers and strict Pydantic contract validation.
+FastAPI backend of the interface, of the n8n workflows (the application pipeline) and of the AI assistant.
+Start it with `python -m uvicorn api.main:app --host 0.0.0.0 --port 8000`; interactive documentation (try every
+endpoint): **http://localhost:8000/docs**. Base path: `/api/v1`. Errors are JSON `{"detail": "..."}`: 400 invalid
+input, 404 unknown id, 409 an action out of turn (a pipeline step before its time), 422 validation or unreadable
+document/model answer, 503 a service is unreachable (Kaggle AI server stopped, Qdrant down).
 
-Base URL: `http://localhost:8000/api/v1`
+## Health and administration
 
----
+| Method | Path | What it does |
+|---|---|---|
+| GET | `/health` | Liveness: `{"status": "ok"}` |
+| GET | `/api/v1/health` | PostgreSQL, Qdrant, the Kaggle AI server (when used) and n8n (when enabled) |
+| POST | `/admin/setup` | Index the HR knowledge base (RAG) and load the demo jobs and candidates (`{"demo_data": true}`); idempotent |
+| POST | `/admin/reindex` | Rebuild the search entries of every job and candidate |
+| GET | `/admin/status` | Providers, models, Qdrant collection sizes, AI server info, n8n settings |
+| GET | `/dashboard` | Figures of the dashboard (counts, grades, statuses, recent analyses and notifications) |
 
-## 1. System Health
+## Application pipeline (every part: one workflow from the CV to the final decision)
 
-### `GET /health`
-Liveness probe.
-- **Response:** `{"status": "ok", "app": "AI Recruitment Automation"}`
+Steps, in order: `intake` → `document` → `extract` → `store` → `acknowledge` → `screen` → `report` →
+`notify_recruiters` → `validation` (waits for the recruiter) → `decision` → `notify_candidate` → `close`.
 
-### `GET /api/v1/health`
-Detailed component readiness probe verifying PostgreSQL, Qdrant, and LLM configuration.
-- **Response:**
-  ```json
-  {
-    "status": "healthy",
-    "app_name": "AI-Recruitment-Automation",
-    "environment": "development",
-    "components": {
-      "postgresql": {"healthy": true, "details": "PostgreSQL connected successfully."},
-      "qdrant": {"healthy": true, "details": "Qdrant connected successfully at http://localhost:6333."},
-      "llm_provider": {"configured": "mock"}
-    }
-  }
-  ```
+| Method | Path | What it does |
+|---|---|---|
+| POST | `/applications` | Intake checks and registration: `{"filename", "content_base64", "source": "upload" \| "portal" \| "email" \| "n8n", "consent", "job_id"?}` (no `job_id` = spontaneous application; a portal application needs `consent: true`). The caller (the n8n workflow) then runs the steps |
+| POST | `/applications/{id}/steps/{step}` | Run one step. Body: `{"content_base64"}` for `document` (the file is never stored), `{"resume_url"}` for `notify_recruiters` (the n8n Wait node's URL, called back when the recruiter decides). 409 if it is not the next step; a step already done answers its stored result (`already_done`); `decision` answers `{"decided": false}` while the recruiter has not decided |
+| POST | `/applications/submit` | Intake, then the API runs every step itself in the background (202): when n8n is stopped, or from the interface |
+| POST | `/applications/{id}/continue` | Continue with the API from the next (or failed) step |
+| GET | `/applications?status=` · `/applications/{id}` | Applications (running, waiting_review, closed, failed) and the log of every step: status, timings, result (the screening agent's timeline and tool calls), error |
+| GET | `/applications/steps` | The steps, with the part of the architecture each one implements |
 
----
+A recruiter's decision (`POST /analyses/{id}/review`) on an analysis of the pipeline resumes its workflow: n8n
+(its Wait node) or, if n8n does not answer, the API runs the final decision, the candidate's message and closes.
 
-## 2. Ingestion & Documents
+## Candidates (DSO1)
 
-### `POST /api/v1/documents/upload`
-Uploads a candidate document (`.pdf`, `.docx`, `.png`, `.jpg`).
-- **Enforces:** File size limit (<15MB), safe filename sanitization, path traversal prevention.
-- **Response:**
-  ```json
-  {
-    "status": "success",
-    "message": "Document 'resume.pdf' successfully uploaded and validated.",
-    "filename": "resume.pdf",
-    "size_bytes": 1048576,
-    "path": "./data/raw/cvs/resume.pdf"
-  }
-  ```
+| Method | Path | What it does |
+|---|---|---|
+| GET | `/candidates?q=` | List (filter on name or location) |
+| POST | `/candidates` | Import a CV without screening it (multipart `file`: PDF, DOCX, PNG, JPG): extraction by Qwen + adapter, storage, search index. The interface sends CVs into the application pipeline instead |
+| POST | `/candidates/extract` | Extraction only, nothing stored (to test DSO1) |
+| GET | `/candidates/{id}` | Profile, extraction details and the candidate's analyses |
+| GET | `/candidates/{id}/cv-text` | The CV text used as evidence |
+| DELETE | `/candidates/{id}` | Delete the candidate, their analyses and search entries (right to erasure) |
 
----
+## Jobs
 
-## 3. Candidates & Jobs
+| Method | Path | What it does |
+|---|---|---|
+| GET | `/jobs` | List |
+| POST | `/jobs` | Create: title, company, location, employment type, role, description, requirements (`requirement_text`, `requirement_type` required/preferred, `importance` high/medium/low, `min_years_experience`) |
+| POST | `/jobs/extract` | Job advertisement text → structured requirements (Qwen), not stored |
+| GET / PATCH / DELETE | `/jobs/{id}` | Read, open/close (`{"status": "closed"}`), delete |
+| GET | `/jobs/{id}/ranking` | Every candidate graded for the job in seconds (fast semantic matching + rubric) |
 
-### `GET /api/v1/candidates`
-Lists ingested candidates.
+## Analyses, reports and human validation (DSO3, parts 6 and 9)
 
-### `GET /api/v1/candidates/{candidate_id}`
-Retrieves candidate profile and history.
+| Method | Path | What it does |
+|---|---|---|
+| POST | `/analyses` | `{"candidate_id", "job_id", "method": "llm" \| "semantic"}`: evidence-backed analysis (the Matching page's fixed analysis or the fast estimate), stored as *pending review*. The pipeline's analyses come from its screening agent (`method: "agent"`) |
+| GET | `/analyses?job_id=&candidate_id=&status=` | List |
+| GET / DELETE | `/analyses/{id}` | The full report (requirements, evidence, gaps, questions, knowledge sources) and its reviews |
+| GET | `/analyses/{id}/report.md` · `/report.pdf` | Download the report |
+| POST | `/analyses/{id}/review` | Recruiter decision: `{"decision": "shortlist" \| "interview" \| "hold" \| "reject", "reviewer", "adjusted_grade", "interview_at", "notes"}` (a rejection needs notes). For a pipeline analysis it resumes the application's workflow (the answer shows the application's status) |
 
-### `POST /api/v1/candidates/extract`
-Triggers structured extraction pipeline (`CandidateProfile`).
+## AI assistant and search
 
-### `GET /api/v1/jobs`
-Lists configured job vacancies and requirement criteria.
+| Method | Path | What it does |
+|---|---|---|
+| POST | `/agent/ask` | `{"question": "..."}` → answer, tool steps (with their data), sources, timings |
+| GET | `/agent/runs` · `/agent/runs/{id}` | Stored questions and traces |
+| GET | `/agent/tools` | The assistant's tools |
+| GET | `/search/knowledge?q=&role=&top_k=` | HR knowledge base (BGE-M3 + Qdrant + reranker) |
+| GET | `/search/candidates?q=` · `/search/jobs?q=` | Candidates' CV evidence, job descriptions |
 
----
+## Notifications and n8n
 
-## 4. Matching, Search & Analysis
+| Method | Path | What it does |
+|---|---|---|
+| GET | `/notifications?unread_only=` | Notifications (app events and n8n messages) |
+| POST | `/notifications` | Used by n8n: `{"event", "title", "message", "payload", "source": "n8n"}` |
+| POST | `/notifications/{id}/read` · `/notifications/read-all` | Mark as read |
+| POST | `/webhooks/n8n/job` | A job advertisement: `{"text", "title"?, "company"?}` → structured and stored |
+| GET | `/webhooks/n8n/digest` | The daily recruiting digest (pending reviews, service levels) |
 
-### `POST /api/v1/matching`
-Executes multi-factor match evaluation (`CandidateMatch`).
-
-### `POST /api/v1/search`
-Queries Qdrant dense vector index for candidate or job snippets.
-
-### `POST /api/v1/analysis`
-Executes multi-agent LangGraph workflow returning `AnalysisReport`.
-
----
-
-## 5. Recruiter Review & Feedback
-
-### `POST /api/v1/feedback`
-Submits human validation decision (`Approved`, `Rejected`, or `Modified`).
-- **Request Body:**
-  ```json
-  {
-    "match_id": "match_uuid",
-    "recruiter_id": "recruiter_01",
-    "decision": "Approved",
-    "rating": 5,
-    "comments": "Strong alignment with ML requirements"
-  }
-  ```
+A CV received by n8n goes into the application pipeline (above). With `N8N_EVENTS_ENABLED=true`, the other
+notifications created by the app are also posted to n8n (`{N8N_URL}/webhook/recruitment-events`); the pipeline's
+own messages are written by its workflow.

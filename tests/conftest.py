@@ -13,6 +13,11 @@ os.environ.update(
         "EMBEDDING_DEVICE": "cpu",
         "RERANKING_MODEL": "passthrough",
         "HF_HUB_OFFLINE": "1",
+        # the developer's .env may point to the Kaggle AI server and n8n: tests never call them
+        "EMBEDDING_PROVIDER": "local",
+        "N8N_EVENTS_ENABLED": "false",
+        "REMOTE_LLM_URL": "",
+        "QDRANT_LOCATION": ":memory:",
     }
 )
 

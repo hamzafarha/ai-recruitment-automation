@@ -1,0 +1,100 @@
+{
+  "id": "RecruitErrAlert1",
+  "name": "Recruitment — Error alert",
+  "nodes": [
+    {
+      "parameters": {
+        "content": "## Error alert\nThe error workflow of the other recruitment workflows: when one fails (API stopped, Kaggle AI server stopped...), the failure is shown in the app's notifications.",
+        "height": 180,
+        "width": 420
+      },
+      "id": "de8821a5-4538-58ac-bf9b-889dad304a67",
+      "name": "About",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -40,
+        -260
+      ]
+    },
+    {
+      "parameters": {},
+      "id": "abca9505-ce1e-5be6-a85b-abb2491fda65",
+      "name": "A workflow failed",
+      "type": "n8n-nodes-base.errorTrigger",
+      "typeVersion": 1,
+      "position": [
+        0,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const e = $input.first().json;\nconst wf = (e.workflow || {}).name || 'a workflow';\nconst err = ((e.execution || {}).error || {}).message || 'unknown error';\nreturn [{ json: { event: 'workflow.error', title: `n8n: ${wf} failed`, message: `${err}${(e.execution || {}).lastNodeExecuted ? ' (node: ' + e.execution.lastNodeExecuted + ')' : ''}`, payload: { execution_id: (e.execution || {}).id || null } } }];"
+      },
+      "id": "c3c0b277-df9a-5995-b1cd-84a968ce5019",
+      "name": "Prepare the alert",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        260,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://host.docker.internal:8000/api/v1/notifications",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ event: $json.event, title: $json.title, message: $json.message, payload: $json.payload, source: 'n8n' }) }}",
+        "options": {
+          "timeout": 30000,
+          "response": {
+            "response": {
+              "neverError": true
+            }
+          }
+        }
+      },
+      "id": "d4a0ef49-a3b6-5fda-a3e3-c85506e5efca",
+      "name": "Show it in the app",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        520,
+        0
+      ]
+    }
+  ],
+  "connections": {
+    "A workflow failed": {
+      "main": [
+        [
+          {
+            "node": "Prepare the alert",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare the alert": {
+      "main": [
+        [
+          {
+            "node": "Show it in the app",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "active": false,
+  "pinData": {},
+  "tags": []
+}

@@ -1,5 +1,9 @@
-"""Candidate to job matching engine."""
+"""Candidate-to-job matching (DSO3): the fit scoring rubric, fast semantic matching, LLM analysis."""
 
-from recruitment_ai.matching.matcher import MatchingEngine
+from recruitment_ai.matching.schemas import (
+    KnowledgeSource,
+    MatchReport,
+    RequirementAssessment,
+)
 
-__all__ = ["MatchingEngine"]
+__all__ = ["KnowledgeSource", "MatchReport", "RequirementAssessment"]

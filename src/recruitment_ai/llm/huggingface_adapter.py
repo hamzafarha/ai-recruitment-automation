@@ -187,10 +187,15 @@ class HuggingFaceAdapter(LLMProvider):
         return messages
 
     def _generate(self, messages: list[dict[str, Any]], images: list[bytes] | None = None,
-                  max_tokens: int = 1024, temperature: float = 0.0) -> str:
+                  max_tokens: int = 1024, temperature: float = 0.0, use_adapter: bool = True) -> str:
+        """``use_adapter=False`` turns the fine-tuned adapter off for this call: it was trained for
+        CV extraction only, so other tasks (matching, job reading, the agent) use the base model."""
+        import contextlib
+
         import torch
 
         self._ensure_loaded()
+        adapter_off = bool(self.adapter) and not use_adapter and hasattr(self._model, "disable_adapter")
         start = time.perf_counter()
         text = self._processor.apply_chat_template(messages, tokenize=False, add_generation_prompt=True)
         if self.vision:
@@ -201,13 +206,13 @@ class HuggingFaceAdapter(LLMProvider):
         inputs = inputs.to(self.device)
         sampling: dict[str, Any] = {"do_sample": True, "temperature": temperature} if temperature > 0 else {
             "do_sample": False}
-        with torch.inference_mode():
+        with torch.inference_mode(), (self._model.disable_adapter() if adapter_off else contextlib.nullcontext()):
             output = self._model.generate(**inputs, max_new_tokens=max_tokens, **sampling)
         prompt_tokens = int(inputs["input_ids"].shape[1])
         new_tokens = output[0, prompt_tokens:]
         self.last_stats = {
             "model": self.model,
-            "adapter": self.adapter,
+            "adapter": self.adapter if self.adapter and not adapter_off else None,
             "device": self.device,
             "seconds": round(time.perf_counter() - start, 2),
             "prompt_tokens": prompt_tokens,
@@ -223,9 +228,9 @@ class HuggingFaceAdapter(LLMProvider):
                            raw_response=self.last_stats)
 
     def generate(self, prompt: str, system_prompt: str | None = None,
-                 temperature: float = 0.0, max_tokens: int = 1024) -> LLMResponse:
+                 temperature: float = 0.0, max_tokens: int = 1024, use_adapter: bool = True) -> LLMResponse:
         return self._response(self._generate(self._messages(prompt, system_prompt), max_tokens=max_tokens,
-                                             temperature=temperature))
+                                             temperature=temperature, use_adapter=use_adapter))
 
     def chat(self, messages: list[LLMMessage], temperature: float = 0.0, max_tokens: int = 1024) -> LLMResponse:
         if self.vision:
@@ -235,14 +240,15 @@ class HuggingFaceAdapter(LLMProvider):
         return self._response(self._generate(turns, max_tokens=max_tokens, temperature=temperature))
 
     def generate_structured(self, prompt: str, schema: type[T], system_prompt: str | None = None,
-                            images: list[bytes] | None = None, max_tokens: int = 2048) -> T:
+                            images: list[bytes] | None = None, max_tokens: int = 2048,
+                            use_adapter: bool = True) -> T:
         """Generate JSON for ``schema`` (optionally from page images) and validate it.
 
         ``max_tokens`` bounds the answer (a normal CV needs about 1,000 tokens): a model stuck
         repeating itself stops there instead of running for an hour on CPU.
         """
         messages = self._messages(structured_prompt(prompt, schema), system_prompt, len(images or []))
-        answer = self._generate(messages, images, max_tokens=max_tokens)
+        answer = self._generate(messages, images, max_tokens=max_tokens, use_adapter=use_adapter)
         self.last_stats["raw_answer"] = answer  # kept for error analysis (what the model really wrote)
         if not answer.strip():
             raise ValueError("The model returned an empty answer.")

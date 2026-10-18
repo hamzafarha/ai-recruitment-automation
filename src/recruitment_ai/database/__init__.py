@@ -1,4 +1,4 @@
-"""Database package for relational persistence."""
+"""Database package for relational persistence (PostgreSQL; SQLite in unit tests)."""
 
 from recruitment_ai.database.connection import (
     Base,
@@ -8,19 +8,13 @@ from recruitment_ai.database.connection import (
     get_session_factory,
 )
 from recruitment_ai.database.models import (
+    AgentRun,
     Analysis,
+    Application,
     Candidate,
-    CandidateDocument,
-    CandidateMatch,
-    Certification,
-    Education,
-    Experience,
     Job,
-    JobRequirement,
-    Language,
-    Project,
-    RecruiterFeedback,
-    Skill,
+    Notification,
+    Review,
 )
 
 __all__ = [
@@ -30,16 +24,10 @@ __all__ = [
     "get_session_factory",
     "check_db_connection",
     "Candidate",
-    "CandidateDocument",
-    "Education",
-    "Experience",
-    "Skill",
-    "Certification",
-    "Project",
-    "Language",
     "Job",
-    "JobRequirement",
-    "CandidateMatch",
+    "Application",
     "Analysis",
-    "RecruiterFeedback",
+    "Review",
+    "Notification",
+    "AgentRun",
 ]

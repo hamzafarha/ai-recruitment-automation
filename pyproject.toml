@@ -79,7 +79,7 @@ database = [
 ]
 
 frontend = [
-    "streamlit>=1.33.0",
+    "streamlit>=1.50.0",  # st.navigation, chat, width="stretch"
 ]
 
 notebooks = [
@@ -110,6 +110,7 @@ where = ["src"]
 [tool.ruff]
 line-length = 88
 target-version = "py312"
+src = [".", "src", "frontend"]  # frontend/app_pages is project code
 exclude = [
     ".venv",
     "notebooks",
@@ -118,6 +119,9 @@ exclude = [
 [tool.ruff.lint]
 select = ["E", "F", "W", "I", "N", "UP", "B", "A", "C4"]
 ignore = ["E501", "B008", "UP046"]
+
+[tool.ruff.lint.isort]
+known-third-party = ["alembic"]  # the migrations folder alembic/ is not the alembic package
 
 [tool.black]
 line-length = 88

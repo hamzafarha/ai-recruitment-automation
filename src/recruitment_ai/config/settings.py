@@ -87,6 +87,15 @@ class Settings(BaseSettings):
     embedding_model: str = Field(default="BAAI/bge-m3", alias="EMBEDDING_MODEL")
     embedding_device: str = Field(default="cpu", alias="EMBEDDING_DEVICE")
     embedding_dimension: int = Field(default=1024, alias="EMBEDDING_DIMENSION")
+    # local = BGE-M3 and the reranker on this machine; remote = on the Kaggle AI server
+    embedding_provider: Literal["local", "remote"] = Field(default="local", alias="EMBEDDING_PROVIDER")
+
+    # n8n orchestrator: the API sends its events (new candidate, analysis done, decision...) to the
+    # "recruitment-events" workflow; n8n calls the API back at http://host.docker.internal:8000
+    n8n_url: str = Field(default="http://localhost:5678", alias="N8N_URL")
+    n8n_events_enabled: bool = Field(default=False, alias="N8N_EVENTS_ENABLED")
+    # optional: an n8n API key (n8n -> Settings -> n8n API) lets the app list the workflows' executions
+    n8n_api_key: str | None = Field(default=None, alias="N8N_API_KEY")
 
     # LLM Settings (Architecture: Qwen2.5 & Qwen2.5-VL, run in Python by Hugging Face Transformers)
     llm_provider: Literal["mock", "openai", "huggingface", "remote"] = Field(

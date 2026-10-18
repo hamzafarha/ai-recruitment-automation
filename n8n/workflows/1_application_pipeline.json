@@ -1,0 +1,700 @@
+{
+  "id": "RecruitCvIntake1",
+  "name": "Recruitment — Application pipeline (CV → final decision)",
+  "nodes": [
+    {
+      "parameters": {
+        "content": "## Application pipeline — one workflow from the CV to the final decision\nEvery node is one step of the architecture (its part under the node). Each step calls the API (`POST /applications/{id}/steps/{step}`, services/pipeline.py), which logs it on the application (Pipeline page of the app).\n\n1. **CV received** (portal or recruiter upload) → **Intake checks** (consent KB-HR-004, file type and size)\n2. **Document processing**: PyMuPDF · python-docx · PaddleOCR for scans\n3. **Candidate JSON**: Qwen2.5-7B + our QLoRA adapter (the fine-tuning's product: it ran once, on Kaggle)\n4. **Store and index**: PostgreSQL + Qdrant (BGE-M3) → the candidate gets an answer\n5. **Screening agent** (LangGraph): understands the task, chooses its tools, retrieves and reranks CV evidence and HR rules, iterates, Qwen analyses, code checks every claim\n6. **Evidence-backed report** → **Notify the recruiters**\n7. **Wait for the recruiter's decision** (Human validation in the app resumes this execution)\n8. **Final decision** → **Notify the candidate** → **Close the application**\n\nA step that fails before the candidate's answer is explained to the candidate; the application can then be continued from the app. The API runs on the host with `--host 0.0.0.0` (n8n calls http://host.docker.internal:8000).",
+        "height": 420,
+        "width": 860
+      },
+      "id": "4aab1feb-1df1-5200-a709-83bf8571fd6d",
+      "name": "About",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -40,
+        -720
+      ]
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "cv-intake",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "759c7f70-41eb-5ec1-a236-8187e3825baf",
+      "name": "CV received",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        0,
+        0
+      ],
+      "webhookId": "cca5f892-cbd3-5950-8ef3-ee4ac6b6f88c"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://host.docker.internal:8000/api/v1/applications",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ filename: $json.body.filename, content_base64: $json.body.content_base64, source: $json.body.source || 'portal', consent: $json.body.consent === true, job_id: $json.body.job_id || null }) }}",
+        "options": {
+          "timeout": 60000
+        }
+      },
+      "id": "ecbf78ee-fe9d-5e27-9174-586b33ef75f9",
+      "name": "Intake checks",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        240,
+        0
+      ],
+      "notes": "Part 1 — consent, file type and size",
+      "notesInFlow": true,
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=http://host.docker.internal:8000/api/v1/applications/{{ $('Intake checks').first().json.id }}/steps/document",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ content_base64: $('CV received').first().json.body.content_base64 }) }}",
+        "options": {
+          "timeout": 300000
+        }
+      },
+      "id": "a6d7340d-4943-53f2-9f5d-3fe5b1f409e5",
+      "name": "Document processing",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        480,
+        0
+      ],
+      "notes": "Part 3 — PyMuPDF · python-docx · PaddleOCR",
+      "notesInFlow": true,
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=http://host.docker.internal:8000/api/v1/applications/{{ $('Intake checks').first().json.id }}/steps/extract",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "{}",
+        "options": {
+          "timeout": 900000
+        }
+      },
+      "id": "073aa736-bc52-5baa-a782-449ee3b580bc",
+      "name": "Candidate JSON (fine-tuned Qwen)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        720,
+        0
+      ],
+      "notes": "Parts 3-4 — Qwen2.5-7B + QLoRA adapter",
+      "notesInFlow": true,
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=http://host.docker.internal:8000/api/v1/applications/{{ $('Intake checks').first().json.id }}/steps/store",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "{}",
+        "options": {
+          "timeout": 300000
+        }
+      },
+      "id": "24f3203b-9f1e-5c8b-83bf-55e868a83c1e",
+      "name": "Store and index",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        960,
+        0
+      ],
+      "notes": "Part 8 — PostgreSQL · Qdrant (BGE-M3)",
+      "notesInFlow": true,
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=http://host.docker.internal:8000/api/v1/applications/{{ $('Intake checks').first().json.id }}/steps/acknowledge",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "{}",
+        "options": {
+          "timeout": 60000
+        }
+      },
+      "id": "c340ed2a-b5fe-51a3-bbb6-06e7f0964ee3",
+      "name": "Acknowledge the candidate",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1200,
+        0
+      ],
+      "notes": "Part 7 — message",
+      "notesInFlow": true,
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify({ application_id: $json.result.application_id, candidate_id: $json.result.candidate_id, full_name: $json.result.full_name, skills_count: $json.result.skills_count, message: $json.result.message }) }}",
+        "options": {
+          "responseCode": 201
+        }
+      },
+      "id": "3f27e918-1469-5e3e-bc83-ccc498ea0f51",
+      "name": "Answer the candidate",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        1440,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "fromEmail": "recruiting@example.com",
+        "toEmail": "={{ $json.result.to || 'recruiting@example.com' }}",
+        "subject": "={{ $json.result.subject }}",
+        "emailFormat": "text",
+        "text": "={{ $json.result.text }}",
+        "options": {}
+      },
+      "id": "00a3a46a-5947-5410-9664-5650a74bd263",
+      "name": "Send the acknowledgement (needs SMTP)",
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2.1,
+      "position": [
+        1680,
+        0
+      ],
+      "disabled": true,
+      "notes": "Enable with SMTP credentials",
+      "notesInFlow": true
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=http://host.docker.internal:8000/api/v1/applications/{{ $('Intake checks').first().json.id }}/steps/screen",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "{}",
+        "options": {
+          "timeout": 1800000
+        }
+      },
+      "id": "9ff4bb6c-98c5-5895-9a5d-c70a9ca8305e",
+      "name": "Screening agent (LangGraph)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        240,
+        360
+      ],
+      "notes": "Part 5 — tools, retrieval, reranking, iterations, Qwen analysis, checks",
+      "notesInFlow": true
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=http://host.docker.internal:8000/api/v1/applications/{{ $('Intake checks').first().json.id }}/steps/report",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "{}",
+        "options": {
+          "timeout": 120000
+        }
+      },
+      "id": "aba98489-94b0-5f19-bfe4-6fad92133bbf",
+      "name": "Evidence-backed report",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        480,
+        360
+      ],
+      "notes": "Part 6 — stored analysis, Markdown, PDF",
+      "notesInFlow": true
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=http://host.docker.internal:8000/api/v1/applications/{{ $('Intake checks').first().json.id }}/steps/notify_recruiters",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ resume_url: $execution.resumeUrl }) }}",
+        "options": {
+          "timeout": 60000
+        }
+      },
+      "id": "20251b0b-83db-519a-9f98-d07a3efa5273",
+      "name": "Notify the recruiters",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        720,
+        360
+      ],
+      "notes": "Part 7 — review needed",
+      "notesInFlow": true
+    },
+    {
+      "parameters": {
+        "resume": "webhook",
+        "httpMethod": "POST",
+        "limitWaitTime": true,
+        "limitType": "afterTimeInterval",
+        "resumeAmount": 10,
+        "resumeUnit": "days",
+        "options": {}
+      },
+      "id": "9e161f38-b5cf-54df-9be1-619678b765b5",
+      "name": "Wait for the recruiter's decision",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        960,
+        360
+      ],
+      "webhookId": "1ab8d09f-323f-5957-a1f5-42eeae3bd7bd",
+      "notes": "Part 9 — Human validation resumes it (at most 10 days, then a reminder)",
+      "notesInFlow": true
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=http://host.docker.internal:8000/api/v1/applications/{{ $('Intake checks').first().json.id }}/steps/decision",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "{}",
+        "options": {
+          "timeout": 60000
+        }
+      },
+      "id": "a1d561a0-1f8e-5123-9b45-31b0112384da",
+      "name": "Final decision",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1200,
+        360
+      ],
+      "notes": "Part 9 — interview, shortlist or rejection",
+      "notesInFlow": true
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "9f064a40-af45-5f28-9ff5-70e81c505865",
+              "leftValue": "={{ $json.result.decided }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "18c447bc-4069-5c7c-a404-c1496d8c8bcc",
+      "name": "Decided?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        1440,
+        360
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=http://host.docker.internal:8000/api/v1/applications/{{ $('Intake checks').first().json.id }}/steps/notify_candidate",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "{}",
+        "options": {
+          "timeout": 60000
+        }
+      },
+      "id": "97d50724-38f6-58c2-9592-649e4b922b45",
+      "name": "Notify the candidate",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1680,
+        260
+      ],
+      "notes": "Part 7 — invitation or answer",
+      "notesInFlow": true
+    },
+    {
+      "parameters": {
+        "fromEmail": "recruiting@example.com",
+        "toEmail": "={{ $json.result.to || 'recruiting@example.com' }}",
+        "subject": "={{ $json.result.subject }}",
+        "emailFormat": "text",
+        "text": "={{ $json.result.text }}",
+        "options": {}
+      },
+      "id": "cb47f0c9-c177-5954-bd13-af5aea3c07d5",
+      "name": "Send the answer (needs SMTP)",
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2.1,
+      "position": [
+        1920,
+        260
+      ],
+      "disabled": true,
+      "notes": "Enable with SMTP credentials",
+      "notesInFlow": true
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=http://host.docker.internal:8000/api/v1/applications/{{ $('Intake checks').first().json.id }}/steps/close",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "{}",
+        "options": {
+          "timeout": 60000
+        }
+      },
+      "id": "3508237e-68b2-531c-a3b9-2120f9fd2fbe",
+      "name": "Close the application",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        2160,
+        260
+      ],
+      "notes": "Part 8 — final status",
+      "notesInFlow": true
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://host.docker.internal:8000/api/v1/notifications",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ event: 'application.reminder', title: 'Still waiting for a decision: ' + ($('Store and index').first().json.result.full_name || 'an application'), message: 'No decision after 10 days: every candidate gets an answer within ten working days (KB-RR-001). Decide in Human validation.', payload: { application_id: $('Intake checks').first().json.id }, source: 'n8n' }) }}",
+        "options": {
+          "timeout": 30000
+        }
+      },
+      "id": "74de94de-0b10-5c72-a6c3-8d186dcccec9",
+      "name": "Remind the recruiters",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1680,
+        480
+      ],
+      "notes": "Then waits again",
+      "notesInFlow": true
+    },
+    {
+      "parameters": {
+        "jsCode": "// The API's answer to the failed step (the step is also recorded on the application, and notified)\nconst item = $input.first().json;\nconst e = item.error !== undefined ? item.error : item;\nlet detail = typeof e === 'string' ? e : (e.description || e.message || JSON.stringify(e));\nlet code = Number((e && typeof e === 'object' && (e.httpCode || e.status || e.statusCode)) || 0);\nconst m = String(detail).match(/^(\\d{3}) - ([\\s\\S]*)$/);\nif (m) { code = code || Number(m[1]); detail = m[2]; }\ntry { const parsed = JSON.parse(detail); if (parsed && parsed.detail) detail = parsed.detail; } catch (err) { /* plain text */ }\nif (!code || code < 400) code = 502;\nreturn [{ json: { statusCode: code, detail: String(detail).slice(0, 600) } }];"
+      },
+      "id": "5aa3aeeb-60bc-525f-b5c2-95fa5a5ee1c4",
+      "name": "Why it failed",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        960,
+        -260
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify({ detail: $json.detail }) }}",
+        "options": {
+          "responseCode": "={{ $json.statusCode }}"
+        }
+      },
+      "id": "f63b7abb-ec4a-5c2d-8988-2ff0c61ab9ec",
+      "name": "Answer the candidate: not received",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        1200,
+        -260
+      ]
+    }
+  ],
+  "connections": {
+    "CV received": {
+      "main": [
+        [
+          {
+            "node": "Intake checks",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Intake checks": {
+      "main": [
+        [
+          {
+            "node": "Document processing",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Why it failed",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Document processing": {
+      "main": [
+        [
+          {
+            "node": "Candidate JSON (fine-tuned Qwen)",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Why it failed",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Candidate JSON (fine-tuned Qwen)": {
+      "main": [
+        [
+          {
+            "node": "Store and index",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Why it failed",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Store and index": {
+      "main": [
+        [
+          {
+            "node": "Acknowledge the candidate",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Why it failed",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Acknowledge the candidate": {
+      "main": [
+        [
+          {
+            "node": "Answer the candidate",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Why it failed",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Why it failed": {
+      "main": [
+        [
+          {
+            "node": "Answer the candidate: not received",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Answer the candidate": {
+      "main": [
+        [
+          {
+            "node": "Send the acknowledgement (needs SMTP)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send the acknowledgement (needs SMTP)": {
+      "main": [
+        [
+          {
+            "node": "Screening agent (LangGraph)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Screening agent (LangGraph)": {
+      "main": [
+        [
+          {
+            "node": "Evidence-backed report",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Evidence-backed report": {
+      "main": [
+        [
+          {
+            "node": "Notify the recruiters",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Notify the recruiters": {
+      "main": [
+        [
+          {
+            "node": "Wait for the recruiter's decision",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait for the recruiter's decision": {
+      "main": [
+        [
+          {
+            "node": "Final decision",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Final decision": {
+      "main": [
+        [
+          {
+            "node": "Decided?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Decided?": {
+      "main": [
+        [
+          {
+            "node": "Notify the candidate",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Remind the recruiters",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Remind the recruiters": {
+      "main": [
+        [
+          {
+            "node": "Wait for the recruiter's decision",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Notify the candidate": {
+      "main": [
+        [
+          {
+            "node": "Send the answer (needs SMTP)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send the answer (needs SMTP)": {
+      "main": [
+        [
+          {
+            "node": "Close the application",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "errorWorkflow": "RecruitErrAlert1"
+  },
+  "active": false,
+  "pinData": {},
+  "tags": []
+}

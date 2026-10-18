@@ -199,6 +199,56 @@ class QdrantVectorStore(VectorStore):
             logger.error(f"Error deleting from Qdrant: {exc}")
             return False
 
+    def delete_by_filter(self, collection_name: str, criteria: dict[str, Any]) -> bool:
+        """Delete every point matching ``criteria`` (e.g. all chunks of one candidate)."""
+        if not self.client:
+            return False
+        try:
+            from qdrant_client.http import models
+
+            if not self.client.collection_exists(collection_name):
+                return True
+            self.client.delete(collection_name=collection_name,
+                               points_selector=models.FilterSelector(filter=build_filter(criteria)))
+            return True
+        except Exception as exc:
+            logger.error(f"Error deleting from Qdrant: {exc}")
+            return False
+
+    def count(self, collection_name: str) -> int:
+        """Number of points in a collection (0 when it does not exist)."""
+        if not self.client or not self.client.collection_exists(collection_name):
+            return 0
+        return int(self.client.count(collection_name=collection_name, exact=True).count)
+
+    def collection_info(self, collection_name: str) -> dict[str, Any] | None:
+        """Size, vector dimension and distance of a collection (None when it does not exist)."""
+        if not self.client or not self.client.collection_exists(collection_name):
+            return None
+        info = self.client.get_collection(collection_name)
+        vectors = info.config.params.vectors
+        return {"name": collection_name, "points": int(info.points_count or 0), "status": str(info.status.value),
+                "dimension": getattr(vectors, "size", None),
+                "distance": str(getattr(getattr(vectors, "distance", None), "value", ""))}
+
+    def scroll(self, collection_name: str, limit: int = 50, offset: Any = None,
+               with_vectors: bool = False) -> tuple[list[dict[str, Any]], Any]:
+        """A page of points (id, payload, and the vector if asked) and the offset of the next page."""
+        if not self.client or not self.client.collection_exists(collection_name):
+            return [], None
+        points, next_offset = self.client.scroll(collection_name=collection_name, limit=limit, offset=offset,
+                                                 with_payload=True, with_vectors=with_vectors)
+        return [{"id": str(p.id), "payload": p.payload or {}, "vector": p.vector if with_vectors else None}
+                for p in points], next_offset
+
+    def get_point(self, collection_name: str, point_id: str) -> dict[str, Any] | None:
+        """One point with its payload and its vector (None when it does not exist)."""
+        if not self.client or not self.client.collection_exists(collection_name):
+            return None
+        found = self.client.retrieve(collection_name=collection_name, ids=[point_id], with_payload=True,
+                                     with_vectors=True)
+        return {"id": str(found[0].id), "payload": found[0].payload or {}, "vector": found[0].vector} if found else None
+
     def health_check(self) -> tuple[bool, str]:
         """Check Qdrant health."""
         try:

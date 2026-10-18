@@ -1,0 +1,131 @@
+{
+  "id": "RecruitEvents001",
+  "name": "Recruitment — Events (messages and notifications)",
+  "nodes": [
+    {
+      "parameters": {
+        "content": "## Recruitment events\nThe API posts every event here when `N8N_EVENTS_ENABLED=true`: new candidate, analysis done, recruiter decision...\nApplications of the **Application pipeline** workflow are not sent here: that workflow writes their messages itself (acknowledgement, answer after the decision).\n\nThe workflow prepares the message to send (acknowledgement, interview invitation, answer after the recruiter's decision — never an automatic rejection) and shows it in the app's notifications.\n\nTo really send e-mails: enable the **Send e-mail** node and give it SMTP credentials.",
+        "height": 280,
+        "width": 420
+      },
+      "id": "de8821a5-4538-58ac-bf9b-889dad304a67",
+      "name": "About",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -40,
+        -360
+      ]
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "recruitment-events",
+        "responseMode": "onReceived",
+        "options": {}
+      },
+      "id": "60c448ad-d205-5fa5-ae64-ec12046a1adc",
+      "name": "App event",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        0,
+        0
+      ],
+      "webhookId": "bee9081a-32a8-5d71-a78a-928ed79ca3f9"
+    },
+    {
+      "parameters": {
+        "jsCode": "const e = $input.first().json.body || {};\nconst p = e.payload || {};\nconst first = (name) => String(name || '').split(' ')[0] || 'candidate';\nlet m = null;\nswitch (e.event) {\n  case 'candidate.created':\n    if (['portal', 'email', 'n8n'].includes(p.source)) {\n      m = { title: `Acknowledgement prepared for ${p.name}`,\n            message: `To: ${p.email || '(no e-mail in the CV)'}\\nDear ${first(p.name)},\\n\\nThank you for your application: we received your CV. A recruiter will answer you within ten working days. Your data is used only for this application and kept at most 24 months (candidate data policy KB-HR-004).\\n\\nThe recruiting team` };\n    }\n    break;\n  case 'analysis.completed':\n    if (p.grade >= 2) {\n      m = { title: `Priority review: ${p.candidate_name} for ${p.job_title}`,\n            message: `Grade ${p.grade}, score ${p.score}/100 (${p.method === 'llm' ? 'AI analysis' : 'fast estimate'}). Strong or partial fit: review it first (Human validation). Service level: shortlisted candidates are contacted within five working days.` };\n    }\n    break;\n  case 'review.decided':\n    if (p.decision === 'interview') {\n      m = { title: `Interview invitation prepared for ${p.candidate_name}`,\n            message: `Dear ${first(p.candidate_name)},\\n\\nFollowing your application for the ${p.job_title} position, we would be glad to meet you for an interview on ${p.interview_at}. The interview follows our structured format (KB-RR-004). Please confirm your availability.\\n\\nThe recruiting team` };\n    } else if (p.decision === 'reject') {\n      m = { title: `Answer prepared for ${p.candidate_name} (decision by ${p.reviewer})`,\n            message: `Dear ${first(p.candidate_name)},\\n\\nThank you for your interest in the ${p.job_title} position. After a careful review by our recruiters, we will not continue with your application this time. You may ask for a human re-examination of your application, and for access to or deletion of your data, at any time (KB-HR-004).\\n\\nThe recruiting team\\n\\n(Recruiter's internal reason, not sent: ${p.notes || '—'})` };\n    } else if (p.decision === 'shortlist') {\n      m = { title: `Shortlisted: contact ${p.candidate_name} within five working days`,\n            message: `${p.candidate_name} was shortlisted for ${p.job_title} by ${p.reviewer}. Schedule the interview within five working days (screening service levels, KB-RR-001).` };\n    } else if (p.decision === 'hold') {\n      m = { title: `On hold: ${p.candidate_name} for ${p.job_title}`,\n            message: `Remember: every candidate receives an answer within ten working days of reception.` };\n    }\n    break;\n  case 'test':\n    m = { title: 'n8n is connected', message: 'The recruitment-events workflow received the test event from the app.' };\n    break;\n}\nif (!m) return [];\nreturn [{ json: { event: 'message.prepared', title: m.title, message: m.message,\n                  payload: { from_event: e.event, ...p }, source: 'n8n' } }];"
+      },
+      "id": "736d26db-229d-5970-9ab4-0dd4dba1c8c8",
+      "name": "Prepare the message",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        260,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://host.docker.internal:8000/api/v1/notifications",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ event: $json.event, title: $json.title, message: $json.message, payload: $json.payload, source: 'n8n' }) }}",
+        "options": {
+          "timeout": 30000,
+          "response": {
+            "response": {
+              "neverError": true
+            }
+          }
+        }
+      },
+      "id": "d4a0ef49-a3b6-5fda-a3e3-c85506e5efca",
+      "name": "Show it in the app",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        520,
+        -80
+      ]
+    },
+    {
+      "parameters": {
+        "fromEmail": "recruiting@example.com",
+        "toEmail": "={{ $json.payload.email || 'recruiting@example.com' }}",
+        "subject": "={{ $json.title }}",
+        "emailFormat": "text",
+        "text": "={{ $json.message }}",
+        "options": {}
+      },
+      "id": "ee13c0ad-6dac-5f5b-b026-edd3e10a042b",
+      "name": "Send e-mail (needs SMTP credentials)",
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2.1,
+      "position": [
+        520,
+        120
+      ],
+      "disabled": true
+    }
+  ],
+  "connections": {
+    "App event": {
+      "main": [
+        [
+          {
+            "node": "Prepare the message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare the message": {
+      "main": [
+        [
+          {
+            "node": "Show it in the app",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Send e-mail (needs SMTP credentials)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "errorWorkflow": "RecruitErrAlert1"
+  },
+  "active": false,
+  "pinData": {},
+  "tags": []
+}

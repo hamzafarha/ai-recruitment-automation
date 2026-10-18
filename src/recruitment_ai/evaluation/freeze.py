@@ -11,6 +11,7 @@ import csv
 import hashlib
 import json
 from collections import Counter
+from collections.abc import Collection
 from itertools import combinations
 from pathlib import Path
 from typing import Any
@@ -167,10 +168,16 @@ def write_manifest(rows: list[dict[str, Any]], path: Path) -> None:
         writer.writerows(rows)
 
 
-def verify(manifest_path: Path, root: Path) -> dict[str, list[str]]:
-    """Compare the files on disk with the frozen manifest."""
+def verify(manifest_path: Path, root: Path, skip_kinds: Collection[str] = ()) -> dict[str, list[str]]:
+    """Compare the files on disk with the frozen manifest.
+
+    ``skip_kinds``: kinds of files the caller never reads (e.g. "real_cv_pdf" for a job that uses
+    the real CVs' dataset text: their PDFs are not uploaded to Kaggle).
+    """
     changed, missing = [], []
     for row in read_rows(manifest_path):
+        if row["kind"] in skip_kinds:
+            continue
         path = root / row["path"]
         if not path.exists():
             missing.append(row["path"])

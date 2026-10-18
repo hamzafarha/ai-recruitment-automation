@@ -1,29 +1,17 @@
-# Evaluation Framework
+# Evaluation
 
-Quantitative evaluation is built into the design of the AI Recruitment Automation system to measure performance at every stage of the pipeline.
+Every evaluation runs on Kaggle's GPUs (`python scripts/kaggle_run.py all <job>`) on the frozen evaluation set
+`data/processed/eval_v1/` ([datasheet](../data/processed/eval_v1/README.md)): tune on **dev**, report **test**.
+Results and their reading: [final report, section 4](reports/final_report.md). Reports are written to
+`data/evaluation/<job>/report.md` and shown on the interface's **Evaluation** page.
 
----
+| Objective | Job | What is measured |
+|---|---|---|
+| DSO1 — CV extraction | `extraction`, `extraction-text`, `extraction-vlm`, `extraction-ft` | field-level F1 for experience, education and skills; exact dates; identity accuracy and hallucinations; seconds per CV — by input type, source and language |
+| DSO1 — fine-tuning | `finetune` | QLoRA training run (loss, steps, held-out check); then `extraction-ft` = same evaluation with the adapter |
+| DSO2 — retrieval (RAG) | `rag` | 40 questions (EN/FR, cross-lingual) on the HR knowledge base: Hit@1/3/5, Recall@5, MRR for dense, + reranker, + role filter, both |
+| DSO3 — matching | `matching` | 36 graded CV-job pairs: grade accuracy, within-one accuracy, MAE, quadratic weighted kappa, Spearman; must-have status accuracy and macro-F1; fast matcher thresholds calibrated on dev |
+| DSO4 — screening agent | `screening` | the application pipeline's agent on the same 36 pairs as DSO3, next to the fixed analysis (same model): grade and must-have status metrics, plus Qwen and tool calls per pair, planning rounds, claims changed by its checks, fallbacks. The fixed analysis' saved answers are reused, so only the agent runs |
+| DSO4 — AI assistant | `agent` | 20 scripted questions: right first tool, expected answer, grounded candidate names, refusals of discriminatory requests, tool/model calls and seconds |
 
-## 1. Metrics Taxonomy
-
-### 1.1 Extraction Quality
-Evaluates the accuracy of transforming unstructured CV text into the Pydantic `CandidateProfile` schema:
-- **Precision:** Fraction of extracted fields that are correct.
-- **Recall:** Fraction of ground-truth candidate details recovered.
-- **F1 Score:** Harmonic mean of precision and recall.
-
-### 1.2 Information Retrieval
-Evaluates vector retrieval and candidate ranking in Qdrant:
-- **Recall@K (K=3, 5, 10):** Fraction of relevant document chunks retrieved in top-$K$.
-- **MRR (Mean Reciprocal Rank):** Position of the first relevant chunk in search results.
-- **NDCG (Normalized Discounted Cumulative Gain):** Quality of ranking taking relevance grading into account.
-
-### 1.3 RAG Quality (RAG Triad)
-- **Context Relevance:** How relevant the retrieved chunks are to the user query.
-- **Groundedness / Faithfulness:** Whether LLM claims are backed by cited retrieved chunks.
-- **Answer Relevance:** How directly the generated report answers the recruiter's prompt.
-
-### 1.4 Operational Telemetry
-- **Latency (p50, p95, p99):** Ingestion, retrieval, and inference time in milliseconds.
-- **Error Rate:** Percentage of failed extractions or tool executions.
-- **Token Efficiency:** Total prompt/completion tokens consumed per candidate processed.
+Code: `src/recruitment_ai/evaluation/` (metrics, comparison of runs), `scripts/eval_*.py`, `scripts/kaggle/`.

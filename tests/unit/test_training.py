@@ -59,7 +59,7 @@ def test_training_prompt_is_exactly_the_inference_prompt(monkeypatch):
 
     sent = {}
 
-    def fake_generate(self, messages, images=None, max_tokens=1024, temperature=0.0):
+    def fake_generate(self, messages, images=None, max_tokens=1024, temperature=0.0, use_adapter=True):
         sent["messages"] = messages
         self.last_stats = {"prompt_tokens": 1, "output_tokens": 1}
         return '{"full_name": "Ann Lee"}'

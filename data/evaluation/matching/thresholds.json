@@ -1,0 +1,9 @@
+{
+ "demonstrated": 0.15,
+ "equivalent": 0.02,
+ "cosine_demonstrated": 0.6,
+ "cosine_equivalent": 0.5,
+ "calibrated_on": "14 dev pairs",
+ "objective": 1.3548,
+ "reranked": true
+}
