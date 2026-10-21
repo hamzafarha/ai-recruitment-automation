@@ -140,6 +140,34 @@ class Settings(BaseSettings):
         default="ai-recruitment-automation", alias="LANGCHAIN_PROJECT"
     )
 
+    # E-mails to the candidates (services/mailer.py): the acknowledgement and the answer after the
+    # recruiter's decision. outbox = stored and shown in the app (Outbox page), not sent; smtp = sent.
+    email_mode: Literal["outbox", "smtp"] = Field(default="outbox", alias="EMAIL_MODE")
+    smtp_host: str = Field(default="smtp.gmail.com", alias="SMTP_HOST")
+    smtp_port: int = Field(default=587, alias="SMTP_PORT")
+    smtp_user: str | None = Field(default=None, alias="SMTP_USER")
+    smtp_password: str | None = Field(default=None, alias="SMTP_PASSWORD")
+    smtp_starttls: bool = Field(default=True, alias="SMTP_STARTTLS")
+    email_from: str | None = Field(default=None, alias="EMAIL_FROM")  # default: SMTP_USER
+    email_from_name: str = Field(default="Recruiting team", alias="EMAIL_FROM_NAME")
+    # demo safety: every e-mail goes to this address instead of the candidate's (CVs of real people)
+    email_redirect_to: str | None = Field(default=None, alias="EMAIL_REDIRECT_TO")
+    email_acknowledge: bool = Field(default=True, alias="EMAIL_ACKNOWLEDGE")
+
+    # Interview meetings (services/meetings.py), created when a recruiter schedules an interview.
+    # google = Google Calendar event with a Google Meet link (scripts/google_calendar_setup.py once);
+    # jitsi = a Jitsi Meet link (no account); auto = google when it is set up, else jitsi; none = no link
+    meeting_provider: Literal["auto", "google", "jitsi", "none"] = Field(default="auto", alias="MEETING_PROVIDER")
+    interview_minutes: int = Field(default=45, alias="INTERVIEW_MINUTES")
+    interview_timezone: str = Field(default="Africa/Tunis", alias="INTERVIEW_TIMEZONE")
+    google_client_secrets: str = Field(default="secrets/google_client_secret.json", alias="GOOGLE_CLIENT_SECRETS")
+    google_token_file: str = Field(default="secrets/google_token.json", alias="GOOGLE_TOKEN_FILE")
+    google_calendar_id: str = Field(default="primary", alias="GOOGLE_CALENDAR_ID")
+
+    # Experiment tracking: every evaluation of data/evaluation/ logged by scripts/mlflow_sync.py
+    mlflow_tracking_uri: str = Field(default="sqlite:///mlruns/mlflow.db", alias="MLFLOW_TRACKING_URI")
+    mlflow_ui_url: str = Field(default="http://localhost:5000", alias="MLFLOW_UI_URL")
+
     # Frontend
     backend_api_url: str = Field(
         default="http://localhost:8000", alias="BACKEND_API_URL"

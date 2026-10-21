@@ -4,7 +4,7 @@
   "nodes": [
     {
       "parameters": {
-        "content": "## Application pipeline — one workflow from the CV to the final decision\nEvery node is one step of the architecture (its part under the node). Each step calls the API (`POST /applications/{id}/steps/{step}`, services/pipeline.py), which logs it on the application (Pipeline page of the app).\n\n1. **CV received** (portal or recruiter upload) → **Intake checks** (consent KB-HR-004, file type and size)\n2. **Document processing**: PyMuPDF · python-docx · PaddleOCR for scans\n3. **Candidate JSON**: Qwen2.5-7B + our QLoRA adapter (the fine-tuning's product: it ran once, on Kaggle)\n4. **Store and index**: PostgreSQL + Qdrant (BGE-M3) → the candidate gets an answer\n5. **Screening agent** (LangGraph): understands the task, chooses its tools, retrieves and reranks CV evidence and HR rules, iterates, Qwen analyses, code checks every claim\n6. **Evidence-backed report** → **Notify the recruiters**\n7. **Wait for the recruiter's decision** (Human validation in the app resumes this execution)\n8. **Final decision** → **Notify the candidate** → **Close the application**\n\nA step that fails before the candidate's answer is explained to the candidate; the application can then be continued from the app. The API runs on the host with `--host 0.0.0.0` (n8n calls http://host.docker.internal:8000).",
+        "content": "## Application pipeline — one workflow from the CV to the final decision\nEvery node is one step of the architecture (its part under the node). Each step calls the API (`POST /applications/{id}/steps/{step}`, services/pipeline.py), which logs it on the application (Pipeline page of the app).\n\n1. **CV received** (portal or recruiter upload) → **Intake checks** (consent KB-HR-004, file type and size)\n2. **Document processing**: PyMuPDF · python-docx · PaddleOCR for scans\n3. **Candidate JSON**: Qwen2.5-7B + our QLoRA adapter (the fine-tuning's product: it ran once, on Kaggle)\n4. **Store and index**: PostgreSQL + Qdrant (BGE-M3) → the candidate gets an answer\n5. **Screening agent** (LangGraph): understands the task, chooses its tools, retrieves and reranks CV evidence and HR rules, iterates, Qwen analyses, code checks every claim\n6. **Evidence-backed report** → **Notify the recruiters**\n7. **Wait for the recruiter's decision** (Human validation in the app resumes this execution)\n8. **Final decision** → **Notify the candidate** (the API e-mails the answer; an interview gets a Google Meet / Jitsi link and a calendar invite) → **Close the application**\n\nE-mails are sent by the API (SMTP settings in `.env`, or the app's Outbox when `EMAIL_MODE=outbox`): no SMTP credentials are needed in n8n.\n\nA step that fails before the candidate's answer is explained to the candidate; the application can then be continued from the app. The API runs on the host with `--host 0.0.0.0` (n8n calls http://host.docker.internal:8000).",
         "height": 420,
         "width": 860
       },
@@ -145,7 +145,7 @@
         1200,
         0
       ],
-      "notes": "Part 7 — message",
+      "notes": "Part 7 — e-mails the acknowledgement",
       "notesInFlow": true,
       "onError": "continueErrorOutput"
     },
@@ -165,27 +165,6 @@
         1440,
         0
       ]
-    },
-    {
-      "parameters": {
-        "fromEmail": "recruiting@example.com",
-        "toEmail": "={{ $json.result.to || 'recruiting@example.com' }}",
-        "subject": "={{ $json.result.subject }}",
-        "emailFormat": "text",
-        "text": "={{ $json.result.text }}",
-        "options": {}
-      },
-      "id": "00a3a46a-5947-5410-9664-5650a74bd263",
-      "name": "Send the acknowledgement (needs SMTP)",
-      "type": "n8n-nodes-base.emailSend",
-      "typeVersion": 2.1,
-      "position": [
-        1680,
-        0
-      ],
-      "disabled": true,
-      "notes": "Enable with SMTP credentials",
-      "notesInFlow": true
     },
     {
       "parameters": {
@@ -349,28 +328,7 @@
         1680,
         260
       ],
-      "notes": "Part 7 — invitation or answer",
-      "notesInFlow": true
-    },
-    {
-      "parameters": {
-        "fromEmail": "recruiting@example.com",
-        "toEmail": "={{ $json.result.to || 'recruiting@example.com' }}",
-        "subject": "={{ $json.result.subject }}",
-        "emailFormat": "text",
-        "text": "={{ $json.result.text }}",
-        "options": {}
-      },
-      "id": "cb47f0c9-c177-5954-bd13-af5aea3c07d5",
-      "name": "Send the answer (needs SMTP)",
-      "type": "n8n-nodes-base.emailSend",
-      "typeVersion": 2.1,
-      "position": [
-        1920,
-        260
-      ],
-      "disabled": true,
-      "notes": "Enable with SMTP credentials",
+      "notes": "Part 7 — e-mails the answer (+ meeting)",
       "notesInFlow": true
     },
     {
@@ -389,7 +347,7 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
       "position": [
-        2160,
+        1920,
         260
       ],
       "notes": "Part 8 — final status",
@@ -565,17 +523,6 @@
       "main": [
         [
           {
-            "node": "Send the acknowledgement (needs SMTP)",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Send the acknowledgement (needs SMTP)": {
-      "main": [
-        [
-          {
             "node": "Screening agent (LangGraph)",
             "type": "main",
             "index": 0
@@ -668,17 +615,6 @@
       ]
     },
     "Notify the candidate": {
-      "main": [
-        [
-          {
-            "node": "Send the answer (needs SMTP)",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Send the answer (needs SMTP)": {
       "main": [
         [
           {

@@ -69,6 +69,7 @@ FIT_GRADE = 2                # ... those graded at least this by the fast matchi
 MAX_ROUNDS = 2               # planning rounds by the model, after the systematic first round
 MAX_CALLS = 4                # tool calls per planning round
 EVIDENCE_PER_REQUIREMENT = 3
+HIT_CHARS = 300              # a tool call's results are kept in the trace (shown in the app), cut to this length
 PLAN_TOKENS = 400
 WEAK_SHOWN = 6               # weak requirements shown to the planner
 STRONG_SECTIONS = USAGE_SECTIONS | {"education", "certification", "languages"}  # context for "demonstrated"
@@ -397,7 +398,9 @@ class ScreeningAgent:
             queries.setdefault(call["requirement"], []).append(call["query"])
             made.append({"tool": "search_cv", "job": job["title"], "round": rnd, "requirement": call["requirement"],
                          "query": call["query"], "found": len(hits),
-                         "best": round(hits[0].score, 3) if hits else None})
+                         "best": round(hits[0].score, 3) if hits else None,
+                         "results": [{"label": h.label, "section": h.section, "score": round(h.score, 4),
+                                      "text": _short(h.text, HIT_CHARS)} for h in hits]})
         seen = {k["id"] for k in knowledge}
         search = self.analyzer.knowledge_search  # (query, job profile) -> HR knowledge chunks, reranked
         for call in (c for c in calls if c["tool"] == "search_hr_knowledge"):
@@ -414,12 +417,18 @@ class ScreeningAgent:
                 new += 1
                 meta = hit.metadata or {}
                 knowledge.append({"id": hit.id, "doc_id": meta.get("document_id") or "?", "title": meta.get("title") or "",
-                                  "section": meta.get("section"), "excerpt": hit.text,
+                                  "section": meta.get("section"), "chunk_id": meta.get("chunk_id"), "excerpt": hit.text,
                                   "score": round(float(hit.relevance_score), 4), "requirement": call.get("requirement")})
             queries.setdefault("_hr", []).append(call["query"])
             made.append({"tool": "search_hr_knowledge", "job": job["title"], "round": rnd,
                          "requirement": call.get("requirement"), "query": call["query"], "found": new,
-                         "documents": sorted({(h.metadata or {}).get("document_id") or "?" for h in hits[:2]})})
+                         "documents": sorted({(h.metadata or {}).get("document_id") or "?" for h in hits[:2]}),
+                         "results": [{"doc_id": (h.metadata or {}).get("document_id") or "?",
+                                      "title": (h.metadata or {}).get("title") or "",
+                                      "section": (h.metadata or {}).get("section"),
+                                      "chunk_id": (h.metadata or {}).get("chunk_id"),
+                                      "score": round(float(h.relevance_score), 4), "text": _short(h.text, HIT_CHARS)}
+                                     for h in hits[:2]]})
         event = {"node": "act", "job": job["title"], "round": rnd, "seconds": round(time.perf_counter() - start, 2),
                  "cv_searches": len(cv_calls), "hr_searches": len(calls) - len(cv_calls),
                  "hr_excerpts": len(knowledge)}
@@ -459,7 +468,8 @@ class ScreeningAgent:
     # ------------------------------------------------------------------ 7. final analysis, checked by code
 
     def _knowledge_sources(self, state: ScreeningState) -> list[KnowledgeSource]:
-        return [KnowledgeSource(doc_id=k["doc_id"], title=k["title"], section=k.get("section"), excerpt=k["excerpt"])
+        return [KnowledgeSource(doc_id=k["doc_id"], title=k["title"], section=k.get("section"), excerpt=k["excerpt"],
+                                chunk_id=k.get("chunk_id"), score=k.get("score"))
                 for k in state.get("knowledge") or []]
 
     def _job_trace(self, state: ScreeningState) -> dict[str, Any]:
@@ -487,7 +497,8 @@ class ScreeningAgent:
             report.warnings = [*report.warnings, *(state.get("job_warnings") or []),
                                f"AI analysis failed ({error[:160]}); the fast semantic estimate is shown instead"]
             report.knowledge_sources = [KnowledgeSource(doc_id=k.doc_id, title=k.title, section=k.section,
-                                                        excerpt=k.excerpt[:300]) for k in knowledge]
+                                                        excerpt=k.excerpt[:300], chunk_id=k.chunk_id, score=k.score)
+                                        for k in knowledge]
             report.trace = {"agent": self._job_trace(state), "prompt": prompt, "prompt_chars": len(prompt),
                             "error": error}
             event = {"node": "analyse", "job": job["title"], "seconds": round(time.perf_counter() - start, 2),

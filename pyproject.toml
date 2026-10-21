@@ -27,6 +27,7 @@ dependencies = [
     "python-dotenv>=1.0.0",
     "httpx>=0.26.0",
     "requests>=2.31.0",
+    "tzdata>=2024.1",  # IANA time zones on Windows (interview meetings, services/meetings.py)
 ]
 
 [project.optional-dependencies]
@@ -78,8 +79,15 @@ database = [
     "asyncpg>=0.29.0",
 ]
 
-frontend = [
-    "streamlit>=1.50.0",  # st.navigation, chat, width="stretch"
+tracking = [
+    "mlflow>=3.1",  # experiment tracking of every evaluation (scripts/mlflow_sync.py)
+]
+
+google = [
+    # Google Meet links for interviews (Google Calendar API, scripts/google_calendar_setup.py)
+    "google-api-python-client>=2.100.0",
+    "google-auth>=2.30.0",
+    "google-auth-oauthlib>=1.2.0",
 ]
 
 notebooks = [
@@ -101,7 +109,7 @@ dev = [
 ]
 
 all = [
-    "recruitment-ai[document-processing,ml,vectorstore,agents,api,database,frontend,notebooks,dev]",
+    "recruitment-ai[document-processing,ml,vectorstore,agents,api,database,notebooks,dev,tracking,google]",
 ]
 
 [tool.setuptools.packages.find]
@@ -110,10 +118,11 @@ where = ["src"]
 [tool.ruff]
 line-length = 88
 target-version = "py312"
-src = [".", "src", "frontend"]  # frontend/app_pages is project code
+src = [".", "src"]
 exclude = [
     ".venv",
     "notebooks",
+    "web",
 ]
 
 [tool.ruff.lint]

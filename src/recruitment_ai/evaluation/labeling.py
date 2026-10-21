@@ -1,4 +1,4 @@
-"""Data access and storage for the human labeling app (frontend/labeling_app.py).
+"""Data access and storage for human labels (the Streamlit labeling app was removed with the Streamlit UI).
 
 Two labeling tasks over the evaluation set:
 - match grading: a human grades each CV-job pair 0-3 with the rubric KB-RR-002

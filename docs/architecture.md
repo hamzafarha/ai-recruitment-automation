@@ -56,7 +56,7 @@ Questions ──► agents/agent.py: the AI assistant (LangGraph decide → act 
 
 | Layer | Package | Notes |
 |---|---|---|
-| Interface | `frontend/` | Streamlit pages; talks to the API only |
+| Interface | `web/` | React (Vite + TypeScript + Tailwind) single-page app, served by the API at `/`; talks to the API only |
 | API | `api/` | FastAPI routers → services; errors mapped to 400/404/409/422/503 |
 | Services | `src/recruitment_ai/services/` | use cases (`pipeline.py`: the application workflow); `container.py` wires the configured models and stores |
 | AI | `extraction/`, `matching/`, `agents/`, `tools/`, `rag/` | prompts, parsing, retrieval and scoring (same code in the app and the evaluations) |

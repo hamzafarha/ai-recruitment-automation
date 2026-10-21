@@ -10,6 +10,7 @@ from api.errors import service_errors
 from recruitment_ai.config.settings import get_settings
 from recruitment_ai.database.repositories import CandidateRepository
 from recruitment_ai.services import candidates as candidate_service
+from recruitment_ai.services import observe
 from recruitment_ai.services.matching import analysis_dict
 from recruitment_ai.utils.security import sanitize_filename, validate_file_upload
 
@@ -82,6 +83,23 @@ def get_cv_text(candidate_id: str, db: Session = Depends(get_db)) -> dict[str, A
     if candidate is None:
         raise HTTPException(status_code=404, detail=f"Candidate {candidate_id} not found")
     return {"id": candidate.id, "cv_filename": candidate.cv_filename, "cv_text": candidate.cv_text or ""}
+
+
+@router.post("/{candidate_id}/compare-models")
+def compare_models(candidate_id: str, db: Session = Depends(get_db),
+                   container: Container = Depends(get_container)) -> dict[str, Any]:
+    """Base Qwen2.5 (no adapter) on the candidate's CV text, next to the fine-tuned profile stored: what the
+    QLoRA fine-tuning changes on this CV (one generation, about a minute). Kept with the candidate."""
+    with service_errors(value_status=422):
+        return observe.compare_candidate(db, container, candidate_id)
+
+
+@router.get("/{candidate_id}/compare-models")
+def get_model_comparison(candidate_id: str, db: Session = Depends(get_db)) -> dict[str, Any]:
+    candidate = CandidateRepository(db).get(candidate_id)
+    if candidate is None:
+        raise HTTPException(status_code=404, detail=f"Candidate {candidate_id} not found")
+    return {"comparison": (candidate.extraction or {}).get("model_comparison")}
 
 
 @router.delete("/{candidate_id}")

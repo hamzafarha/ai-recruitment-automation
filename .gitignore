@@ -61,6 +61,17 @@ data/evaluation/**/predictions/
 # Local build outputs (Kaggle packages, downloads)
 build/
 
+# React interface: packages and build output (npm install / npm run build in web/)
+web/node_modules/
+web/dist/
+
+# MLflow tracking store (python scripts/mlflow_sync.py rebuilds it from data/evaluation/)
+mlruns/
+mlartifacts/
+
+# Google OAuth client and token (scripts/google_calendar_setup.py): never commit
+secrets/
+
 # Fine-tuned LoRA adapters and checkpoints (Step 9): large, kept on Kaggle
 *.safetensors
 data/evaluation/finetune/adapter/

@@ -6,7 +6,7 @@ Stages (run in order; your review happens between them):
   python scripts/build_eval_set.py shortlist    # 3 candidate job postings per role -> jd_shortlist.md
   python scripts/build_eval_set.py synthetic    # render synthetic CV profiles -> synthetic/files/ (PDF, DOCX)
   python scripts/build_eval_set.py pairs        # pairs to grade + CVs to check -> labels/pairs.csv, extraction_sample.csv
-  (label in the app: python -m streamlit run frontend/labeling_app.py)
+  (labels: model-made silver labels; the Streamlit labeling app was removed with the Streamlit interface)
   python scripts/build_eval_set.py autocheck    # automatic extraction checks -> labels/extraction_checks.csv
   python scripts/build_eval_set.py freeze       # check labels, checksums -> manifest.csv, labels/summary.json, README.md
   python scripts/build_eval_set.py verify       # has anything changed since the freeze?

@@ -146,7 +146,9 @@ class EvidenceAnalyzer:
                 seen.add(hit.id)
                 meta = hit.metadata or {}
                 sources.append(KnowledgeSource(doc_id=meta.get("document_id") or "?", title=meta.get("title") or "",
-                                               section=meta.get("section"), excerpt=hit.text))
+                                               section=meta.get("section"), excerpt=hit.text,
+                                               chunk_id=meta.get("chunk_id"),
+                                               score=round(float(hit.relevance_score), 4)))
         return sources, warnings
 
     # ------------------------------------------------------------------ prompt
@@ -278,7 +280,8 @@ class EvidenceAnalyzer:
             summary=(judgement.summary or "").strip() or rubric.GRADE_LABELS[grade_value],
             action=rubric.ACTIONS[grade_value], action_label=rubric.ACTION_LABELS[rubric.ACTIONS[grade_value]],
             knowledge_sources=[KnowledgeSource(doc_id=k.doc_id, title=k.title, section=k.section,
-                                               excerpt=k.excerpt[:300]) for k in knowledge],
+                                               excerpt=k.excerpt[:300], chunk_id=k.chunk_id, score=k.score)
+                               for k in knowledge],
             model=getattr(self.llm, "model", None), seconds=round(time.perf_counter() - start, 1),
             warnings=warnings, trace=trace,
         )

@@ -11,6 +11,7 @@ from recruitment_ai.database.models import (
     Analysis,
     Application,
     Candidate,
+    Email,
     Job,
     Notification,
     Review,
@@ -140,3 +141,19 @@ class NotificationRepository(BaseRepository[Notification]):
 class AgentRunRepository(BaseRepository[AgentRun]):
     def __init__(self, db: Session) -> None:
         super().__init__(AgentRun, db)
+
+
+class EmailRepository(BaseRepository[Email]):
+    def __init__(self, db: Session) -> None:
+        super().__init__(Email, db)
+
+    def filter(self, application_id: str | None = None, status: str | None = None, kind: str | None = None,
+               limit: int = 200) -> list[Email]:
+        query = self.db.query(Email)
+        if application_id:
+            query = query.filter(Email.application_id == application_id)
+        if status:
+            query = query.filter(Email.status == status)
+        if kind:
+            query = query.filter(Email.kind == kind)
+        return query.order_by(Email.created_at.desc()).limit(limit).all()

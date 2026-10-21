@@ -11,6 +11,8 @@ Works on PostgreSQL and on SQLite (unit tests).
 - analyses: one candidate-job report (MatchReport), with its review status;
 - reviews: the recruiter's decisions on an analysis (human validation, part 9);
 - notifications: events shown in the app and sent to n8n;
+- emails: the e-mails to the candidates (acknowledgement, answer after the decision, interview invitation
+  with its meeting link), sent by SMTP or kept in the outbox;
 - agent_runs: questions asked to the AI assistant, with the tools it used (traceability).
 """
 
@@ -57,6 +59,7 @@ class Candidate(Base):
 
     analyses = relationship("Analysis", back_populates="candidate", cascade="all, delete-orphan")
     applications = relationship("Application", back_populates="candidate", cascade="all, delete-orphan")
+    emails = relationship("Email", cascade="all, delete-orphan")  # right to erasure: deleted with the candidate
 
 
 class Job(Base):
@@ -104,6 +107,8 @@ class Application(Base):
     candidate = relationship("Candidate", back_populates="applications")
     job = relationship("Job", back_populates="applications")
     analyses = relationship("Analysis", back_populates="application", order_by="Analysis.created_at")
+    emails = relationship("Email", back_populates="application", cascade="all, delete-orphan",
+                          order_by="Email.created_at")
 
 
 class Analysis(Base):
@@ -160,6 +165,32 @@ class Notification(Base):
     source = Column(String(30), nullable=False, default="app")  # app | n8n
     read = Column(Boolean, nullable=False, default=False)
     created_at = Column(DateTime, default=datetime.utcnow, nullable=False, index=True)
+
+
+class Email(Base):
+    """An e-mail to a candidate (acknowledgement, answer after the decision), sent or kept in the outbox."""
+
+    __tablename__ = "emails"
+
+    id = Column(String(36), primary_key=True, default=generate_uuid)
+    application_id = Column(String(36), ForeignKey("applications.id", ondelete="CASCADE"), nullable=True, index=True)
+    candidate_id = Column(String(36), ForeignKey("candidates.id", ondelete="CASCADE"), nullable=True, index=True)
+    kind = Column(String(30), nullable=False)  # acknowledgement | decision
+    decision = Column(String(30), nullable=True)  # interview | shortlist | reject (kind "decision")
+    to_address = Column(String(255), nullable=True)  # where it was sent (EMAIL_REDIRECT_TO in demos)
+    candidate_address = Column(String(255), nullable=True)  # the candidate's address from the CV
+    subject = Column(String(255), nullable=False)
+    text = Column(Text, nullable=False)
+    html = Column(Text, nullable=True)
+    status = Column(String(20), nullable=False)  # sent | outbox | failed | skipped
+    mode = Column(String(20), nullable=False)  # smtp | outbox
+    error = Column(Text, nullable=True)
+    meeting = Column(JSON, nullable=True)  # interview: provider, link, start, end, calendar event
+    attachments = Column(JSON, nullable=True)  # names of the attached files (invite.ics)
+    sent_at = Column(DateTime, nullable=True)
+    created_at = Column(DateTime, default=datetime.utcnow, nullable=False, index=True)
+
+    application = relationship("Application", back_populates="emails")
 
 
 class AgentRun(Base):

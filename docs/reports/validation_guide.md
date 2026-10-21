@@ -59,7 +59,7 @@ http://localhost:5678 · Adminer http://localhost:8080 · Kaggle notebooks (fine
 **30 minutes before**
 1. Start the Kaggle AI server notebook (*Run All*, ~5 min), paste the 4 lines into `.env`.
 2. `docker compose up -d postgres qdrant n8n` and `docker compose --profile tools up -d adminer`.
-3. Start the API (`--host 0.0.0.0`) and Streamlit; check the sidebar: 4 green dots.
+3. Start the API (`--host 0.0.0.0`) and open http://localhost:8000; check the top bar: 4 green dots.
 4. Pre-run what is slow, so the demo stays fast: one application through the portal (via n8n) that waits for a
    decision, one already decided (closed), 3 analyses for *GenAI Engineer* (Matching), 2–3 assistant questions, one
    *Document processing* comparison on your CV (that page keeps its result only while the browser tab stays open).

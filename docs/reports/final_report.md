@@ -56,7 +56,7 @@ to `services/pipeline.py`, which the API can also run by itself):
 
 ```text
  1 USERS & INPUTS                                     KAGGLE GPU SESSION = "AI SERVER"
- Recruiter interface (Streamlit)                      Qwen2.5-7B-Instruct + our QLoRA adapter (4)
+ Recruiter interface (React)                          Qwen2.5-7B-Instruct + our QLoRA adapter (4)
  Candidate portal ──► 2 n8n workflows                 BGE-M3 embeddings · BGE reranker v2-m3
                        (application pipeline, new job,       ▲
                         events, digest, error alert)         │ private Cloudflare link + token
@@ -94,9 +94,10 @@ to `services/pipeline.py`, which the API can also run by itself):
 
 ### 3.1 Users and inputs (part 1)
 
-- **Recruiter interface** (Streamlit, `frontend/streamlit_app.py` + `frontend/app_pages/`): Dashboard,
+- **Recruiter interface** (React + TypeScript, `web/src/pages/`, served by the API): Dashboard,
   Application pipeline, Candidates, Jobs, Matching, Reports, Human validation, AI assistant, Search, Candidate
-  portal, Notifications & n8n, Evaluation (plus the "Under the hood" pages).
+  portal, E-mails & meetings, Notifications & n8n, Base vs fine-tuned, Evaluation & MLflow, HR knowledge base
+  (plus the "Under the hood" pages).
 - **Candidate portal**: a candidate applies with a CV, accepts the data policy, and may choose a job. The
   application goes into the application pipeline through n8n; a recruiter's upload (Candidates page) goes into
   the same workflow.
@@ -407,7 +408,7 @@ questions succeed 4 times out of 5.
 ### 4.6 Limits of the evaluation
 
 - Match labels are silver (model-made with the written rubric); a human annotator on the same pairs is the next
-  step (the labeling app exists: `frontend/labeling_app.py`).
+  step.
 - Small samples (36 pairs, 71 extraction documents): differences of a few points are within noise.
 - Extraction is scored against the dataset's reference profiles, which have their own errors.
 
@@ -439,10 +440,10 @@ REMOTE_LLM_TOKEN=<secret>
 ```powershell
 docker compose up -d postgres qdrant n8n
 python -m uvicorn api.main:app --host 0.0.0.0 --port 8000
-python -m streamlit run frontend/streamlit_app.py
+cd web; npm install; npm run build   # the API serves the interface
 ```
 
-3. Open http://localhost:8501. The sidebar must show PostgreSQL, Qdrant and the Kaggle AI server in green.
+3. Open http://localhost:8000. The top bar must show PostgreSQL, Qdrant and the Kaggle AI server in green.
 4. First time only — **Dashboard → Set up** (~1 min): HR knowledge base indexed, 5 jobs and 12 candidates loaded.
 5. First time only — n8n: `python scripts/n8n_setup.py` (it imports the 5 workflows, among them the application
    pipeline), then `N8N_EVENTS_ENABLED=true` in `.env` and restart the API. n8n editor: http://localhost:5678

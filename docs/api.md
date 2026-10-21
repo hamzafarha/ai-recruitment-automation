@@ -30,6 +30,8 @@ Steps, in order: `intake` → `document` → `extract` → `store` → `acknowle
 | POST | `/applications/{id}/continue` | Continue with the API from the next (or failed) step |
 | GET | `/applications?status=` · `/applications/{id}` | Applications (running, waiting_review, closed, failed) and the log of every step: status, timings, result (the screening agent's timeline and tool calls), error |
 | GET | `/applications/steps` | The steps, with the part of the architecture each one implements |
+| GET | `/applications/{id}/outputs` | What every step produced, in full: CV text, structured profile, Qdrant points, e-mails, the screening agent's tool calls with their results and the HR documents retrieved, reports, reviews |
+| POST | `/applications/via-n8n` | Same body as `/applications`: the CV is sent to the n8n workflow's webhook (`cv-intake`), which runs every step (the interface cannot call n8n itself) |
 
 A recruiter's decision (`POST /analyses/{id}/review`) on an analysis of the pipeline resumes its workflow: n8n
 (its Wait node) or, if n8n does not answer, the API runs the final decision, the candidate's message and closes.
@@ -43,7 +45,8 @@ A recruiter's decision (`POST /analyses/{id}/review`) on an analysis of the pipe
 | POST | `/candidates/extract` | Extraction only, nothing stored (to test DSO1) |
 | GET | `/candidates/{id}` | Profile, extraction details and the candidate's analyses |
 | GET | `/candidates/{id}/cv-text` | The CV text used as evidence |
-| DELETE | `/candidates/{id}` | Delete the candidate, their analyses and search entries (right to erasure) |
+| POST · GET | `/candidates/{id}/compare-models` | Base Qwen2.5 (no adapter) on the stored CV text next to the fine-tuned profile (POST runs it, about a minute; GET returns the stored comparison) |
+| DELETE | `/candidates/{id}` | Delete the candidate, their analyses, applications, e-mails and search entries (right to erasure) |
 
 ## Jobs
 
@@ -88,3 +91,33 @@ A recruiter's decision (`POST /analyses/{id}/review`) on an analysis of the pipe
 A CV received by n8n goes into the application pipeline (above). With `N8N_EVENTS_ENABLED=true`, the other
 notifications created by the app are also posted to n8n (`{N8N_URL}/webhook/recruitment-events`); the pipeline's
 own messages are written by its workflow.
+
+## E-mails and interview meetings (part 7)
+
+| Method | Path | What it does |
+|---|---|---|
+| GET | `/emails/settings` | How e-mails are sent (`EMAIL_MODE` smtp or outbox, redirection) and how meetings are created (Google Meet or Jitsi) |
+| GET | `/emails?application_id=&status=&kind=` | E-mails to the candidates (acknowledgement, decision), with counts per status |
+| GET | `/emails/{id}` | One e-mail: text, HTML, meeting, calendar invite (`ics`) |
+| POST | `/emails/{id}/send` | Send again with the current settings (an e-mail of the outbox, or a failed one); 409 if already sent |
+
+The pipeline's steps `acknowledge` and `notify_candidate` write them; an interview decision creates the meeting.
+
+## HR knowledge base (part 6)
+
+| Method | Path | What it does |
+|---|---|---|
+| GET | `/knowledge/documents` | The 15 documents the RAG retrieves from, with their sections and chunks |
+| GET | `/knowledge/documents/{doc_id}` | One document (e.g. `KB-RR-002`): markdown and the chunks indexed in Qdrant |
+
+## Evaluation
+
+| Method | Path | What it does |
+|---|---|---|
+| GET | `/evaluation/overview` | What each evaluation measures, with which technologies, and its headline number |
+| GET | `/evaluation/extraction?before=&after=` | CV extraction, base vs fine-tuned (or any two runs): metrics, groups, per CV |
+| GET | `/evaluation/finetune` · `/evaluation/rag` · `/evaluation/matching` · `/evaluation/assistant` | The other evaluations of data/evaluation/ |
+| GET | `/evaluation/pipeline` | The live pipeline: timings and outcomes of every step |
+| GET | `/evaluation/mlflow` | MLflow installed / interface running / experiments (scripts/mlflow_sync.py logs them) |
+
+The React interface is served at `/` (any path that is not `/api/...`, `/health` or `/docs`).

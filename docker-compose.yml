@@ -35,8 +35,9 @@ services:
       retries: 5
       start_period: 5s
 
-  # Optional: the API and the interface can also run in Docker (by default we run them with Python
-  # on the PC, README "Try everything"). Model settings (LLM_PROVIDER, REMOTE_LLM_URL...) come from .env.
+  # Optional: the API can also run in Docker (by default we run it with Python on the PC, docs/USER_GUIDE.md).
+  # The image builds the React interface too and serves it at http://localhost:8000.
+  # Model and e-mail settings (LLM_PROVIDER, REMOTE_LLM_URL, EMAIL_MODE, SMTP_*...) come from .env.
   api:
     build:
       context: .
@@ -64,34 +65,13 @@ services:
       - "8000:8000"
     volumes:
       - ./data:/app/data
+      - ./secrets:/app/secrets  # Google Calendar token (optional)
     healthcheck:
       test: ["CMD-SHELL", "curl -f http://localhost:8000/health || exit 1"]
       interval: 10s
       timeout: 5s
       retries: 5
       start_period: 20s
-
-  frontend:
-    build:
-      context: .
-      dockerfile: Dockerfile
-    container_name: recruitment_frontend
-    restart: unless-stopped
-    profiles: ["app"]
-    command: ["streamlit", "run", "frontend/streamlit_app.py", "--server.port=8501", "--server.address=0.0.0.0"]
-    depends_on:
-      - api
-    env_file:
-      - path: .env
-        required: false
-    environment:
-      BACKEND_API_URL: http://api:8000
-      N8N_URL: http://n8n:5678
-    ports:
-      - "8501:8501"
-    volumes:
-      - ./frontend:/app/frontend
-      - ./data:/app/data
 
   # n8n orchestrator (diagram part 2). Workflows: n8n/workflows/ (import + activate: python scripts/n8n_setup.py).
   # They call the API at http://host.docker.internal:8000: start the API with --host 0.0.0.0.

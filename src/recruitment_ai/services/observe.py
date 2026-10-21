@@ -38,7 +38,7 @@ from recruitment_ai.rag.knowledge_index import COLLECTION as KNOWLEDGE
 from recruitment_ai.rag.search_index import CANDIDATES, JOBS
 from recruitment_ai.services.errors import NotFoundError
 
-TABLES = ["applications", "candidates", "jobs", "analyses", "reviews", "notifications", "agent_runs"]
+TABLES = ["applications", "candidates", "jobs", "analyses", "reviews", "notifications", "emails", "agent_runs"]
 COLLECTIONS = [KNOWLEDGE, CANDIDATES, JOBS]
 MAX_TEXT = 600  # long text cells are cut in table views
 WEBHOOKS = {"cv-intake": "Recruitment — Application pipeline", "new-job": "Recruitment — New job",
@@ -371,6 +371,34 @@ def compare_profiles(finetuned: dict[str, Any], base: dict[str, Any]) -> dict[st
                          for f in ("full_name", "email", "phone", "location")},
             "skills_only_finetuned": sorted(skills_ft - skills_base),
             "skills_only_base": sorted(skills_base - skills_ft)}
+
+
+def compare_candidate(db: Session, container: Any, candidate_id: str) -> dict[str, Any]:
+    """Base Qwen2.5 (no adapter) on a stored candidate's CV text, next to the profile the fine-tuned model
+    wrote when the candidate was stored. One generation (about a minute on the Kaggle GPU); the result is
+    kept with the candidate (extraction.model_comparison) and shown in the application's extraction step."""
+    from sqlalchemy.orm.attributes import flag_modified
+
+    candidate = CandidateRepository(db).get(candidate_id)
+    if candidate is None:
+        raise NotFoundError(f"Candidate {candidate_id} not found")
+    if not (candidate.cv_text or "").strip():
+        raise ValueError("No CV text is stored for this candidate (demo candidates come from a profile, not a CV): "
+                         "compare on a CV file in Model comparison instead")
+    base = _extraction_run(container.extractor, candidate.cv_text, use_adapter=False)
+    finetuned_profile = candidate.profile or {}
+    extraction = candidate.extraction or {}
+    result = {"at": datetime.utcnow().isoformat(timespec="seconds"),
+              "finetuned": {"adapter_used": True, "model": extraction.get("model"), "adapter": extraction.get("adapter"),
+                            "seconds": extraction.get("seconds"), "prompt_tokens": extraction.get("prompt_tokens"),
+                            "output_tokens": extraction.get("output_tokens"), "profile": finetuned_profile},
+              "base": {k: v for k, v in base.items() if k != "raw_answer"} | {"raw_answer": (base.get("raw_answer")
+                                                                                              or "")[:20000]},
+              "comparison": compare_profiles(finetuned_profile, base["profile"])}
+    candidate.extraction = {**extraction, "model_comparison": result}
+    flag_modified(candidate, "extraction")
+    db.commit()
+    return result
 
 
 def explain_extraction(container: Any, filename: str, content: bytes, compare_base: bool = False) -> dict[str, Any]:

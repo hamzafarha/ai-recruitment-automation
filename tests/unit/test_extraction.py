@@ -119,6 +119,85 @@ def test_to_profile_normalizes_dates_and_dedupes_skills():
     assert profile.id == "cv1"
 
 
+HEADER = "Hamza Farhani\nData Science Student\nAriana, Tunisia | farhanihamza563@gmail.com | +216 99 786 220 | LinkedIn\n"
+
+
+def test_a_scrambled_email_is_corrected_from_the_cv():
+    # seen with the fine-tuned Qwen: the address copied with letters swapped
+    raw = CVExtraction(full_name="Hamza Farhani", email="faranhiamz563@gmail.com", phone="+216 99 786 220")
+    profile = to_profile(raw, cv_text=HEADER + "Summary\nReferee: john.smith@acme.com")
+    assert profile.email == "farhanihamza563@gmail.com"  # the CV's own address, not the referee's
+    assert profile.phone == "+216 99 786 220"  # copied correctly: kept as the model wrote it
+
+
+def test_missing_and_invented_contacts():
+    from recruitment_ai.extraction.extractor import check_contacts
+
+    assert check_contacts(None, None, HEADER) == ("farhanihamza563@gmail.com", "+216 99 786 220")  # filled
+    assert check_contacts("ann@mail.com", "+1 555 010 2030", "Ann Lee\nTunis") == (None, None)  # invented
+    assert check_contacts("ann@mail.com", "99786220", HEADER)[1] == "99786220"  # same number without +216
+    # an address the OCR broke ("gmail com") is kept: its name is in the text
+    assert check_contacts("jane.doe@gmail.com", None, "Jane Doe\njane.doe@gmail com")[0] == "jane.doe@gmail.com"
+    # an address only far down the CV (a referee's) is not used to fill a missing one
+    assert check_contacts(None, None, "Ann Lee\n" + "line\n" * 20 + "Referee: bob@acme.com")[0] is None
+
+
+def test_date_ranges_are_not_phone_numbers():
+    from recruitment_ai.extraction.extractor import cv_phones
+
+    text = "Acme 2019 - 2021\nBeta 06/2020 - 09/2022\nPhone: +33 6 12 34 56 78\nGPA 16.5/20"
+    assert cv_phones(text) == ["+33 6 12 34 56 78"]
+
+
+def test_contact_fixes_are_reported_with_the_extraction():
+    from recruitment_ai.extraction.extractor import CVExtractor
+
+    class CopyErrorLLM:
+        last_stats: dict = {}
+
+        def generate_structured(self, prompt, schema, system_prompt=None, max_tokens=None):
+            return CVExtraction(full_name="Ann Lee", email="an.lee@mail.com")
+
+    profile, stats = CVExtractor(llm=CopyErrorLLM(), normalizer=object()).extract_text("Ann Lee | ann.lee@mail.com")
+    assert profile.email == "ann.lee@mail.com"
+    assert stats["contact_fixes"] == {"email": {"model": "an.lee@mail.com", "cv": "ann.lee@mail.com"}}
+
+
+def test_check_contacts_script_fixes_every_stored_copy():
+    # seen in the app: the column corrected by hand, the profile JSON and the acknowledgement in the
+    # outbox still holding the scrambled address
+    from sqlalchemy import create_engine
+    from sqlalchemy.orm import sessionmaker
+
+    from recruitment_ai.database.connection import Base
+    from recruitment_ai.database.models import Candidate, Email
+    from scripts.check_contacts import contact_changes
+
+    engine = create_engine("sqlite://")
+    Base.metadata.create_all(engine)
+    db = sessionmaker(bind=engine)()
+    wrong, right = "faranhiamz563@gmail.com", "farhanihamza563@gmail.com"
+    candidate = Candidate(full_name="Hamza Farhani", email=right, phone="+216 99 786 220", cv_text=HEADER,
+                          profile={"full_name": "Hamza Farhani", "email": wrong, "phone": "+216 99 786 220"})
+    db.add(candidate)
+    db.flush()
+    unsent, sent = (Email(candidate_id=candidate.id, kind="acknowledgement", subject="s", text="t", status=status,
+                          mode="outbox", candidate_address=wrong, to_address=wrong) for status in ("outbox", "sent"))
+    db.add_all([unsent, sent])
+    db.commit()
+
+    [(found, changes)] = contact_changes(db)  # dry run
+    assert found.id == candidate.id
+    assert changes == [("profile email", wrong, right), ("acknowledgement e-mail (outbox)", wrong, right)]
+    contact_changes(db, apply=True)
+    db.commit()
+    assert (candidate.email, candidate.profile["email"]) == (right, right)
+    assert (unsent.candidate_address, unsent.to_address) == (right, right)
+    assert sent.to_address == wrong  # already sent: kept as the record of what happened
+    assert candidate.extraction["contact_fixes"] == {"email": {"model": wrong, "cv": right}}
+    assert contact_changes(db) == []
+
+
 def test_sentence_like_skills_are_split_with_the_lexicon():
     phrase = "Knowledge modern DevOps services (Kubernetes services, Prometheus, etc.)"
     assert split_skill_phrase(phrase, FakeNormalizer()) == ["DevOps", "Kubernetes", "Prometheus"]

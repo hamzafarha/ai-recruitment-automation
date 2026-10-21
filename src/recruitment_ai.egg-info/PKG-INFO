@@ -17,6 +17,7 @@ Requires-Dist: pyyaml>=6.0.1
 Requires-Dist: python-dotenv>=1.0.0
 Requires-Dist: httpx>=0.26.0
 Requires-Dist: requests>=2.31.0
+Requires-Dist: tzdata>=2024.1
 Provides-Extra: document-processing
 Requires-Dist: pymupdf>=1.24.0; extra == "document-processing"
 Requires-Dist: python-docx>=1.1.0; extra == "document-processing"
@@ -50,8 +51,12 @@ Requires-Dist: sqlalchemy>=2.0.25; extra == "database"
 Requires-Dist: alembic>=1.13.1; extra == "database"
 Requires-Dist: psycopg2-binary>=2.9.9; extra == "database"
 Requires-Dist: asyncpg>=0.29.0; extra == "database"
-Provides-Extra: frontend
-Requires-Dist: streamlit>=1.50.0; extra == "frontend"
+Provides-Extra: tracking
+Requires-Dist: mlflow>=3.1; extra == "tracking"
+Provides-Extra: google
+Requires-Dist: google-api-python-client>=2.100.0; extra == "google"
+Requires-Dist: google-auth>=2.30.0; extra == "google"
+Requires-Dist: google-auth-oauthlib>=1.2.0; extra == "google"
 Provides-Extra: notebooks
 Requires-Dist: ipykernel>=6.29.0; extra == "notebooks"
 Requires-Dist: matplotlib>=3.8.0; extra == "notebooks"
@@ -67,21 +72,29 @@ Requires-Dist: mypy>=1.9.0; extra == "dev"
 Requires-Dist: types-pyyaml>=6.0.12; extra == "dev"
 Requires-Dist: types-requests>=2.31.0; extra == "dev"
 Provides-Extra: all
-Requires-Dist: recruitment-ai[agents,api,database,dev,document-processing,frontend,ml,notebooks,vectorstore]; extra == "all"
+Requires-Dist: recruitment-ai[agents,api,database,dev,document-processing,google,ml,notebooks,tracking,vectorstore]; extra == "all"
 
 # AI Recruitment Automation
 
-AI-assisted CV screening (Advanced Deep Learning project). The system reads CVs (digital PDF, scanned PDF,
-Word), extracts structured candidate profiles, retrieves the company's HR rules (RAG), compares candidates
-with job requirements and produces evidence-backed reports. **A human recruiter always makes the decision.**
+AI-assisted CV screening (Advanced Deep Learning project). Every application goes through **one workflow, from
+the CV to the final decision** (n8n): the system reads the CV (digital PDF, scanned PDF, Word), extracts a
+structured profile with our fine-tuned Qwen, then a LangGraph **screening agent** retrieves the CV evidence and
+the company's HR rules (RAG) for every job requirement and writes an evidence-backed report; the recruiters are
+notified, the workflow waits for their decision, then answers the candidate. **A human recruiter always makes
+the decision.**
 
 Stack: Python 3.12 · Qwen2.5 / Qwen2.5-VL via Hugging Face Transformers · PaddleOCR models (RapidOCR) · BGE-M3 embeddings ·
-BGE-reranker-v2-m3 · Qdrant · PostgreSQL · FastAPI · Streamlit · LangGraph · n8n · Kaggle (free GPUs) for every model run.
+BGE-reranker-v2-m3 · Qdrant · PostgreSQL · FastAPI · React (Vite, TypeScript, Tailwind) · LangGraph · n8n · MLflow ·
+SMTP e-mails with Google Meet / Jitsi interview invitations · Kaggle (free GPUs) for every model run.
 
-**Project status:** complete — every part of the architecture is built and usable from the interface: CV
-extraction with our QLoRA fine-tuned Qwen, RAG over the HR knowledge base, evidence-backed matching and reports,
-a LangGraph AI assistant with tools, human validation, notifications and n8n workflows. What was done, the
-results and a guided tour: **[final report](docs/reports/final_report.md)**. To try it: [section 8](#8-try-everything).
+**How to install, start and use everything — commands, links and where to go for each page: [docs/USER_GUIDE.md](docs/USER_GUIDE.md)** (also in the app: *Run guide*).
+
+**Project status:** complete — every part of the architecture is built and usable from the interface, chained
+in the application pipeline: intake, document processing, CV extraction with our QLoRA fine-tuned Qwen,
+storage and search index, the screening agent (RAG over the CV and the HR knowledge base, reranking,
+iterations, evidence-checked analysis), reports, notifications, human validation and the answer to the
+candidate. Plus a LangGraph AI assistant with tools. What was done, the results and a guided tour:
+**[final report](docs/reports/final_report.md)**. To try it: [section 8](#8-try-everything).
 
 ---
 
@@ -94,6 +107,7 @@ Install these once:
 | **Python 3.12** (exactly 3.12) | Project language | https://www.python.org/downloads/ |
 | **Git** | Clone the repo | https://git-scm.com/downloads |
 | **Docker Desktop** | Runs PostgreSQL, Qdrant and n8n | https://www.docker.com/products/docker-desktop/ |
+| **Node.js 20 LTS** | Builds the React interface (`web/`) | https://nodejs.org |
 | **Kaggle account** | Runs the AI models on free GPUs | https://www.kaggle.com |
 
 > Commands below are for **Windows PowerShell**, run from the project root. On macOS/Linux, activate the
@@ -123,6 +137,12 @@ Then the project and all its dependencies:
 
 ```powershell
 pip install -e ".[all]"
+```
+
+And the interface (React, in `web/`), built once; the API then serves it at http://localhost:8000:
+
+```powershell
+cd web; npm install; npm run build; cd ..
 ```
 
 > **Always run tools as `python -m <tool>`** (`python -m pytest`, `python -m uvicorn`, …). On Windows the
@@ -174,7 +194,7 @@ docker compose down                           # stop and remove the containers (
 > start from zero, then run `python -m alembic upgrade head` again.
 
 The API and the interface run with Python (section 8). They can also run in Docker
-(`docker compose --profile app up -d --build`: API on :8000, interface on :8501, settings from `.env`).
+(`docker compose --profile app up -d --build`: the API and the interface on :8000, settings from `.env`).
 
 ---
 
@@ -250,7 +270,8 @@ called the **AI server**. The app sends its model requests to it through a priva
 ```powershell
 docker compose up -d postgres qdrant n8n
 python -m uvicorn api.main:app --host 0.0.0.0 --port 8000     # terminal 1 — API docs: http://localhost:8000/docs
-python -m streamlit run frontend/streamlit_app.py              # terminal 2 — interface: http://localhost:8501
+# interface: http://localhost:8000 (served by the API once built: cd web; npm install; npm run build)
+# development mode with hot reload (optional, terminal 2): cd web; npm run dev  ->  http://localhost:5173
 ```
 
 `--host 0.0.0.0` lets n8n (in Docker) call the API; if Windows asks, allow Python on **private** networks.
@@ -268,31 +289,36 @@ set. Running it again adds nothing twice.
 python scripts/n8n_setup.py        # imports and activates the 5 workflows of n8n/workflows/, sends a test event
 ```
 
-Then set `N8N_EVENTS_ENABLED=true` in `.env` and restart the API. The n8n editor is at http://localhost:5678
+The main one is **Recruitment — Application pipeline**: one execution per application, from the CV to the
+final decision (it replaces the former "CV intake" workflow; re-running the script replaces it). Then set
+`N8N_EVENTS_ENABLED=true` in `.env` and restart the API. The n8n editor is at http://localhost:5678
 (the first visit asks you to create the local owner account).
 
 ### Guided tour
 
 | # | Page | Do | Architecture part |
 |---|---|---|---|
-| 1 | **Candidates** → Add | Upload your own CV (PDF, Word or image): profile in about a minute | 1, 3, 4 (OCR + fine-tuned Qwen) |
-| 2 | **Jobs** → New job from an advertisement | Paste a job ad, check the requirements, save | 1, 6 |
-| 3 | **Matching** | Choose a job: all candidates ranked in seconds; analyse the best 3 (≈1 min each) | 5 (BGE-M3, Qdrant, reranker, RAG, Qwen) |
-| 4 | **Reports** | Open an analysis: requirement-by-requirement evidence; download the PDF | 6 |
-| 5 | **Human validation** | Shortlist, invite (date), hold or reject (reason required) | 9 |
-| 6 | **Notifications & n8n** | The message n8n prepared (invitation, answer…); run the daily digest | 2, 7 |
-| 7 | **AI assistant** | Click an example question; open "How it answered" to see the tools | 5 (LangGraph agent) |
-| 8 | **Search** | Ask the HR knowledge base (EN/FR), search CVs and jobs | 5, 6 |
-| 9 | **Candidate portal** | Apply with a CV *through n8n*, choosing a job: it is analysed automatically | 1, 2 |
-| 10 | **Evaluation** | Results of every evaluation (extraction before/after fine-tuning, RAG, matching, assistant) | — |
+| 1 | **Candidate portal** | Apply with a CV *through n8n*, for a job or spontaneously: the answer comes after the extraction | 1, 2, 3, 4, 8, 7 |
+| 2 | **Application pipeline** | Watch the application go through every step: the screening agent's path (tools, searches, rounds, checks), then it waits | 5, 6, 7 |
+| 3 | **Human validation** | Decide (shortlist, interview with a date, hold, reject with a reason): the workflow resumes, answers the candidate and closes | 9, 7 |
+| 4 | **Reports** | Open the analysis: requirement-by-requirement evidence, the agent's trace; download the PDF | 6 |
+| 5 | **Candidates** → Add | The same workflow from the recruiter's side (any CV: PDF, Word or image) | 1, 3, 4 |
+| 6 | **Jobs** → New job from an advertisement | Paste a job ad, check the requirements, save | 1, 6 |
+| 7 | **Matching** | Choose a job: all candidates ranked in seconds; analyse the best ones (fixed analysis) | 5 |
+| 8 | **Notifications & n8n** | The messages prepared for the candidates; run the daily digest | 2, 7 |
+| 9 | **AI assistant** | Click an example question; open "How it answered" to see the tools | 5 (LangGraph assistant) |
+| 10 | **Search** | Ask the HR knowledge base (EN/FR), search CVs and jobs | 5, 6 |
+| 11 | **Evaluation** | Results of every evaluation (extraction before/after fine-tuning, RAG, matching, screening agent, assistant) | — |
 
 Only use CVs you are allowed to process (your own, or invented ones): their text goes to your Kaggle session.
 Without the AI server (`LLM_PROVIDER=mock`) the pages work but the AI answers are fake.
 
-**See the data while you use the app** — database rows (Adminer or psql), the vector database (Qdrant dashboard)
-and every n8n run: [step-by-step guide](docs/reports/observe_the_data.md).
+**Observe every part while it works** — the Application pipeline page (every step of every application, the
+screening agent's path), the app's *Under the hood* pages (architecture live, document processing and fine-tuned
+vs base model, vectors and reranking, matching internals, the assistant's path, the database), plus
+Adminer/psql, the Qdrant dashboard and the n8n runs: [step-by-step guide](docs/reports/observe_the_data.md).
 
-Other app: `python -m streamlit run frontend/labeling_app.py` (optional human labeling of the evaluation pairs).
+More pages: **E-mails & meetings** (every e-mail to the candidates, the interview's Google Meet / Jitsi link and calendar invite), **Base vs fine-tuned** (Qwen2.5 vs Qwen2.5 + QLoRA: metrics, live on a CV), **HR knowledge base** (the exact documents the RAG cites), **Evaluation & MLflow**. Every page: [docs/USER_GUIDE.md](docs/USER_GUIDE.md) section 8.
 
 ---
 
@@ -318,7 +344,8 @@ python scripts/kaggle_run.py all rag                          # Step 3: retrieva
 python scripts/kaggle_run.py all extraction extraction-text   # Step 2: CV extraction, 2 jobs in parallel (~1-3 h)
 python scripts/kaggle_run.py all extraction-vlm               # Step 2: Qwen2.5-VL reads the page images (~2-3 h)
 python scripts/kaggle_run.py all matching                     # DSO3: matching vs the 36 graded pairs (~1 h)
-python scripts/kaggle_run.py all agent                        # DSO4: the AI assistant on 20 questions (~30 min)
+python scripts/kaggle_run.py all screening                    # DSO4: the screening agent on the same pairs (~1 h)
+python scripts/kaggle_run.py all agent                        # the AI assistant on 20 questions (~30 min)
 python scripts/kaggle_run.py status extraction extraction-text
 python scripts/kaggle_run.py fetch extraction extraction-text # download the reports if you stopped waiting
 ```
@@ -334,7 +361,9 @@ GPUs. As a safety net for the quota, a job stops starting new CVs after 4 hours;
 a partial run keeps the mix of the whole split, and the report says how many were processed.
 
 The `matching` job calibrates the fast matcher's two thresholds on the dev pairs and writes them to
-`data/evaluation/matching/thresholds.json`, which the app then uses. The `agent` job builds a fresh workspace
+`data/evaluation/matching/thresholds.json`, which the app then uses. The `screening` job runs the application
+pipeline's screening agent on the same pairs and adds it to the matching report, next to the fixed analysis
+(whose saved answers it reuses). The `agent` job builds a fresh workspace
 (SQLite, embedded Qdrant, demo data) and asks the questions of `data/processed/agent_eval/scenarios.json`.
 
 Reports: `data/evaluation/<extraction/run | rag | matching | agent>/report.md`, also shown on the
@@ -368,28 +397,36 @@ src/recruitment_ai/
   llm/               Hugging Face Transformers adapter (Qwen2.5, Qwen2.5-VL), remote adapter + the Kaggle AI server
   embeddings/ reranking/  BGE-M3 and the BGE reranker (local, or remote on the Kaggle AI server)
   rag/               chunking, HR knowledge index, search index of candidates and jobs (Qdrant)
-  matching/          rubric KB-RR-002 as code, experience rules, fast semantic matcher, LLM evidence analyzer
-  agents/ tools/     the LangGraph AI assistant and its 8 tools
+  matching/          rubric KB-RR-002 as code, experience rules, fast semantic matcher, LLM evidence analyzer,
+                     the CV as searchable evidence (cv_index.py)
+  agents/ tools/     the LangGraph screening agent of the pipeline; the AI assistant and its 8 tools
   reports/           evidence-backed report as Markdown and PDF
-  services/          use cases: candidates, jobs, matching, reviews, events/notifications, dashboard, demo, assistant
-  database/          PostgreSQL tables (candidates, jobs, analyses, reviews, notifications, agent_runs) + repositories
+  services/          use cases: the application pipeline (pipeline.py), candidates, jobs, matching, reviews,
+                     events/notifications, dashboard, demo, assistant; mailer.py + meetings.py (e-mails to the
+                     candidates, Google Meet / Jitsi interviews, calendar invites); outputs.py (every step's full
+                     output); knowledge.py (the RAG's documents); evaluation.py (every metric, MLflow status)
+  database/          PostgreSQL tables (applications, candidates, jobs, analyses, reviews, notifications,
+                     emails, agent_runs) + repositories
   data/              dataset preparation, EN/FR skill lexicon (ESCO + custom), knowledge-base loader
   evaluation/        evaluation set, extraction / retrieval / matching / assistant metrics, before-after comparison
   training/          fine-tuning: training examples (data.py) and QLoRA training (qlora.py)
 api/                 FastAPI app: routers for every feature (docs at /docs)
-frontend/            Streamlit interface (streamlit_app.py + app_pages/), labeling app
-n8n/workflows/       the 5 n8n workflows (CV intake, new job, events, daily digest, error alert)
-scripts/             prepare_data, build_eval_set, eval_*, finetune_qlora, kaggle_run, n8n_setup, health_check
+web/                 React interface (Vite + TypeScript + Tailwind): pages in web/src/pages, built into web/dist
+                     and served by the API at /
+n8n/workflows/       the 5 n8n workflows (application pipeline, new job, events, daily digest, error alert)
+scripts/             prepare_data, build_eval_set, eval_*, finetune_qlora, kaggle_run, n8n_setup, health_check,
+                     mlflow_sync (evaluations -> MLflow), google_calendar_setup (Google Meet invitations)
 scripts/kaggle/      the jobs that run on Kaggle
 notebooks/kaggle/    the fine-tuning notebook and the AI server notebook (run on Kaggle)
 data/knowledge_base/ 15 HR documents used by RAG (rubric, job profiles, policies…; 3 in French)
 data/processed/eval_v1/  frozen evaluation set (committed; no CV content)
 data/reference/      custom skills added to ESCO
 data/raw/, data/interim/, data/evaluation/**/predictions/   git-ignored (real CVs, personal data)
-api/  frontend/  tests/  docs/  notebooks/  alembic/  configs/
+api/  web/  tests/  docs/  notebooks/  alembic/  configs/
 ```
 
-Reports: **[final report](docs/reports/final_report.md)** · [observe the data](docs/reports/observe_the_data.md) ·
+Reports: **[final report](docs/reports/final_report.md)** · [end-to-end test plan](docs/reports/test_plan.md) ·
+[observe the data](docs/reports/observe_the_data.md) · [validation day guide](docs/reports/validation_guide.md) ·
 [API](docs/api.md) ·
 [data inspection report](docs/reports/data_inspection_report.md) · [data layer](docs/data.md).
 
@@ -409,7 +446,7 @@ Reports: **[final report](docs/reports/final_report.md)** · [observe the data](
 
 | Problem | Fix |
 |---|---|
-| `No module named 'recruitment_ai'`, or `pytest`/`uvicorn`/`streamlit` not found | Activate the venv and use `python -m pytest`, `python -m uvicorn`, … |
+| `No module named 'recruitment_ai'`, or `pytest`/`uvicorn` not found | Activate the venv and use `python -m pytest`, `python -m uvicorn`, … |
 | PostgreSQL password error mentioning port 5432 | A Windows PostgreSQL service owns 5432; the project uses **5433**: keep `POSTGRES_PORT=5433` in `.env` |
 | Qdrant `SSL: WRONG_VERSION_NUMBER` | Leave `QDRANT_API_KEY=` empty (no value) in `.env` |
 | `failed to connect to the docker API` | Start Docker Desktop, then `docker compose up -d postgres qdrant n8n` |
@@ -423,3 +460,5 @@ Reports: **[final report](docs/reports/final_report.md)** · [observe the data](
 | Portal: *n8n answered 404* | The workflows are not imported or not active: `python scripts/n8n_setup.py` |
 | n8n cannot reach the API (workflow error) | Start the API with `--host 0.0.0.0` and allow Python through the Windows firewall (private networks) |
 | Search returns nothing | Dashboard → *Set up* (indexes the knowledge base, jobs and candidates); after a Qdrant reset → *Re-index* |
+| http://localhost:8000 says *The interface is not built yet* | `cd web; npm install; npm run build` |
+| E-mails, Google Meet, MLflow | [docs/USER_GUIDE.md](docs/USER_GUIDE.md) sections 9-11 and 15 |

@@ -38,6 +38,8 @@ class KnowledgeSource(BaseModel):
     title: str
     section: str | None = None
     excerpt: str = ""
+    chunk_id: str | None = Field(default=None, description="The retrieved chunk, e.g. 'KB-RR-002#3'")
+    score: float | None = Field(default=None, description="Reranker relevance of the chunk")
 
 
 class MatchReport(BaseModel):

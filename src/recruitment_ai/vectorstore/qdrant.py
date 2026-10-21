@@ -232,12 +232,15 @@ class QdrantVectorStore(VectorStore):
                 "distance": str(getattr(getattr(vectors, "distance", None), "value", ""))}
 
     def scroll(self, collection_name: str, limit: int = 50, offset: Any = None,
-               with_vectors: bool = False) -> tuple[list[dict[str, Any]], Any]:
-        """A page of points (id, payload, and the vector if asked) and the offset of the next page."""
+               with_vectors: bool = False,
+               filter_criteria: dict[str, Any] | None = None) -> tuple[list[dict[str, Any]], Any]:
+        """A page of points (id, payload, and the vector if asked) and the offset of the next page;
+        ``filter_criteria`` as in ``search`` (e.g. {"candidate_id": ...})."""
         if not self.client or not self.client.collection_exists(collection_name):
             return [], None
         points, next_offset = self.client.scroll(collection_name=collection_name, limit=limit, offset=offset,
-                                                 with_payload=True, with_vectors=with_vectors)
+                                                 with_payload=True, with_vectors=with_vectors,
+                                                 scroll_filter=build_filter(filter_criteria))
         return [{"id": str(p.id), "payload": p.payload or {}, "vector": p.vector if with_vectors else None}
                 for p in points], next_offset
 

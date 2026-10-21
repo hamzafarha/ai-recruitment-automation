@@ -5,15 +5,19 @@ application, from the CV received to the final decision.
   POST /applications/{id}/steps/{step} (document, extract, store, acknowledge, screen, report,
   notify_recruiters, decision, notify_candidate, close);
 - POST /applications/submit: intake, then the API runs every step itself, in the background;
+- POST /applications/via-n8n: a CV sent to the n8n workflow's webhook (the interface cannot call n8n
+  itself: other origin), which then runs every step;
 - POST /applications/{id}/continue: continue from the next (or failed) step with the API;
-- GET /applications, /applications/{id}, /applications/steps: the applications and their step logs.
+- GET /applications, /applications/{id}, /applications/steps: the applications and their step logs;
+- GET /applications/{id}/outputs: what every step produced, in full (services/outputs.py).
 """
 
 import base64
 import binascii
 from typing import Any, Literal
 
-from fastapi import APIRouter, BackgroundTasks, Depends
+import httpx
+from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException
 from pydantic import BaseModel, Field
 from sqlalchemy.orm import Session, sessionmaker
 
@@ -21,6 +25,9 @@ from api.dependencies import Container, get_container, get_db
 from api.errors import service_errors
 from recruitment_ai.database.repositories import ApplicationRepository
 from recruitment_ai.services import pipeline
+from recruitment_ai.services.outputs import outputs as step_outputs
+
+N8N_TIMEOUT = 900  # the n8n workflow answers after the extraction (about a minute on the Kaggle GPU)
 
 router = APIRouter(prefix="/applications", tags=["Application pipeline"])
 
@@ -79,6 +86,32 @@ def submit_application(body: ApplicationIn, background: BackgroundTasks, db: Ses
     return pipeline.application_dict(app, full=True)
 
 
+@router.post("/via-n8n", status_code=201)
+def submit_via_n8n(body: ApplicationIn, container: Container = Depends(get_container)) -> dict[str, Any]:
+    """The CV goes to the n8n workflow "Application pipeline" (webhook cv-intake), which runs every step;
+    n8n answers once the candidate is stored (after the extraction)."""
+    url = f"{container.settings.n8n_url.rstrip('/')}/webhook/cv-intake"
+    try:
+        response = httpx.post(url, json=body.model_dump(), timeout=N8N_TIMEOUT)
+    except httpx.HTTPError as exc:
+        raise HTTPException(status_code=503, detail=f"n8n is not reachable at {url} ({type(exc).__name__}): start it "
+                            "(docker compose up -d n8n) and publish the workflows (python scripts/n8n_setup.py), "
+                            "or send the CV straight to the API") from exc
+    if response.status_code == 404:
+        raise HTTPException(status_code=502, detail="n8n answered 404: the 'Application pipeline' workflow is not "
+                            "imported or not active (python scripts/n8n_setup.py)")
+    try:
+        data = response.json()
+    except ValueError:
+        data = None
+    if not isinstance(data, dict):
+        raise HTTPException(status_code=502, detail=f"n8n answered {response.status_code}: {response.text[:300]}")
+    if response.status_code >= 400 or data.get("detail") or not data.get("application_id"):
+        raise HTTPException(status_code=response.status_code if response.status_code >= 400 else 502,
+                            detail=f"The application was not received: {data.get('detail') or data}")
+    return data
+
+
 @router.get("")
 def list_applications(status: str | None = None, limit: int = 200, db: Session = Depends(get_db)) -> dict[str, Any]:
     applications = ApplicationRepository(db).filter(status=status, limit=limit)
@@ -89,6 +122,15 @@ def list_applications(status: str | None = None, limit: int = 200, db: Session =
 def get_application(application_id: str, db: Session = Depends(get_db)) -> dict[str, Any]:
     with service_errors():
         return pipeline.application_dict(pipeline.get(db, application_id), full=True)
+
+
+@router.get("/{application_id}/outputs")
+def get_outputs(application_id: str, db: Session = Depends(get_db),
+                container: Container = Depends(get_container)) -> dict[str, Any]:
+    """What every step produced, in full: CV text, extracted profile, Qdrant points, e-mails, the screening
+    agent's tool calls and retrieved documents, reports, reviews."""
+    with service_errors():
+        return step_outputs(db, container, pipeline.get(db, application_id))
 
 
 @router.post("/{application_id}/steps/{step}")

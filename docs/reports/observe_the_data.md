@@ -57,7 +57,7 @@ docker compose ps                                   # all must be "Up" (postgres
 
 ```powershell
 python -m uvicorn api.main:app --host 0.0.0.0 --port 8000     # terminal 1: creates/updates the tables at start
-python -m streamlit run frontend/streamlit_app.py              # terminal 2: http://localhost:8501
+# interface: http://localhost:8000 (served by the API once built: cd web; npm install; npm run build)
 ```
 
 If Windows asks, allow Python on **private** networks (n8n, in Docker, calls the API).

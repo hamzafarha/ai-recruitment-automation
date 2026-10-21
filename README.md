@@ -8,7 +8,10 @@ notified, the workflow waits for their decision, then answers the candidate. **A
 the decision.**
 
 Stack: Python 3.12 · Qwen2.5 / Qwen2.5-VL via Hugging Face Transformers · PaddleOCR models (RapidOCR) · BGE-M3 embeddings ·
-BGE-reranker-v2-m3 · Qdrant · PostgreSQL · FastAPI · Streamlit · LangGraph · n8n · Kaggle (free GPUs) for every model run.
+BGE-reranker-v2-m3 · Qdrant · PostgreSQL · FastAPI · React (Vite, TypeScript, Tailwind) · LangGraph · n8n · MLflow ·
+SMTP e-mails with Google Meet / Jitsi interview invitations · Kaggle (free GPUs) for every model run.
+
+**How to install, start and use everything — commands, links and where to go for each page: [docs/USER_GUIDE.md](docs/USER_GUIDE.md)** (also in the app: *Run guide*).
 
 **Project status:** complete — every part of the architecture is built and usable from the interface, chained
 in the application pipeline: intake, document processing, CV extraction with our QLoRA fine-tuned Qwen,
@@ -28,6 +31,7 @@ Install these once:
 | **Python 3.12** (exactly 3.12) | Project language | https://www.python.org/downloads/ |
 | **Git** | Clone the repo | https://git-scm.com/downloads |
 | **Docker Desktop** | Runs PostgreSQL, Qdrant and n8n | https://www.docker.com/products/docker-desktop/ |
+| **Node.js 20 LTS** | Builds the React interface (`web/`) | https://nodejs.org |
 | **Kaggle account** | Runs the AI models on free GPUs | https://www.kaggle.com |
 
 > Commands below are for **Windows PowerShell**, run from the project root. On macOS/Linux, activate the
@@ -57,6 +61,12 @@ Then the project and all its dependencies:
 
 ```powershell
 pip install -e ".[all]"
+```
+
+And the interface (React, in `web/`), built once; the API then serves it at http://localhost:8000:
+
+```powershell
+cd web; npm install; npm run build; cd ..
 ```
 
 > **Always run tools as `python -m <tool>`** (`python -m pytest`, `python -m uvicorn`, …). On Windows the
@@ -108,7 +118,7 @@ docker compose down                           # stop and remove the containers (
 > start from zero, then run `python -m alembic upgrade head` again.
 
 The API and the interface run with Python (section 8). They can also run in Docker
-(`docker compose --profile app up -d --build`: API on :8000, interface on :8501, settings from `.env`).
+(`docker compose --profile app up -d --build`: the API and the interface on :8000, settings from `.env`).
 
 ---
 
@@ -184,7 +194,8 @@ called the **AI server**. The app sends its model requests to it through a priva
 ```powershell
 docker compose up -d postgres qdrant n8n
 python -m uvicorn api.main:app --host 0.0.0.0 --port 8000     # terminal 1 — API docs: http://localhost:8000/docs
-python -m streamlit run frontend/streamlit_app.py              # terminal 2 — interface: http://localhost:8501
+# interface: http://localhost:8000 (served by the API once built: cd web; npm install; npm run build)
+# development mode with hot reload (optional, terminal 2): cd web; npm run dev  ->  http://localhost:5173
 ```
 
 `--host 0.0.0.0` lets n8n (in Docker) call the API; if Windows asks, allow Python on **private** networks.
@@ -231,7 +242,7 @@ screening agent's path), the app's *Under the hood* pages (architecture live, do
 vs base model, vectors and reranking, matching internals, the assistant's path, the database), plus
 Adminer/psql, the Qdrant dashboard and the n8n runs: [step-by-step guide](docs/reports/observe_the_data.md).
 
-Other app: `python -m streamlit run frontend/labeling_app.py` (optional human labeling of the evaluation pairs).
+More pages: **E-mails & meetings** (every e-mail to the candidates, the interview's Google Meet / Jitsi link and calendar invite), **Base vs fine-tuned** (Qwen2.5 vs Qwen2.5 + QLoRA: metrics, live on a CV), **HR knowledge base** (the exact documents the RAG cites), **Evaluation & MLflow**. Every page: [docs/USER_GUIDE.md](docs/USER_GUIDE.md) section 8.
 
 ---
 
@@ -315,23 +326,27 @@ src/recruitment_ai/
   agents/ tools/     the LangGraph screening agent of the pipeline; the AI assistant and its 8 tools
   reports/           evidence-backed report as Markdown and PDF
   services/          use cases: the application pipeline (pipeline.py), candidates, jobs, matching, reviews,
-                     events/notifications, dashboard, demo, assistant
+                     events/notifications, dashboard, demo, assistant; mailer.py + meetings.py (e-mails to the
+                     candidates, Google Meet / Jitsi interviews, calendar invites); outputs.py (every step's full
+                     output); knowledge.py (the RAG's documents); evaluation.py (every metric, MLflow status)
   database/          PostgreSQL tables (applications, candidates, jobs, analyses, reviews, notifications,
-                     agent_runs) + repositories
+                     emails, agent_runs) + repositories
   data/              dataset preparation, EN/FR skill lexicon (ESCO + custom), knowledge-base loader
   evaluation/        evaluation set, extraction / retrieval / matching / assistant metrics, before-after comparison
   training/          fine-tuning: training examples (data.py) and QLoRA training (qlora.py)
 api/                 FastAPI app: routers for every feature (docs at /docs)
-frontend/            Streamlit interface (streamlit_app.py + app_pages/), labeling app
+web/                 React interface (Vite + TypeScript + Tailwind): pages in web/src/pages, built into web/dist
+                     and served by the API at /
 n8n/workflows/       the 5 n8n workflows (application pipeline, new job, events, daily digest, error alert)
-scripts/             prepare_data, build_eval_set, eval_*, finetune_qlora, kaggle_run, n8n_setup, health_check
+scripts/             prepare_data, build_eval_set, eval_*, finetune_qlora, kaggle_run, n8n_setup, health_check,
+                     mlflow_sync (evaluations -> MLflow), google_calendar_setup (Google Meet invitations)
 scripts/kaggle/      the jobs that run on Kaggle
 notebooks/kaggle/    the fine-tuning notebook and the AI server notebook (run on Kaggle)
 data/knowledge_base/ 15 HR documents used by RAG (rubric, job profiles, policies…; 3 in French)
 data/processed/eval_v1/  frozen evaluation set (committed; no CV content)
 data/reference/      custom skills added to ESCO
 data/raw/, data/interim/, data/evaluation/**/predictions/   git-ignored (real CVs, personal data)
-api/  frontend/  tests/  docs/  notebooks/  alembic/  configs/
+api/  web/  tests/  docs/  notebooks/  alembic/  configs/
 ```
 
 Reports: **[final report](docs/reports/final_report.md)** · [end-to-end test plan](docs/reports/test_plan.md) ·
@@ -355,7 +370,7 @@ Reports: **[final report](docs/reports/final_report.md)** · [end-to-end test pl
 
 | Problem | Fix |
 |---|---|
-| `No module named 'recruitment_ai'`, or `pytest`/`uvicorn`/`streamlit` not found | Activate the venv and use `python -m pytest`, `python -m uvicorn`, … |
+| `No module named 'recruitment_ai'`, or `pytest`/`uvicorn` not found | Activate the venv and use `python -m pytest`, `python -m uvicorn`, … |
 | PostgreSQL password error mentioning port 5432 | A Windows PostgreSQL service owns 5432; the project uses **5433**: keep `POSTGRES_PORT=5433` in `.env` |
 | Qdrant `SSL: WRONG_VERSION_NUMBER` | Leave `QDRANT_API_KEY=` empty (no value) in `.env` |
 | `failed to connect to the docker API` | Start Docker Desktop, then `docker compose up -d postgres qdrant n8n` |
@@ -369,3 +384,5 @@ Reports: **[final report](docs/reports/final_report.md)** · [end-to-end test pl
 | Portal: *n8n answered 404* | The workflows are not imported or not active: `python scripts/n8n_setup.py` |
 | n8n cannot reach the API (workflow error) | Start the API with `--host 0.0.0.0` and allow Python through the Windows firewall (private networks) |
 | Search returns nothing | Dashboard → *Set up* (indexes the knowledge base, jobs and candidates); after a Qdrant reset → *Re-index* |
+| http://localhost:8000 says *The interface is not built yet* | `cd web; npm install; npm run build` |
+| E-mails, Google Meet, MLflow | [docs/USER_GUIDE.md](docs/USER_GUIDE.md) sections 9-11 and 15 |

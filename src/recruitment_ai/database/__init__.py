@@ -12,6 +12,7 @@ from recruitment_ai.database.models import (
     Analysis,
     Application,
     Candidate,
+    Email,
     Job,
     Notification,
     Review,
@@ -29,5 +30,6 @@ __all__ = [
     "Analysis",
     "Review",
     "Notification",
+    "Email",
     "AgentRun",
 ]

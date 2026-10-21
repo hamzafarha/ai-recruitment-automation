@@ -9,7 +9,7 @@ Short version, once installed:
 ```powershell
 docker compose up -d postgres qdrant n8n
 python -m uvicorn api.main:app --host 0.0.0.0 --port 8000     # terminal 1
-python -m streamlit run frontend/streamlit_app.py              # terminal 2
+cd web; npm install; npm run build                          # once: the API serves the interface at http://localhost:8000
 ```
 
 The AI models run in the Kaggle notebook `notebooks/kaggle/model_server.ipynb` (README section 8, step 1); paste

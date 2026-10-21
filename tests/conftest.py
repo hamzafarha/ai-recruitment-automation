@@ -18,6 +18,12 @@ os.environ.update(
         "N8N_EVENTS_ENABLED": "false",
         "REMOTE_LLM_URL": "",
         "QDRANT_LOCATION": ":memory:",
+        # e-mails stay in the outbox and meetings get a Jitsi link: tests never send mail nor call Google
+        "EMAIL_MODE": "outbox",
+        "EMAIL_REDIRECT_TO": "",
+        "EMAIL_ACKNOWLEDGE": "true",
+        "MEETING_PROVIDER": "jitsi",
+        "MLFLOW_UI_URL": "http://127.0.0.1:9",
     }
 )
 

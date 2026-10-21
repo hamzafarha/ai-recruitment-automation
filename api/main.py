@@ -3,15 +3,18 @@ and of the AI assistant.
 
 Start it with ``uvicorn api.main:app --host 0.0.0.0 --port 8000`` (``0.0.0.0`` lets n8n, in
 Docker, call it at http://host.docker.internal:8000). Interactive documentation: /docs.
+The React interface (web/) is served at / once built (``cd web; npm run build``); during development
+``npm run dev`` serves it at http://localhost:5173 and forwards /api to this API.
 """
 
+import mimetypes
 from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
 from pathlib import Path
 
-from fastapi import APIRouter, FastAPI, Request
+from fastapi import APIRouter, FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse
+from fastapi.responses import FileResponse, JSONResponse
 
 from api.routers import (
     admin,
@@ -19,8 +22,11 @@ from api.routers import (
     analyses,
     applications,
     candidates,
+    emails,
+    evaluation,
     health,
     jobs,
+    knowledge,
     notifications,
     observe,
     search,
@@ -33,6 +39,11 @@ settings = get_settings()
 configure_logging(level="DEBUG" if settings.debug else "INFO")
 logger = get_logger("api.main")
 ROOT = Path(__file__).resolve().parents[1]
+WEB_DIST = ROOT / "web" / "dist"  # the built React interface
+# Windows may map .js to text/plain in its registry: browsers then refuse the interface's modules
+for _type, _extension in (("text/javascript", ".js"), ("text/css", ".css"), ("image/svg+xml", ".svg"),
+                          ("application/json", ".json"), ("font/woff2", ".woff2")):
+    mimetypes.add_type(_type, _extension)
 
 
 def migrate_database() -> None:
@@ -86,6 +97,22 @@ app.include_router(health.router)  # /health and /api/v1/health
 
 api_v1 = APIRouter(prefix=settings.api_v1_str)
 for module in (applications, candidates, jobs, analyses, agent, search, notifications, webhooks, admin,
-               observe):
+               observe, emails, knowledge, evaluation):
     api_v1.include_router(module.router)
 app.include_router(api_v1)
+
+
+@app.get("/{path:path}", include_in_schema=False)
+def interface(path: str) -> FileResponse:
+    """The React interface (a single-page app: every other path answers index.html)."""
+    if path.startswith(("api/", "health")):
+        raise HTTPException(status_code=404, detail=f"Not found: /{path}")
+    index = WEB_DIST / "index.html"
+    if not index.is_file():
+        raise HTTPException(status_code=404, detail="The interface is not built yet: run `cd web; npm install; "
+                            "npm run build`, or `npm run dev` and open http://localhost:5173. API docs: /docs")
+    target = (WEB_DIST / path).resolve()
+    if path and target.is_file() and WEB_DIST.resolve() in target.parents:
+        cache = "public, max-age=31536000, immutable" if path.startswith("assets/") else "no-cache"
+        return FileResponse(target, headers={"Cache-Control": cache})
+    return FileResponse(index, headers={"Cache-Control": "no-cache"})

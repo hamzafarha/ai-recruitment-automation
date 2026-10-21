@@ -6,9 +6,10 @@ Two paths, compared in the evaluation:
 - ``extract_images``: a vision-language model (Qwen2.5-VL) reads the page images directly.
 
 The LLM fills a compact schema (``CVExtraction``); code then normalizes dates, removes
-duplicates and converts it to ``CandidateProfile``.
+duplicates, checks the e-mail and phone against the CV text and converts it to ``CandidateProfile``.
 """
 
+import difflib
 import re
 import time
 from pathlib import Path
@@ -257,11 +258,89 @@ def is_heading_only(skill: str, cv_text: str) -> bool:
     return bool(found) and all(found)
 
 
+# --------------------------------------------------------------------------- contact details
+# The model copies an e-mail or a phone number token by token and sometimes scrambles it
+# ("faranhiamz563@gmail.com" for "farhanihamza563@gmail.com"): the answer to the candidate would
+# go to a stranger. These values are written in the CV in a fixed format, so code checks them.
+
+EMAIL_RE = re.compile(r"[A-Za-z0-9._%+-]+@[A-Za-z0-9-]+(?:\.[A-Za-z0-9-]+)*\.[A-Za-z]{2,}")
+PHONE_RE = re.compile(r"(?<![\w+])\+?\(?\d[\d \t().\-/]{6,}\d(?!\w)")
+YEAR_RE = re.compile(r"(?<!\d)(?:19|20)\d{2}(?!\d)")
+MONTH_YEAR_RE = re.compile(r"(?<!\d)\d{1,2}[/.](?:19|20)\d{2}(?!\d)")
+# A model value at least this close to a value of the CV is a copy of it, with errors
+COPY_SIMILARITY = 0.75
+# The candidate's own details are in the first lines; an address further down may be a referee's
+HEADER_LINES = 15
+
+
+def _digits(value: str | None) -> str:
+    return re.sub(r"\D", "", value or "")
+
+
+def _compact(value: str | None) -> str:
+    return re.sub(r"[^0-9a-z]", "", (value or "").lower())
+
+
+def _header(cv_text: str) -> str:
+    return "\n".join([line for line in cv_text.splitlines() if line.strip()][:HEADER_LINES])
+
+
+def cv_emails(text: str) -> list[str]:
+    """E-mail addresses written in the text, in order, without duplicates."""
+    emails: dict[str, str] = {}
+    for email in EMAIL_RE.findall(text):
+        emails.setdefault(email.lower(), email)
+    return list(emails.values())
+
+
+def cv_phones(text: str) -> list[str]:
+    """Phone numbers written in the text (8 to 15 digits; date ranges such as "2019 - 2021" are not)."""
+    phones: dict[str, str] = {}
+    for match in PHONE_RE.finditer(text):
+        value, digits = match.group(0).strip(), _digits(match.group(0))
+        if 8 <= len(digits) <= 15 and len(YEAR_RE.findall(value)) < 2 and not MONTH_YEAR_RE.search(value):
+            phones.setdefault(digits, value)
+    return list(phones.values())
+
+
+def _same_phone(a: str, b: str) -> bool:  # the rule of the evaluation: same last digits (with or without +216)
+    da, db = _digits(a), _digits(b)
+    return min(len(da), len(db)) >= 7 and (da[-9:] == db[-9:] or da.endswith(db) or db.endswith(da))
+
+
+def _checked(value: str | None, found: list[str], header: list[str], same: Any, key: Any,
+             written: Any) -> str | None:
+    if value and any(same(value, f) for f in found):
+        return value  # copied correctly
+    if value and found:
+        best = max(found, key=lambda f: difflib.SequenceMatcher(None, key(value), key(f)).ratio())
+        if difflib.SequenceMatcher(None, key(value), key(best)).ratio() >= COPY_SIMILARITY:
+            return best  # a copy error: the value as the CV writes it
+    if header:
+        return header[0]  # missed or invented: the CV's own (first) value
+    # Nothing well-formed in the CV: keep the value only if the text has it (an OCR-broken address)
+    return value if value and written(value) else None
+
+
+def check_contacts(email: str | None, phone: str | None, cv_text: str) -> tuple[str | None, str | None]:
+    """The e-mail and phone as written in the CV: copy errors corrected, missing values filled
+    from the first lines, values that appear nowhere in the CV removed."""
+    header = _header(cv_text)
+    lines = cv_text.splitlines()
+    # an address the OCR broke ("jane.doe@gmail com") still has all its letters in the text; one
+    # made up from the name ("ann.lee@gmail.com" for "Ann Lee") does not
+    email = _checked(email, cv_emails(cv_text), cv_emails(header), lambda a, b: a.lower() == b.lower(), str.lower,
+                     lambda v: len(_compact(v)) >= 8 and _compact(v) in _compact(cv_text))
+    phone = _checked(phone, cv_phones(cv_text), cv_phones(header), _same_phone, _digits,
+                     lambda v: len(_digits(v)) >= 7 and any(_digits(v)[-8:] in _digits(line) for line in lines))
+    return email, phone
+
+
 def to_profile(raw: CVExtraction, cv_id: str | None = None, normalizer: Any | None = None,
                cv_text: str | None = None) -> CandidateProfile:
     """Convert the LLM output to a CandidateProfile: clean values, normalize dates, split
     sentence-like skills, add the projects' technologies to the skills, drop group headings
-    copied as skills (needs ``cv_text``), dedupe."""
+    copied as skills and check the e-mail and phone against the CV (both need ``cv_text``), dedupe."""
     experience = []
     for job in raw.experience:
         title, company = clean_value(job.title), clean_value(job.company)
@@ -295,9 +374,12 @@ def to_profile(raw: CVExtraction, cv_id: str | None = None, normalizer: Any | No
     certifications = [Certification(name=n) for n in dict.fromkeys(filter(None, map(clean_value, raw.certifications)))]
     languages = [Language(language=x.language.strip(), proficiency=clean_value(x.proficiency))
                  for x in raw.languages if clean_value(x.language)]
+    email, phone = clean_value(raw.email), clean_value(raw.phone)
+    if cv_text:
+        email, phone = check_contacts(email, phone, cv_text)
     return CandidateProfile(
-        id=cv_id, full_name=clean_value(raw.full_name), email=clean_value(raw.email),
-        phone=clean_value(raw.phone), location=clean_value(raw.location), summary=clean_value(raw.summary),
+        id=cv_id, full_name=clean_value(raw.full_name), email=email,
+        phone=phone, location=clean_value(raw.location), summary=clean_value(raw.summary),
         experience=experience, education=education, skills=skills, projects=projects,
         certifications=certifications, languages=languages,
     )
@@ -343,7 +425,12 @@ class CVExtractor:
         raw = self.llm.generate_structured(text_prompt(text, max_chars), CVExtraction, system_prompt=SYSTEM_PROMPT,
                                            max_tokens=MAX_OUTPUT_TOKENS, **options)
         stats = {**self.llm.last_stats, "input_chars": len(text), "input_truncated": len(text) > max_chars}
-        return to_profile(raw, cv_id, self.normalizer, cv_text=text), stats
+        profile = to_profile(raw, cv_id, self.normalizer, cv_text=text)
+        fixes = {field: {"model": clean_value(getattr(raw, field)), "cv": getattr(profile, field)}
+                 for field in ("email", "phone") if clean_value(getattr(raw, field)) != getattr(profile, field)}
+        if fixes:  # shown in the Candidate JSON step
+            stats["contact_fixes"] = fixes
+        return profile, stats
 
     def free_memory(self) -> None:
         """Release the GPU memory cached by the models (after an out-of-memory error)."""

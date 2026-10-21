@@ -81,12 +81,12 @@ python -m uvicorn api.main:app --host 0.0.0.0 --port 8000
 ### A6. The interface
 
 ```powershell
-python -m streamlit run frontend/streamlit_app.py
+cd web; npm install; npm run build   # then open http://localhost:8000
 ```
 
-- [ ] http://localhost:8501 opens on the Dashboard; the sidebar shows 🟢 PostgreSQL · 🟢 Qdrant · 🟢 Kaggle AI server.
+- [ ] http://localhost:8000 opens on the Dashboard; the top bar shows 🟢 PostgreSQL · 🟢 Qdrant · 🟢 Kaggle AI.
 - [ ] *Getting started*: check 1 is green; checks 2 and 3 are not (the system is empty).
-- [ ] **Under the hood → Database**: every table has 0 rows; the schema version is `a1b2c3d4e5f6`.
+- [ ] **Under the hood → Database**: every table has 0 rows; the schema version is `c3d4e5f6a7b8`.
 
 ---
 
@@ -388,7 +388,7 @@ Stop the Kaggle session (power icon), then in the app:
 ## Phase E — The end
 
 - [ ] The Kaggle session is stopped (done in D3).
-- [ ] Ctrl+C in the API and Streamlit windows.
+- [ ] Ctrl+C in the API window (and `npm run dev`, if used).
 - [ ] `docker compose stop` (the data is kept for next time; `docker compose up -d postgres qdrant n8n` restarts it).
 
 ---

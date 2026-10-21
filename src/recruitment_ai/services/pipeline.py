@@ -15,6 +15,9 @@ result, error). Two ways to run them, with the same code:
 A failed step is recorded (and notified); the workflow continues from that step once fixed.
 Fine-tuning is not a step: it ran once on Kaggle (QLoRA); the "extract" step uses its adapter.
 The CV file is never kept: it is read at the "document" step only (personal data, KB-HR-004).
+The candidate's e-mails (acknowledgement, answer after the decision, with the interview's video meeting
+and calendar invite) are sent by the API itself (services/mailer.py, services/meetings.py): SMTP, or the
+app's outbox when EMAIL_MODE=outbox. What every step produced, in full: services/outputs.py.
 """
 
 import logging
@@ -32,6 +35,7 @@ from sqlalchemy.orm import Session
 from recruitment_ai.database.models import Analysis, Application, Review
 from recruitment_ai.database.repositories import ApplicationRepository, JobRepository
 from recruitment_ai.matching.schemas import MatchReport
+from recruitment_ai.services import mailer, meetings
 from recruitment_ai.services.errors import ConflictError, NotFoundError
 from recruitment_ai.services.events import notify
 from recruitment_ai.utils.security import sanitize_filename, validate_file_upload
@@ -62,7 +66,8 @@ STEPS = [
     Step("extract", "Candidate JSON", "3-4", "Qwen2.5-7B with our QLoRA adapter (fine-tuned on 873 CVs) structures "
          "the CV: identity, positions, education, projects, skills"),
     Step("store", "Store and index", "8, 5", "PostgreSQL (candidates) and Qdrant (CV snippets as BGE-M3 vectors)"),
-    Step("acknowledge", "Acknowledge the candidate", "7", "the candidate is told the application was received"),
+    Step("acknowledge", "Acknowledge the candidate", "7", "the candidate is e-mailed that the application was "
+         "received (SMTP, or the app's outbox)"),
     Step("screen", "Screening agent", "5", "LangGraph agent: understands the task, chooses its tools, retrieves and "
          "reranks CV evidence and HR rules, iterates, then Qwen analyses and code checks every claim"),
     Step("report", "Evidence-backed report", "6", "the analysis is stored with each requirement's CV evidence "
@@ -70,7 +75,8 @@ STEPS = [
     Step("notify_recruiters", "Notify the recruiters", "7", "review needed (priority for grades 2-3)"),
     Step("validation", "Human validation", "9", "the workflow waits until a recruiter decides (KB-RR-001)"),
     Step("decision", "Final decision", "9", "interview, shortlist or rejection; on hold keeps waiting"),
-    Step("notify_candidate", "Notify the candidate", "7", "interview invitation or answer, ready for e-mail"),
+    Step("notify_candidate", "Notify the candidate", "7", "the answer is e-mailed; an interview gets a video "
+         "meeting (Google Meet or Jitsi) and a calendar invite"),
     Step("close", "Close the application", "8", "final status and timings stored"),
 ]
 STEP_NAMES = [s.name for s in STEPS]
@@ -259,7 +265,8 @@ def _extract(db: Session, container: Any, app: Application, **_: Any) -> dict[st
             "model": stats.get("model"), "adapter": stats.get("adapter"), "seconds": stats.get("seconds"),
             "prompt_tokens": stats.get("prompt_tokens"), "output_tokens": stats.get("output_tokens"),
             "input_truncated": stats.get("input_truncated"),
-            "retried_after_out_of_memory": stats.get("retried_after_out_of_memory")}
+            "retried_after_out_of_memory": stats.get("retried_after_out_of_memory"),
+            "contact_fixes": stats.get("contact_fixes")}
 
 
 # --------------------------------------------------------------------------- 8. store and index
@@ -284,6 +291,19 @@ def _store(db: Session, container: Any, app: Application, **_: Any) -> dict[str,
 # --------------------------------------------------------------------------- 7. messages
 
 
+def _email_state(email: Any) -> str:
+    return {"sent": "e-mailed", "outbox": "in the outbox", "failed": "NOT sent", "skipped": "not sent"}.get(
+        email.status if email else "", "prepared")
+
+
+def _email_summary(email: Any) -> dict[str, Any] | None:
+    if email is None:
+        return None
+    return {"id": email.id, "status": email.status, "mode": email.mode, "to": email.to_address,
+            "redirected": bool(email.candidate_address and email.to_address != email.candidate_address),
+            "error": email.error, "attachments": [a["filename"] for a in email.attachments or []]}
+
+
 def _first_name(name: str | None) -> str:
     return (name or "").split(" ")[0] or "candidate"
 
@@ -300,7 +320,24 @@ def acknowledgement(name: str | None, job_title: str | None) -> dict[str, str]:
                     "The recruiting team"}
 
 
-def answer(decision: str, name: str | None, job_title: str | None, interview_at: str | None = None) -> dict[str, str]:
+def _meeting_lines(meeting: dict[str, Any] | None) -> str:
+    """How to join the interview, for the e-mail."""
+    if not meeting:
+        return ""
+    start = datetime.fromisoformat(meeting["start"])
+    when = f"{start:%A %d %B %Y at %H:%M} ({meeting.get('timezone')}), {meeting.get('minutes')} minutes"
+    lines = [f"When: {when}"]
+    if meeting.get("url"):
+        lines.append(f"Where: video meeting — {meeting['url']}")
+    if meeting.get("invitation_by") == "google":
+        lines.append("Google Calendar also sent you an invitation: accept it to add the interview to your agenda.")
+    elif meeting.get("url"):
+        lines.append("The calendar invitation (invite.ics) is attached: open it to add the interview to your agenda.")
+    return "\n\n" + "\n".join(lines)
+
+
+def answer(decision: str, name: str | None, job_title: str | None, interview_at: str | None = None,
+           meeting: dict[str, Any] | None = None) -> dict[str, str]:
     """The candidate's answer after the recruiter's decision (never sent before a human decided)."""
     job = job_title or "the"
     dear = f"Dear {_first_name(name)},\n\n"
@@ -309,8 +346,8 @@ def answer(decision: str, name: str | None, job_title: str | None, interview_at:
                 "subject": f"Interview invitation — {job_title or 'your application'}",
                 "text": f"{dear}Following your application for the {job} position, we would be glad to meet you "
                         f"for an interview" + (f" on {interview_at}" if interview_at else "") + ". The interview "
-                        "follows our structured format (KB-RR-004). Please confirm your availability.\n\n"
-                        "The recruiting team"}
+                        "follows our structured format (KB-RR-004). Please confirm your availability."
+                        + _meeting_lines(meeting) + "\n\nThe recruiting team"}
     if decision == "shortlist":
         return {"title": f"Shortlist message prepared for {name or 'the candidate'}",
                 "subject": f"Your application — {job_title or 'next step'}",
@@ -331,11 +368,17 @@ def _acknowledge(db: Session, container: Any, app: Application, **_: Any) -> dic
         raise ValueError("No candidate: the store step must run first")
     job_title = app.job.title if app.job else None
     message = acknowledgement(candidate.full_name, job_title)
-    notify(db, container, "application.received", f"Acknowledgement prepared for {_who(app)}",
+    email = None
+    if container.settings.email_acknowledge:  # a delivery problem is recorded on the e-mail, the workflow goes on
+        email = mailer.send(db, container.settings, "acknowledgement", message["subject"], message["text"],
+                            candidate.email, application_id=app.id, candidate_id=candidate.id)
+    notify(db, container, "application.received", f"Acknowledgement {_email_state(email)} for {_who(app)}",
            f"To: {candidate.email or '(no e-mail in the CV)'}\nSubject: {message['subject']}\n\n{message['text']}",
-           {"application_id": app.id, "candidate_id": candidate.id, "email": candidate.email}, forward=False)
+           {"application_id": app.id, "candidate_id": candidate.id, "email": candidate.email,
+            "email_id": email.id if email else None}, forward=False)
     return {**message, "to": candidate.email, "application_id": app.id, "candidate_id": candidate.id,
-            "full_name": candidate.full_name, "skills_count": len((candidate.profile or {}).get("skills") or [])}
+            "full_name": candidate.full_name, "skills_count": len((candidate.profile or {}).get("skills") or []),
+            "email": _email_summary(email)}
 
 
 # --------------------------------------------------------------------------- 5. screening agent
@@ -467,14 +510,38 @@ def _notify_candidate(db: Session, container: Any, app: Application, **_: Any) -
     if decided is None:
         raise ValueError("No final decision yet: a recruiter decides first (Human validation)")
     analysis, review = decided
+    settings = container.settings
     candidate = app.candidate
     name = candidate.full_name if candidate else None
-    message = answer(review.decision, name, (analysis.report or {}).get("job_title"), review.interview_at)
+    job_title = (analysis.report or {}).get("job_title")
     to = candidate.email if candidate else None
-    notify(db, container, "application.answer", message["title"],
+    meeting = None
+    if review.decision == "interview" and review.interview_at and settings.meeting_provider != "none":
+        meeting = (app.work or {}).get("meeting")  # made by an earlier try of this step: never two meetings
+        if meeting is None:
+            attendee = settings.email_redirect_to or to
+            title = f"Interview — {job_title or 'your application'}" + (f" — {name}" if name else "")
+            meeting = meetings.create_meeting(settings, title, f"Structured interview (KB-RR-004) for the "
+                                              f"{job_title or ''} position.", review.interview_at, attendee, job_title)
+            if meeting["invitation_by"] != "google":  # Google already sends its own invitation
+                meeting["ics"] = meetings.ics_invite(meeting, f"Interview for the {job_title or ''} position. "
+                                                     f"Join: {meeting.get('url') or 'link to follow'}",
+                                                     mailer.sender(settings), settings.email_from_name, attendee, name)
+            _set_work(app, meeting=meeting)
+            db.commit()
+    message = answer(review.decision, name, job_title, review.interview_at, meeting)
+    email = mailer.send(db, settings, "decision", message["subject"], message["text"], to, application_id=app.id,
+                        candidate_id=candidate.id if candidate else None, decision=review.decision, meeting=meeting)
+    notify(db, container, "application.answer", f"{message['title']} ({_email_state(email)})",
            f"To: {to or '(no e-mail in the CV)'}\nSubject: {message['subject']}\n\n{message['text']}",
-           {"application_id": app.id, "decision": review.decision, "email": to}, forward=False)
-    return {"decision": review.decision, "to": to, "subject": message["subject"], "text": message["text"]}
+           {"application_id": app.id, "decision": review.decision, "email": to, "email_id": email.id,
+            "meeting_url": (meeting or {}).get("url")}, forward=False)
+    if email.status == "failed":  # the candidate must get an answer (KB-RR-001): the step fails, visibly
+        raise RuntimeError(f"The answer was not e-mailed to the candidate ({email.error}). Fix the SMTP settings "
+                           "in .env (or set EMAIL_MODE=outbox), restart the API, then continue the workflow")
+    return {"decision": review.decision, "to": to, "subject": message["subject"], "text": message["text"],
+            "email": _email_summary(email),
+            "meeting": {k: v for k, v in meeting.items() if k != "ics"} if meeting else None}
 
 
 def _close(db: Session, container: Any, app: Application, **_: Any) -> dict[str, Any]:

@@ -8,6 +8,7 @@ src/recruitment_ai.egg-info/requires.txt
 src/recruitment_ai.egg-info/top_level.txt
 src/recruitment_ai/agents/__init__.py
 src/recruitment_ai/agents/agent.py
+src/recruitment_ai/agents/screening.py
 src/recruitment_ai/config/__init__.py
 src/recruitment_ai/config/settings.py
 src/recruitment_ai/data/__init__.py
@@ -56,6 +57,7 @@ src/recruitment_ai/llm/remote_client.py
 src/recruitment_ai/llm/server.py
 src/recruitment_ai/matching/__init__.py
 src/recruitment_ai/matching/analyzer.py
+src/recruitment_ai/matching/cv_index.py
 src/recruitment_ai/matching/evidence.py
 src/recruitment_ai/matching/rubric.py
 src/recruitment_ai/matching/schemas.py
@@ -82,9 +84,16 @@ src/recruitment_ai/services/container.py
 src/recruitment_ai/services/dashboard.py
 src/recruitment_ai/services/demo.py
 src/recruitment_ai/services/errors.py
+src/recruitment_ai/services/evaluation.py
 src/recruitment_ai/services/events.py
 src/recruitment_ai/services/jobs.py
+src/recruitment_ai/services/knowledge.py
+src/recruitment_ai/services/mailer.py
 src/recruitment_ai/services/matching.py
+src/recruitment_ai/services/meetings.py
+src/recruitment_ai/services/observe.py
+src/recruitment_ai/services/outputs.py
+src/recruitment_ai/services/pipeline.py
 src/recruitment_ai/services/reviews.py
 src/recruitment_ai/tools/__init__.py
 src/recruitment_ai/tools/registry.py

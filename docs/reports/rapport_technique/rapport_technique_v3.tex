@@ -1,0 +1,809 @@
+% Rapport technique — AI Recruitment Automation (v3)
+% pdflatex rapport_technique_v3.tex (deux fois, pour la table des matières)
+\documentclass[11pt,a4paper]{report}
+
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage{lmodern}
+\usepackage[english,french]{babel}
+\usepackage[a4paper,hmargin=2.2cm,top=2.6cm,bottom=2.6cm,headheight=14pt]{geometry}
+\usepackage{fancyhdr}
+\usepackage{titlesec}
+\usepackage{booktabs}
+\usepackage{tabularx}
+\usepackage{array}
+\usepackage{xcolor}
+\usepackage{listings}
+\usepackage{needspace}
+\usepackage{tikz}
+\usetikzlibrary{arrows.meta,positioning,calc,babel}
+\usepackage[hidelinks,pdftitle={AI Recruitment Automation - Rapport technique},
+  pdfauthor={Woujoud Abdellaoui, Mohamed Aziz Kadri, Iyassine Ishi, Hamza Farhani, Jihed Hmila}]{hyperref}
+
+\definecolor{boxfill}{HTML}{EAF0F8}
+\definecolor{boxline}{HTML}{3D6AA2}
+\definecolor{arrowc}{HTML}{2B5791}
+\definecolor{humanfill}{HTML}{FDF1DC}
+\definecolor{humanline}{HTML}{D08A1E}
+\definecolor{promptblue}{HTML}{3D6AA2}
+\definecolor{promptbg}{HTML}{F7F9FC}
+\definecolor{promptframe}{HTML}{B9C8DC}
+
+% Identifiants des documents RH (KB-RR-002...)
+\newcommand{\kb}[1]{\textsf{#1}}
+
+% Titres
+\titleformat{\chapter}[display]{\normalfont\bfseries}{\Large\chaptertitlename\ \thechapter}{6pt}{\LARGE}
+\titleformat{name=\chapter,numberless}[block]{\normalfont\bfseries\LARGE}{}{0pt}{}
+\titlespacing*{\chapter}{0pt}{0pt}{20pt}
+\titleformat{\section}{\normalfont\large\bfseries}{\thesection}{1em}{}
+\titlespacing*{\section}{0pt}{14pt}{6pt}
+
+% En-têtes
+\fancyhf{}
+\fancyhead[L]{\small AI Recruitment Automation}
+\fancyhead[R]{\small Rapport technique}
+\fancyfoot[C]{\thepage}
+\renewcommand{\headrulewidth}{0.4pt}
+
+\addto\captionsfrench{\renewcommand{\tablename}{\textsc{Tableau}}}
+\makeatletter
+\setlength{\@fptop}{0pt}  % une page de flottants commence en haut
+\makeatother
+
+\renewcommand{\arraystretch}{1.12}
+\newcolumntype{L}[1]{>{\raggedright\arraybackslash}p{#1}}
+\newcolumntype{Y}{>{\raggedright\arraybackslash}X}
+
+% Prompts de l'annexe
+\lstdefinestyle{prompt}{
+  basicstyle=\ttfamily\fontsize{7.5}{9}\selectfont,
+  backgroundcolor=\color{promptbg}, frame=single, rulecolor=\color{promptframe}, framerule=0.4pt, framesep=4pt,
+  xleftmargin=4pt, xrightmargin=4pt, aboveskip=3pt, belowskip=9pt,
+  breaklines=true, breakatwhitespace=true, breakindent=18pt,
+  postbreak=\mbox{\textcolor{gray}{$\hookrightarrow$}\space},
+  columns=fullflexible, keepspaces=true, showstringspaces=false, upquote=true,
+  literate={é}{{\'e}}1 {—}{{\textemdash}}1 {–}{{\textendash}}1,
+}
+\newcommand{\promptlabel}[2][7]{\par\needspace{#1\baselineskip}\smallskip\noindent{\sffamily\bfseries\small\color{promptblue}#2}\par\nopagebreak}
+
+\begin{document}
+
+% ---------------------------------------------------------------- page de garde
+\begin{titlepage}
+\centering
+\vspace*{2cm}
+{\bfseries ÉCOLE SUPÉRIEURE PRIVÉE D'INGÉNIERIE ET DE\\TECHNOLOGIES\par}
+\vspace{1.6cm}
+{\bfseries RAPPORT TECHNIQUE\par}
+\vspace{1.8cm}
+\rule{\textwidth}{0.8pt}\par\vspace{0.3cm}
+{\Huge\bfseries AI Recruitment Automation\par}
+\vspace{0.35cm}
+{\bfseries Présélection de CV assistée par IA,\\de la candidature à la décision humaine\par}
+\vspace{0.3cm}
+\rule{\textwidth}{0.4pt}\par
+\vspace{2.4cm}
+{\bfseries Réalisé par :\par}
+\vspace{0.1cm}
+Woujoud Abdellaoui\\Mohamed Aziz Kadri\\Iyassine Ishi\\Hamza Farhani\\Jihed Hmila\par
+\vspace{0.6cm}
+{\bfseries Module :\par}\vspace{0.1cm}
+Advanced Deep Learning\par
+\vspace{0.6cm}
+{\bfseries Date :\par}\vspace{0.1cm}
+Octobre 2026\par
+\vfill
+Année universitaire 2026--2027
+\end{titlepage}
+
+\pagenumbering{arabic}
+\pagestyle{plain}
+
+% ---------------------------------------------------------------- résumé
+\chapter*{Résumé}
+
+Ce rapport présente \emph{AI Recruitment Automation}, un système de présélection de CV assistée par intelligence artificielle. Chaque candidature suit un workflow unique, orchestré par n8n, du CV reçu à la décision du recruteur : lecture du document (PDF, scan ou Word), extraction d'un profil structuré par Qwen2.5-7B-Instruct spécialisé par QLoRA, indexation sémantique (BGE-M3, Qdrant), puis un agent LangGraph qui recherche, pour chaque exigence de l'offre, la preuve dans le CV et les règles RH de l'entreprise (RAG avec reranking) et rédige un rapport argumenté. Une fois la décision prise, le candidat reçoit un e-mail, avec un lien de visioconférence s'il est convoqué en entretien. Une interface React montre la sortie de chaque étape, et toutes les métriques sont suivies dans MLflow.
+
+Sur le jeu de développement, le fine-tuning porte le F1 global d'extraction de 78,9\,\% à 81,2\,\% et réduit de 12 à 5 les champs d'identité inventés. La recherche dans la base RH atteint un MRR de 0,94 avec reranking. L'analyse d'adéquation place 95\,\% des candidats à un grade près de la référence. L'agent de screening améliore l'évaluation exigence par exigence, mais pas encore la note globale.
+
+Le système reste un outil d'aide : la note est calculée par du code, chaque citation est vérifiée, et un recruteur prend toujours la décision finale.
+
+\medskip
+\noindent\textbf{Mots-clés :} LLM, Qwen2.5, QLoRA, RAG, BGE-M3, Qdrant, LangGraph, agents, n8n, MLflow, React, recrutement, IA responsable.
+
+% ---------------------------------------------------------------- abstract
+\chapter*{Abstract}
+\begin{otherlanguage}{english}
+This report presents \emph{AI Recruitment Automation}, an AI-assisted CV screening system. Every application follows a single n8n workflow, from the received CV to the recruiter's decision: document reading (PDF, scan or Word), structured profile extraction by a QLoRA-tuned Qwen2.5-7B-Instruct, semantic indexing (BGE-M3, Qdrant), and a LangGraph agent that retrieves, for each job requirement, the evidence in the CV and the company's HR rules (RAG with reranking) and writes an evidence-backed report. Once the decision is made, the candidate receives an e-mail, with a video-meeting link when invited to an interview. A React interface shows the output of every step, and every metric is tracked in MLflow.
+
+On the development set, fine-tuning raises the overall extraction F1 from 78.9\,\% to 81.2\,\% and cuts invented identity fields from 12 to 5. HR knowledge retrieval reaches an MRR of 0.94 with reranking. The fit analysis places 95\,\% of candidates within one grade of the reference. The screening agent improves requirement-level assessment, but not yet the overall grade.
+
+The system remains a decision aid: the grade is computed by code, every quote is checked, and a recruiter always makes the final decision.
+
+\medskip
+\noindent\textbf{Keywords:} LLM, Qwen2.5, QLoRA, RAG, BGE-M3, Qdrant, LangGraph, agents, n8n, MLflow, React, recruitment, responsible AI.
+\end{otherlanguage}
+
+\tableofcontents
+\clearpage
+
+% ---------------------------------------------------------------- corps
+\fancypagestyle{plain}{%
+  \fancyhf{}%
+  \fancyhead[L]{\small AI Recruitment Automation}%
+  \fancyhead[R]{\small Rapport technique}%
+  \fancyfoot[C]{\thepage}%
+  \renewcommand{\headrulewidth}{0.4pt}}
+\pagestyle{fancy}
+
+\chapter*{Introduction générale}
+\addcontentsline{toc}{chapter}{Introduction générale}
+
+Les grands modèles de langage (LLM) savent aujourd'hui lire un document non structuré et en restituer l'essentiel. Dans le recrutement, ils peuvent prendre en charge la partie la plus répétitive du travail : lire des centaines de CV et les comparer à une offre. Mais un tel système manipule des données personnelles et influence des décisions qui touchent des personnes : il doit donc être exact, traçable, équitable et laisser la décision à un humain.
+
+Ce projet, réalisé dans le cadre du module \emph{Advanced Deep Learning}, construit une chaîne complète : lecture des documents, extraction par un LLM spécialisé par fine-tuning, recherche augmentée (RAG) dans le CV et les règles RH, agent LangGraph, orchestration n8n, validation humaine, puis réponse au candidat par e-mail. Une interface web rend chaque étape inspectable, et chaque résultat d'évaluation est suivi dans MLflow. Ce rapport présente les choix techniques et leurs justifications : les outils, le choix du LLM, l'approche RAG, l'architecture agentique, l'évaluation du système et les aspects de sécurité. La bibliothèque des prompts utilisés est donnée en annexe.
+
+% ================================================================ 1
+\chapter{Contexte, objectifs et principe directeur}
+
+Une équipe de recrutement reçoit des CV hétérogènes (PDF numériques, scans, Word, en français ou en anglais) qu'elle doit comparer à des offres d'emploi. Le système automatise la partie fastidieuse : lire le document, en extraire un profil structuré, rechercher pour chaque exigence de l'offre la \textbf{preuve} correspondante dans le CV et dans les règles RH de l'entreprise, puis rédiger un rapport argumenté. Quatre objectifs techniques (DSO) structurent le projet et son évaluation (tableau~\ref{tab:dso}).
+
+\begin{table}[ht]
+\centering\small
+\begin{tabularx}{\textwidth}{L{3.1cm}L{6.3cm}Y}
+\toprule
+\textbf{Objectif} & \textbf{Contenu} & \textbf{Mesure principale}\\
+\midrule
+DSO1 --- Extraction & CV (texte, scan, Word) $\rightarrow$ JSON structuré par Qwen2.5-7B fine-tuné (QLoRA) & F1 expérience / formation / compétences\\
+DSO2 --- RAG & Recherche dans la base de connaissances RH (EN/FR, interlingue) & Hit@$k$, Recall@5, MRR\\
+DSO3 --- Matching & Note d'adéquation 0--3 et statut de chaque exigence obligatoire & Exactitude à $\pm$1 grade, kappa\\
+DSO4 --- Agents & Agent de screening LangGraph et assistant à outils & Comparaison à l'analyse fixe\\
+\bottomrule
+\end{tabularx}
+\caption{Les quatre objectifs techniques du projet.}
+\label{tab:dso}
+\end{table}
+
+\textbf{Principe directeur : l'IA ne décide jamais.} Elle propose une note accompagnée de citations du CV ; la note elle-même est calculée par du code à partir de la grille d'évaluation de l'entreprise (\kb{KB-RR-002}), et un recruteur valide chaque décision (\kb{KB-RR-001}). Ce principe guide la plupart des choix qui suivent : séparation entre le \emph{jugement} (LLM) et le \emph{calcul} (code), vérification des citations par du code, et un workflow qui s'arrête tant qu'un humain n'a pas tranché.
+
+% ================================================================ 2
+\chapter{Architecture générale}
+
+Chaque candidature (portail candidat ou dépôt par un recruteur) suit \textbf{un seul workflow}, du CV à la décision finale, orchestré par n8n (figure~\ref{fig:workflow}). Chaque nœud n8n appelle une étape de l'API (\texttt{POST /applications/\{id\}/steps/\{step\}}). L'API journalise chaque étape (statut, durée, résultat, erreur), refuse une étape appelée hors ordre (409) et renvoie le résultat stocké si un nœud est rejoué : une étape ne s'exécute jamais deux fois. Sans n8n, l'API exécute elle-même la même séquence.
+
+\begin{figure}[ht]
+\centering
+\begin{tikzpicture}[
+  every node/.append style={execute at begin node={\hyphenpenalty=10000\relax}},
+  box/.style={draw=boxline, fill=boxfill, rounded corners=2pt, align=center, font=\fontsize{7}{8.4}\selectfont,
+              inner sep=2.5pt, minimum height=10.5mm, text width=2.78cm},
+  comp/.style={draw=boxline, fill=white, rounded corners=2pt, align=center, font=\fontsize{7}{8.4}\selectfont,
+               inner sep=2.5pt, minimum height=12mm, text width=3.72cm},
+  human/.style={box, draw=humanline, fill=humanfill},
+  arr/.style={-{Stealth[length=4pt]}, draw=arrowc, semithick},
+  node distance=3.6mm]
+\node[box] (a1) {\textbf{1 Accueil}\\consentement,\\type, taille};
+\node[box, right=of a1] (a2) {\textbf{3 Document}\\PyMuPDF $\cdot$ docx\\OCR PaddleOCR};
+\node[box, right=of a2] (a3) {\textbf{3--4 JSON candidat}\\Qwen2.5-7B\\+ adaptateur QLoRA};
+\node[box, right=of a3] (a4) {\textbf{8 Stockage}\\PostgreSQL\\Qdrant (BGE-M3)};
+\node[box, right=of a4] (a5) {\textbf{7 Accusé}\\e-mail au\\candidat};
+\node[box, below=9mm of a1] (b1) {\textbf{5 Agent screening}\\LangGraph : planifier,\\agir, évaluer (boucle)};
+\node[box, right=of b1] (b2) {\textbf{6 Rapport}\\preuves par\\exigence (PDF)};
+\node[box, right=of b2] (b3) {\textbf{7 Recruteurs}\\notifiés};
+\node[human, right=of b3] (b4) {\textbf{9 Validation}\\\textbf{humaine}\\n8n attend (Wait)};
+\node[box, right=of b4] (b5) {\textbf{9 Décision}\\$\rightarrow$ 7 e-mail (+ Meet)\\$\rightarrow$ 8 clôture};
+\foreach \x/\y in {a1/a2,a2/a3,a3/a4,a4/a5,b1/b2,b2/b3,b3/b4,b4/b5} \draw[arr] (\x) -- (\y);
+\draw[arr] (a5.south) -- ++(0,-4.5mm) -| (b1.north);
+\node[comp, below=8mm of b1.south west, anchor=north west] (c1) {\textbf{Orchestrateur n8n}\\une exécution par\\candidature ; chaque nœud\\appelle l'API FastAPI};
+\node[comp, right=2.6mm of c1] (c2) {\textbf{Serveur IA}\\Kaggle, 2 $\times$ T4\\Qwen2.5-7B (fp16) + LoRA\\BGE-M3, BGE-reranker};
+\node[comp, right=2.6mm of c2] (c3) {\textbf{Sources de connaissance}\\Qdrant : hr\_knowledge,\\candidates, jobs\\PostgreSQL : 8 tables};
+\node[comp, right=2.6mm of c3] (c4) {\textbf{Interface React}\\servie par FastAPI : sortie\\de chaque étape, e-mails\\et réunions, métriques};
+\end{tikzpicture}
+\caption{Le workflow d'une candidature (numéros = parties de l'architecture) et les composants qui le servent. L'exécution s'arrête à l'étape 9 tant qu'un recruteur n'a pas décidé.}
+\label{fig:workflow}
+\end{figure}
+
+Le code est organisé en couches : interface React $\rightarrow$ API FastAPI $\rightarrow$ services (cas d'usage, dont \texttt{pipeline.py}, \texttt{mailer.py} et \texttt{meetings.py}) $\rightarrow$ couche IA (extraction, matching, agents, outils, RAG) $\rightarrow$ modèles (local, distant ou factice) $\rightarrow$ stockage (PostgreSQL via SQLAlchemy/Alembic, Qdrant). Les prompts, l'analyse du JSON, la recherche et le calcul de la note restent \textbf{dans l'application} : le serveur Kaggle ne fait que générer du texte, des vecteurs et des scores. L'application et les scripts d'évaluation exécutent donc exactement le même code.
+
+\textbf{Réponse au candidat.} L'API envoie elle-même les e-mails, aux deux étapes 7 : accusé de réception dès l'arrivée du CV, puis réponse après la décision. Pour un entretien, elle crée aussi la réunion : un événement Google Calendar avec lien Google Meet~\cite{gcal}, dont Google envoie lui-même l'invitation, si un compte Google est connecté ; sinon une salle Jitsi, qui ne demande aucun compte, et une invitation \texttt{.ics} (RFC~5545~\cite{ics}) jointe à l'e-mail. Par défaut (\texttt{EMAIL\_MODE=outbox}), rien ne part : les messages sont rangés dans une boîte d'envoi consultable dans l'interface ; en mode \texttt{smtp}, ils partent par SMTP. Chaque e-mail est enregistré (destinataire, statut, réunion, pièces jointes).
+
+\textbf{Interface et traçabilité.} L'interface React (21 pages, servie par FastAPI sur le même port) suit une candidature de bout en bout et rend chaque étape inspectable (tableau~\ref{tab:ui}). Le guide d'utilisation (\texttt{docs/USER\_GUIDE.md}, aussi affiché dans l'interface) donne les commandes de lancement et le rôle de chaque page.
+
+\begin{table}[ht]
+\centering\small
+\begin{tabularx}{\textwidth}{L{4.2cm}Y}
+\toprule
+\textbf{Page} & \textbf{Ce qu'on y voit}\\
+\midrule
+\emph{Application pipeline} & Le workflow de chaque candidature, étape par étape, avec la sortie complète de chacune : texte lu, profil extrait (identité, expériences, formation, projets, compétences), points indexés dans Qdrant, e-mails, rapport, décision.\\
+Étape \emph{Screening agent} & Le graphe parcouru par l'agent, chaque appel d'outil avec sa requête et ses résultats, les prompts système et les contrôles par code.\\
+\emph{HR knowledge base} & Les 15 documents RH et leurs segments ; le segment cité par l'agent (ex. \kb{KB-RR-002\#3}) est surligné dans son document.\\
+\emph{Base vs fine-tuned} & Un même CV extrait avec et sans l'adaptateur QLoRA, les deux profils côte à côte (chapitre~\ref{ch:llm}).\\
+\emph{Evaluation \& MLflow} & Toutes les métriques DSO1--DSO4 et les durées réelles du workflow (section~\ref{sec:mlflow}).\\
+\emph{Human validation}, \emph{E-mails \& meetings} & La décision du recruteur ; les e-mails envoyés ou en attente, avec le lien de réunion et l'invitation.\\
+\bottomrule
+\end{tabularx}
+\caption{Les pages de l'interface qui rendent le système traçable.}
+\label{tab:ui}
+\end{table}
+
+% ================================================================ 3
+\chapter{Outils utilisés et justification}
+
+\begin{table}[ht]
+\centering\small
+\begin{tabularx}{\textwidth}{L{2.3cm}L{3.9cm}Y}
+\toprule
+\textbf{Besoin} & \textbf{Outil retenu} & \textbf{Justification}\\
+\midrule
+Calcul GPU & Kaggle (2 $\times$ T4 16 Go, 30 h/sem.) & Gratuit, suffisant pour un 7B en float16 et pour QLoRA ; aucun GPU sur nos postes. Limite : session éphémère (lien et jeton changent).\\
+Modèles & Transformers, PEFT, bitsandbytes & Même bibliothèque pour l'entraînement (4 bits NF4) et l'inférence (fp16 sur 2 GPU) ; l'adaptateur LoRA s'active ou non à chaque requête.\\
+Documents & PyMuPDF, python-docx, RapidOCR (modèles PaddleOCR PP-OCRv5) & Couche texte quand elle existe (rapide, exacte) ; OCR uniquement pour les pages sans texte ; modèles PaddleOCR en ONNX, sans dépendance Paddle.\\
+Vecteurs & BGE-M3 (1024 dim.) + Qdrant (cosinus) & Multilingue : un CV français est comparé à une offre anglaise. Qdrant : filtres sur métadonnées, tableau de bord, mode embarqué pour les tests.\\
+Reranking & BGE-reranker-v2-m3 (cross-encoder) & Réordonne les résultats denses ; sert aussi à vérifier qu'une citation soutient bien l'exigence.\\
+Agents & LangGraph & Graphe d'états explicite (nœuds, arêtes conditionnelles, bornes d'itération) : chaque chemin est traçable et testable, contrairement à une boucle ReAct~\cite{react} libre~\cite{langgraph}.\\
+Orchestration & n8n (Docker) & Workflow visuel~\cite{n8n} ; nœud \emph{Wait} qui suspend l'exécution jusqu'à la décision humaine ; rappel aux recruteurs après 10 jours, alertes d'erreur, résumé quotidien.\\
+Back-end & FastAPI, Pydantic & Schémas validés partout (y compris les sorties du LLM) ; documentation OpenAPI ; sert aussi l'interface.\\
+Interface & React 18, TypeScript, Vite, Tailwind CSS, React Flow, Recharts & Composants typés pour 21 pages ; graphes de l'agent et de l'architecture (React Flow), graphiques d'évaluation (Recharts)~\cite{react-doc}. Remplace l'interface Streamlit, trop limitée pour suivre une candidature étape par étape.\\
+E-mails et réunions & smtplib, Google Calendar API, Jitsi & Envoi par l'API, sans service payant ; lien Google Meet créé par l'API Calendar~\cite{gcal}, salle Jitsi sans compte en secours ; invitation \texttt{.ics} standard~\cite{ics}.\\
+Suivi des expériences & MLflow & Chaque évaluation devient un run comparable (paramètres, métriques, courbe de perte, fichiers sources)~\cite{mlflow} ; base SQLite locale, sans serveur à déployer.\\
+Données & PostgreSQL 16 + Alembic & 8 tables (candidatures et journal d'étapes, candidats, offres, analyses, revues, notifications, e-mails, traces d'agent) ; migrations versionnées.\\
+Qualité & pytest, ruff & 270 tests avec doublures (aucun GPU, réseau ni Docker requis) ; tous passent.\\
+\bottomrule
+\end{tabularx}
+\caption{Outils retenus et raisons du choix.}
+\label{tab:tools}
+\end{table}
+
+% ================================================================ 4
+\chapter{Choix du LLM et fine-tuning}
+\label{ch:llm}
+
+\section{Pourquoi Qwen2.5-7B-Instruct}
+
+Nous avons retenu Qwen2.5-7B-Instruct~\cite{qwen} pour les raisons suivantes.
+\begin{itemize}
+\item \textbf{Poids ouverts (licence Apache 2.0)} : le modèle tourne sur une infrastructure que nous contrôlons. Les CV sont des données personnelles ; les envoyer à une API commerciale aurait posé un problème de confidentialité (\kb{KB-HR-004}) et de coût.
+\item \textbf{Taille adaptée au matériel} : 7 milliards de paramètres $\approx$ 15 Go en float16, répartis sur les deux T4 (\texttt{device\_map="auto"}). Un 14B ou un 32B ne tiendrait pas sans quantification agressive ; un 3B, essayé lors d'un test rapide (F1 global 59\,\% sur 3 CV), était nettement trop faible.
+\item \textbf{Multilinguisme et sortie structurée} : bon niveau en français et en anglais, et production fiable de JSON suivant un schéma --- central ici, puisque toutes les sorties sont validées par Pydantic.
+\item \textbf{Famille vision disponible} : Qwen2.5-VL-7B~\cite{qwenvl} lit directement les images de pages ; il a été évalué comme alternative à \og OCR puis texte\fg{} pour les scans.
+\item \textbf{Génération déterministe} (température 0) : un même CV donne la même analyse, ce qui rend l'évaluation reproductible.
+\end{itemize}
+
+\section{Fine-tuning QLoRA pour l'extraction}
+
+Le modèle de base commettait des erreurs systématiques sur les vrais CV scannés : postes oubliés, compétences manquées, champs d'identité inventés. Nous l'avons spécialisé sur notre format de sortie avec QLoRA~\cite{lora,qlora} (tableau~\ref{tab:qlora}). Point clé : chaque exemple d'entraînement est construit \textbf{par la même fonction} que le prompt d'inférence ; le modèle apprend donc exactement la requête qu'il recevra.
+
+\begin{table}[ht]
+\centering\small
+\begin{tabularx}{\textwidth}{L{2.6cm}Y}
+\toprule
+\textbf{Élément} & \textbf{Choix}\\
+\midrule
+Données & Resume Parser (split \emph{train}, 12\,440 CV). Retirés : CV présents dans l'évaluation (306), étiquettes mal ancrées (391), doublons (541), corrompus (36), trop longs (98) ; 1\,000 CV tirés, 873 utilisés ($\leq$ 4\,096 tokens).\\
+Méthode & Base en 4 bits NF4, calcul float16 (le T4 n'a pas de bfloat16) ; LoRA $r = 16$, $\alpha = 32$, dropout 0,05 sur toutes les projections attention et MLP : 40,4\,M paramètres entraînables (0,53\,\%).\\
+Entraînement & 1 époque, $lr = 2\cdot10^{-4}$, batch effectif 8 (2 GPU $\times$ 1 $\times$ 4 accumulations), perte calculée sur la réponse seulement ; 110 pas en 141,5 min ; perte 0,40 $\rightarrow$ 0,18.\\
+Robustesse & Checkpoint toutes les 15 min, arrêt 40 min avant la limite de session, reprise automatique ; logits calculés uniquement sur les tokens de réponse (mémoire).\\
+\bottomrule
+\end{tabularx}
+\caption{Paramètres du fine-tuning QLoRA de Qwen2.5-7B-Instruct.}
+\label{tab:qlora}
+\end{table}
+
+L'adaptateur (173 Mo) n'est activé que pour l'extraction de CV ; les autres tâches (lecture d'offre, analyse, agents) le désactivent et utilisent le modèle de base, car il n'a été entraîné que pour une tâche. Le JSON est extrait de la réponse, refermé s'il a été tronqué, puis validé par des schémas Pydantic tolérants ; les compétences sont normalisées avec un lexique EN/FR (ESCO~\cite{esco} + liste propre).
+
+La page \emph{Base vs fine-tuned} de l'interface montre cet apport : le même prompt est envoyé à Qwen2.5-7B avec et sans l'adaptateur, et les deux profils sont affichés côte à côte.
+
+% ================================================================ 5
+\chapter{Approche RAG}
+
+Le RAG~\cite{rag} sert à \textbf{ancrer chaque jugement} dans deux types de sources : les règles de l'entreprise et le CV lui-même. Trois collections Qdrant~\cite{qdrant} sont indexées avec BGE-M3~\cite{bgem3} :
+\begin{itemize}
+\item \textbf{hr\_knowledge} : 15 documents RH (grille d'évaluation, règles d'expérience, processus, entretiens, rémunération, équité, données personnelles, 5 profils de poste avec équivalences acceptées, définitions de compétences ; 3 en français), découpés \textbf{par section} (126 segments) et titrés \og Document --- Section\fg{}, pour que chaque segment soit citable par son identifiant (ex. \kb{KB-RR-003}) ;
+\item \textbf{candidates} : chaque CV en petits extraits citables (un par poste, projet, diplôme, groupe de compétences), étiquetés avec leur \textbf{section d'origine} ;
+\item \textbf{jobs} : les exigences et paragraphes de chaque offre.
+\end{itemize}
+
+\textbf{Chaîne de recherche} : recherche dense (cosinus) $\rightarrow$ filtre optionnel par profil de poste $\rightarrow$ reranking par cross-encoder. Le découpage par section est délibéré : la section d'origine porte une information métier. Une compétence trouvée dans un poste ou un projet est \og démontrée\fg{} ; trouvée seulement dans une liste de compétences, elle n'est que \og listée\fg{} (\kb{KB-RR-002}).
+
+\textbf{Contextualisation} : le prompt d'analyse assemble les exigences de l'offre (obligatoire ou souhaitée, importance, années minimales), les règles RH récupérées, une \textbf{chronologie d'expérience calculée par code} (stages à 50\,\%, chevauchements comptés une fois, \kb{KB-RR-003}) et le texte du CV. Le LLM juge ; il ne calcule ni les années ni la note.
+
+\textbf{Traçabilité} : chaque passage récupéré garde l'identifiant de son segment (ex. \kb{KB-RR-002\#3}) et son score. L'interface ouvre le document source et y surligne le segment exact sur lequel s'appuie un jugement.
+
+\begin{table}[ht]
+\centering\small
+\begin{tabular}{lcccc}
+\toprule
+\textbf{Configuration} (40 questions, dont 11 interlingues) & \textbf{Hit@1} & \textbf{Hit@3} & \textbf{Recall@5} & \textbf{MRR}\\
+\midrule
+Dense BGE-M3 & 82,5\,\% & 98\,\% & 99\,\% & 0,91\\
+Dense + filtre de profil & 85\,\% & 98\,\% & 99\,\% & 0,92\\
+Dense + reranker & 90\,\% & 98\,\% & 98\,\% & 0,94\\
+\textbf{Dense + filtre + reranker} (retenue) & \textbf{90\,\%} & 98\,\% & 98\,\% & \textbf{0,94}\\
+\bottomrule
+\end{tabular}
+\caption{DSO2 --- recherche dans la base RH. Le reranker améliore surtout la première position, mais perd une question sur dix en français (Hit@1 90\,\% $\rightarrow$ 80\,\%). Avec reranker, le filtre de profil ne change pas les scores ; il est retenu car l'application connaît toujours le poste visé.}
+\label{tab:rag}
+\end{table}
+
+% ================================================================ 6
+\chapter{Architecture agentique}
+
+Le système n'est pas un \og essaim\fg{} d'agents autonomes : il combine un \textbf{orchestrateur déterministe} (n8n, qui fixe l'ordre des étapes et le point d'arrêt humain) et \textbf{deux agents LangGraph} à périmètre étroit, chacun borné par du code. Ce choix privilégie la traçabilité et la sécurité : dans un processus de recrutement, un comportement imprévisible n'est pas acceptable.
+
+\section{L'agent de screening (dans le workflow)}
+
+Il reçoit sa tâche du workflow : l'offre visée ou, pour une candidature spontanée, les offres ouvertes notées $\geq 2$ par le matching rapide (au plus 2). Son graphe est le suivant :
+
+\begin{center}
+\begin{tikzpicture}[
+  n/.style={draw=boxline, fill=boxfill, rounded corners=2pt, font=\scriptsize, inner sep=3pt, minimum height=5.5mm},
+  arr/.style={-{Stealth[length=3.5pt]}, draw=arrowc, semithick},
+  lab/.style={font=\tiny, text=arrowc},
+  node distance=6mm]
+\node[n] (u) {understand};
+\node[n, right=of u] (p) {plan};
+\node[n, right=of p] (a) {act};
+\node[n, right=of a] (e) {evaluate};
+\node[n, right=14mm of e] (an) {analyse};
+\node[n, right=of an] (v) {verify};
+\node[n, right=of v] (nj) {next\_job};
+\foreach \x/\y in {u/p,p/a,a/e,an/v,v/nj} \draw[arr] (\x) -- (\y);
+\draw[arr] (e) -- node[lab, above=1pt] {preuves OK} (an);
+\draw[arr] (e.south) -- ++(0,-4mm) -| node[lab, pos=0.25, below=1pt] {obligatoires faibles, tours restants} (p.south);
+\draw[arr] (nj.north) -- ++(0,6mm) -| node[lab, pos=0.25, above=1pt] {autre offre} (p.north);
+\end{tikzpicture}
+\end{center}
+
+\begin{table}[ht]
+\centering\small
+\begin{tabularx}{\textwidth}{L{2.6cm}Y}
+\toprule
+\textbf{Nœud} & \textbf{Rôle}\\
+\midrule
+understand & Fixe la ou les offres à analyser.\\
+plan & Tour 0 \textbf{par code} : chaque exigence est cherchée dans le CV, et les règles RH de l'offre dans la base. Tours suivants \textbf{par Qwen} : pour les exigences encore faibles, nouvelles requêtes (synonymes, outils qui impliquent la compétence, terme français) ou recherche des équivalences RH.\\
+act / evaluate & Exécute les outils (recherche CV : BGE-M3 + reranker ; recherche RH : Qdrant) et garde les 3 meilleurs passages par exigence ; s'il reste des obligatoires sans preuve forte, nouveau tour (au plus 2 tours de 4 appels).\\
+analyse & Qwen juge chaque exigence à partir de ses passages et du CV : niveau, citation, années.\\
+verify & \textbf{Contrôles par code} : la citation doit figurer dans le CV et soutenir l'exigence (score cross-encoder) ; une citation issue d'une liste de compétences ou du résumé est rétrogradée en \og listée\fg{} ; une preuve forte oubliée par le modèle est reprise ; la grille calcule note (0--3), score (0--100) et action proposée.\\
+\bottomrule
+\end{tabularx}
+\caption{Les nœuds de l'agent de screening.}
+\label{tab:agent}
+\end{table}
+
+\textbf{Garde-fous} : les recherches systématiques s'exécutent toujours ; aucune requête n'est répétée ; aucune recherche sur un attribut protégé (expression régulière EN/FR : âge, genre, origine, religion, handicap\ldots) ; un appel au modèle qui échoue dégrade le résultat (requêtes par défaut, ou estimation sémantique) au lieu d'arrêter le workflow. Chaque exécution conserve sa trace complète (chronologie, appels d'outils avec leurs résultats, passages, contrôles) avec le rapport ; l'interface la présente sous forme de graphe, outil par outil, jusqu'au segment de document utilisé.
+
+\section{L'assistant du recruteur}
+
+Graphe \emph{decide} $\rightarrow$ \emph{act} $\rightarrow$ \ldots{} $\rightarrow$ \emph{respond} : à chaque pas, Qwen choisit \textbf{un} outil parmi huit (recherche de candidats, d'offres, de règles RH ; profil d'un candidat ou d'une offre ; classement par la grille ; comparaison candidat/offre ; reranking sur un critère), au plus 4 pas, puis rédige la réponse uniquement à partir des résultats d'outils, en citant les candidats et documents utilisés. Les coordonnées des candidats ne sont jamais exposées aux outils ; un appel inconnu ou mal formé devient une observation au lieu d'une erreur.
+
+\section{L'humain dans la boucle}
+
+Après le rapport, le workflow n8n s'arrête sur un nœud \emph{Wait} dont l'URL de reprise est transmise à l'API. La décision du recruteur (présélection, entretien avec date, attente, rejet \textbf{motivé}) reprend l'exécution : l'API envoie l'e-mail de réponse au candidat --- avec, pour un entretien, un lien Google Meet (ou Jitsi) et l'invitation de calendrier --- puis clôt la candidature. Sans décision après 10 jours, les recruteurs reçoivent un rappel. Aucun message de rejet n'est jamais produit automatiquement : l'e-mail ne part qu'après une décision humaine.
+
+% ================================================================ 7
+\chapter{Évaluation du système}
+
+\textbf{Protocole.} Un jeu d'évaluation \textbf{figé} par sommes de contrôle (427 fichiers) : 192 vrais CV scannés (Resume Parser~\cite{resumeparser} ; dev 60 / test 132), 12 CV inventés (dont 4 en français, rendus en 18 PDF et Word), 5 vraies offres (Tech Jobs 2026~\cite{techjobs}), 36 paires CV--offre notées (dev 14 / test 22) et 40 questions de recherche. Règle : les seuils du matching sont réglés sur \emph{dev} et le \emph{test} n'est mesuré qu'une fois ; l'extraction (DSO1) n'est mesurée, pour l'instant, que sur \emph{dev}. Les étiquettes de matching sont \og silver\fg{} : produites en appliquant la grille écrite, exigence par exigence, par un modèle différent du modèle évalué. Tous les résultats sont enregistrés dans MLflow (section~\ref{sec:mlflow}).
+
+\section{DSO1 --- Extraction (71 documents dev, chaîne réelle OCR + Qwen)}
+
+\begin{table}[ht]
+\centering\small
+\begin{tabular}{lccc}
+\toprule
+\textbf{Métrique} & \textbf{Qwen de base} & \textbf{+ QLoRA} & \textbf{Écart}\\
+\midrule
+F1 global (exp., formation, compétences) & 78,9\,\% & \textbf{81,2\,\%} & +2,4 pts\\
+F1 expérience / dates exactes & 88,2 / 95,7\,\% & \textbf{92,9 / 97,6\,\%} & +4,7 / +1,9\\
+F1 formation & \textbf{92,3\,\%} & 88,8\,\% & $-$3,5 pts\\
+Compétences : précision / rappel / F1 & 67,8 / 47,7 / 56,0\,\% & \textbf{72,5 / 54,2 / 62,0\,\%} & +6,0 pts F1\\
+Champs d'identité inventés & 12 & \textbf{5} & $-$7\\
+Secondes par CV & 90,4 & \textbf{72,1} & $-$18 s\\
+\bottomrule
+\end{tabular}
+\caption{Le fine-tuning corrige surtout ce que le modèle de base faisait mal sur les vrais scans (77,2\,\% $\rightarrow$ 80,2\,\%) ; la baisse en formation vient du style des étiquettes d'entraînement.}
+\label{tab:dso1}
+\end{table}
+
+\section{DSO3 et DSO4 --- Matching et agent de screening (22 paires de test)}
+
+\begin{table}[ht]
+\centering\small\setlength{\tabcolsep}{4.5pt}
+\begin{tabular}{lccccc}
+\toprule
+\textbf{Système} & \textbf{Grade exact} & \textbf{À $\pm$1} & \textbf{Kappa} & \textbf{Statut oblig.} & \textbf{Macro-F1}\\
+\midrule
+Matching sémantique (calibré sur dev) & \textbf{41\,\%} & 82\,\% & 0,40 & \textbf{60\,\%} & \textbf{0,53}\\
+Analyse fixe (RAG + Qwen + contrôles) & 36\,\% & \textbf{95\,\%} & \textbf{0,54} & 55\,\% & 0,41\\
+Agent de screening LangGraph & \textbf{41\,\%} & 77\,\% & 0,18 & 55\,\% & 0,47\\
+\bottomrule
+\end{tabular}
+\caption{Profils de référence en entrée : on mesure le matching seul, sans erreur d'extraction. Kappa quadratique pondéré.}
+\label{tab:dso3}
+\end{table}
+
+\textbf{Lecture.} L'analyse fixe place presque tous les candidats à un grade près de la référence (ce qui décide qui arrive devant un recruteur) et ordonne le mieux (kappa 0,54). L'agent améliore le macro-F1 des exigences obligatoires (0,41 $\rightarrow$ 0,47), mais \textbf{pas} la note globale : kappa 0,18 en test (0,37 en dev, à égalité avec l'analyse fixe). Ses contrôles ont modifié 73 jugements sur 24 paires, dont 68 citations jugées non pertinentes par le cross-encoder : ce contrôle est probablement trop strict et fait descendre des candidats. De plus, 7 analyses sur 36 ont échoué et sont retombées sur l'estimation sémantique : ces paires ne mesurent donc pas l'agent. Coût moyen : 2,9 appels à Qwen et 16,9 appels d'outils par paire. Avec 22 paires et des étiquettes silver, quelques points d'écart restent dans le bruit.
+
+\section{DSO4 --- Assistant (20 questions scénarisées)}
+
+Succès des tâches \textbf{65\,\%} (13/20) ; premier outil correct 83\,\% ; réponse contenant l'élément attendu 80\,\% ; noms de candidats tous issus d'un outil dans 90\,\% des cas ; 1,7 appel d'outil et 51 s par question. Points faibles : comparaison candidat/offre (0/2) et reranking (0/1). \textbf{Une seule des deux demandes discriminatoires a été refusée} (voir chapitre~\ref{ch:securite}).
+
+\section{Tests logiciels}
+
+270 tests unitaires et d'intégration passent (grille, règles d'expérience, contrôles des citations et des coordonnées, workflow complet par l'API et pas à pas comme n8n, reprise après décision, garde-fous des agents, serveur IA, métriques, e-mails et invitations avec un serveur SMTP simulé, synchronisation MLflow), avec des doublures : aucun GPU, réseau ni Docker requis.
+
+\section{Suivi des résultats : MLflow et interface}
+\label{sec:mlflow}
+
+Le script \texttt{mlflow\_sync.py} enregistre chaque évaluation de \texttt{data/evaluation/} dans MLflow~\cite{mlflow}, avec une expérience par partie : extraction (base contre QLoRA), fine-tuning (hyperparamètres et courbe de perte), RAG, matching, agent de screening et assistant. Chaque run garde ses paramètres, ses métriques par sous-groupe (langue, type de document, split) et ses fichiers sources. Il est retrouvé par une clé et une empreinte de ses fichiers : une nouvelle synchronisation ne crée donc aucun doublon et ne réenregistre que ce qui a changé. La page \emph{Evaluation \& MLflow} de l'interface affiche les mêmes chiffres, ainsi que les durées mesurées sur les candidatures réellement traitées.
+
+% ================================================================ 8
+\chapter{Sécurité, confidentialité et IA responsable}
+\label{ch:securite}
+
+\section{Mesures en place}
+
+\begin{table}[ht]
+\centering\small
+\begin{tabularx}{\textwidth}{L{3.1cm}Y}
+\toprule
+\textbf{Risque} & \textbf{Mesure}\\
+\midrule
+Fuite de données personnelles & Modèles sur notre propre session GPU, pas d'API IA externe ; fichier du CV lu dans un dossier temporaire puis supprimé (seuls le texte et le profil sont conservés) ; consentement obligatoire sur le portail ; suppression d'un candidat avec ses analyses, ses e-mails et ses vecteurs (\kb{KB-HR-004}) ; vrais CV jamais versionnés.\\
+Accès au serveur IA & Jeton Bearer aléatoire exigé à chaque requête, régénéré à chaque session ; le lien seul ne suffit pas ; arrêt automatique après 3 h ou 30 min d'inactivité.\\
+Fichiers malveillants & Liste blanche d'extensions (PDF, DOCX, PNG, JPG), taille $\leq$ 15 Mo, nettoyage du nom de fichier, protection contre le \emph{path traversal}.\\
+Hallucinations & Chaque citation est cherchée dans le CV, sinon \og démontrée\fg{} devient \og listée\fg{} avec avertissement ; e-mail et téléphone vérifiés dans le texte du CV (une adresse mal recopiée par le modèle est corrigée, une valeur absente du CV est retirée) ; note, score et action calculés par la grille, jamais par le modèle ; l'assistant ne nomme que des candidats renvoyés par un outil.\\
+Discrimination & Prompts interdisant les attributs protégés ; filtre par code des requêtes de l'agent de screening ; coordonnées jamais transmises à l'assistant (\kb{KB-HR-003}).\\
+E-mails aux candidats & Boîte d'envoi par défaut (aucun envoi réel) ; en démonstration, redirection de tous les envois vers une adresse de test (\texttt{EMAIL\_REDIRECT\_TO}) ; adresses réservées (\texttt{example.com}) jamais contactées ; mot de passe SMTP (\texttt{.env}) et jeton Google (\texttt{secrets/}) jamais versionnés.\\
+Décision automatisée & Validation humaine obligatoire, rejet motivé, journal de chaque étape et de chaque décision (qui, quand, pourquoi) ; la réponse au candidat ne part qu'après cette décision.\\
+\bottomrule
+\end{tabularx}
+\caption{Risques et mesures de sécurité en place.}
+\label{tab:securite}
+\end{table}
+
+\section{Limites identifiées et recommandations}
+
+\begin{itemize}
+\item \textbf{API sans authentification} et CORS ouvert (\texttt{allow\_origins=["*"]}) : acceptable en local pour la démonstration, mais un déploiement exige une authentification (OAuth2/JWT), des rôles (recruteur, administrateur) et une origine CORS précise.
+\item \textbf{Injection de prompt via le CV} : un CV peut contenir des instructions cachées. L'effet est limité, car la note est calculée par code et les citations sont vérifiées, mais le texte du CV n'est pas encore isolé ni filtré.
+\item \textbf{Refus des demandes discriminatoires} : 1 sur 2 seulement pour l'assistant ; il faut lui ajouter le même filtre par code que celui de l'agent de screening.
+\item \textbf{E-mails} : en démonstration, l'envoi passe par un compte Gmail (mot de passe d'application) et le jeton Google est un fichier local ; un déploiement utiliserait un domaine d'envoi authentifié (SPF, DKIM) et un coffre de secrets.
+\item Le jeton du serveur IA est comparé par une égalité simple : utiliser \texttt{hmac.compare\_digest}. Les identifiants par défaut de PostgreSQL doivent être changés hors démonstration.
+\end{itemize}
+
+% ---------------------------------------------------------------- conclusion
+\chapter*{Conclusion générale}
+\addcontentsline{toc}{chapter}{Conclusion générale}
+
+Ce projet a abouti à une chaîne complète de présélection de CV, du document reçu jusqu'à la réponse au candidat, dans laquelle chaque composant d'IA a un rôle borné. Qwen2.5-7B-Instruct, spécialisé par QLoRA sur 873 CV, extrait des profils plus complets et invente moins (F1 global 81,2\,\%, 5 champs inventés au lieu de 12). Le RAG sur BGE-M3, Qdrant et un cross-encoder ancre les jugements dans le CV et dans les règles RH (MRR 0,94). Deux agents LangGraph, encadrés par n8n et par des garde-fous écrits en code, recherchent les preuves et répondent aux recruteurs. Une fois la décision prise, le candidat reçoit sa réponse par e-mail, avec un lien de réunion pour un entretien ; l'interface React rend consultables chaque étape, chaque appel d'outil et chaque document cité, et MLflow conserve toutes les métriques.
+
+Le principal enseignement est que la fiabilité vient moins du modèle que de ce qui l'entoure : un calcul de la note par code, la vérification de chaque citation, une évaluation figée séparant \emph{dev} et \emph{test}, et une validation humaine obligatoire. L'évaluation montre aussi les limites actuelles : l'agent de screening n'améliore pas encore la note globale, et l'assistant ne refuse pas toujours les demandes discriminatoires. Le système doit donc rester un outil d'aide à la décision.
+
+\chapter*{Perspectives}
+\addcontentsline{toc}{chapter}{Perspectives}
+
+\begin{itemize}
+\item Le serveur IA vit dans une session Kaggle (lien changeant, 30 h GPU par semaine) : un déploiement réel utiliserait un serveur GPU permanent avec le même code.
+\item Étiquettes silver et petits échantillons (36 paires, 71 documents) : ajouter un annotateur humain et élargir le jeu, surtout en français. Le stockage des étiquettes humaines existe ; l'outil d'annotation de l'ancienne interface Streamlit reste à reporter dans l'interface React.
+\item Agent de screening : recalibrer sur dev le seuil du contrôle de pertinence des citations, cause probable de ses sous-estimations.
+\item Extraction : ajouter des exemples riches en formation pour compenser la perte de 3,5 points, et mesurer l'extraction sur le jeu \emph{test}. L'assistant n'a pas de mémoire de conversation.
+\item Réponse au candidat : envoi depuis un domaine authentifié, et choix du créneau d'entretien par le candidat (aujourd'hui fixé par le recruteur).
+\item Sécurité : authentification et rôles sur l'API, filtre par code des demandes discriminatoires dans l'assistant, isolation du texte des CV contre l'injection de prompt (chapitre~\ref{ch:securite}).
+\end{itemize}
+
+% ---------------------------------------------------------------- bibliographie
+\begin{thebibliography}{99}
+\addcontentsline{toc}{chapter}{Bibliographie}
+\bibitem{qwen} Qwen Team, \emph{Qwen2.5 Technical Report}, arXiv 2412.15115, 2024.
+\bibitem{qwenvl} Bai, S. et al., \emph{Qwen2.5-VL Technical Report}, arXiv 2502.13923, 2025.
+\bibitem{lora} Hu, E.~J. et al., \emph{LoRA : Low-Rank Adaptation of Large Language Models}, ICLR, 2022.
+\bibitem{qlora} Dettmers, T., Pagnoni, A., Holtzman, A., Zettlemoyer, L., \emph{QLoRA : Efficient Finetuning of Quantized LLMs}, NeurIPS, 2023.
+\bibitem{rag} Lewis, P. et al., \emph{Retrieval-Augmented Generation for Knowledge-Intensive NLP Tasks}, NeurIPS, 2020.
+\bibitem{bgem3} Chen, J. et al., \emph{BGE M3-Embedding : Multi-Lingual, Multi-Functionality, Multi-Granularity Text Embeddings Through Self-Knowledge Distillation}, arXiv 2402.03216, 2024.
+\bibitem{react} Yao, S. et al., \emph{ReAct : Synergizing Reasoning and Acting in Language Models}, ICLR, 2023.
+\bibitem{langgraph} LangGraph, documentation, \url{https://langchain-ai.github.io/langgraph/}
+\bibitem{qdrant} Qdrant, documentation, \url{https://qdrant.tech/documentation/}
+\bibitem{n8n} n8n, documentation, \url{https://docs.n8n.io/}
+\bibitem{resumeparser} md-zain, \emph{Resume Parser Dataset}, Hugging Face, \url{https://huggingface.co/datasets/md-zain/resume-parser-dataset}
+\bibitem{techjobs} Sundaydream, \emph{Tech Jobs Dataset 2026}, Hugging Face, \url{https://huggingface.co/datasets/Sundaydream/tech-jobs-dataset-2026}
+\bibitem{esco} Commission européenne, \emph{ESCO --- European Skills, Competences, Qualifications and Occupations}, v1.2.1, \url{https://esco.ec.europa.eu/}
+\bibitem{react-doc} React, documentation, \url{https://react.dev/}
+\bibitem{mlflow} MLflow, documentation, \url{https://mlflow.org/docs/latest/}
+\bibitem{gcal} Google, \emph{Google Calendar API} (événements et visioconférences Meet), \url{https://developers.google.com/calendar/api}
+\bibitem{ics} Desruisseaux, B. (éd.), \emph{Internet Calendaring and Scheduling Core Object Specification (iCalendar)}, RFC 5545, IETF, 2009.
+\end{thebibliography}
+
+% ---------------------------------------------------------------- annexe
+\appendix
+\chapter{Bibliothèque de prompts}
+
+Les prompts ci-dessous sont reproduits \textbf{tels qu'utilisés} par l'application : ils sont extraits directement du code source (fichiers du tableau~\ref{tab:prompts}). Ils sont rédigés en anglais, langue dans laquelle Qwen2.5 suit le plus fidèlement les consignes ; les CV et les questions peuvent être en français. Conventions communes : température 0 ; pour toute sortie structurée, le message utilisateur se termine par l'instruction JSON (A.0) suivie du schéma Pydantic attendu, et la réponse est validée par ce schéma. Dans l'interface, chaque analyse affiche aussi les prompts système qui lui ont été envoyés.
+
+\begin{table}[ht]
+\centering\small
+\begin{tabularx}{\textwidth}{lL{2.5cm}L{5.0cm}L{2.1cm}Y}
+\toprule
+\textbf{Id} & \textbf{Prompt} & \textbf{Code} & \textbf{Modèle} & \textbf{Sortie}\\
+\midrule
+A.0 & Instruction JSON commune & \texttt{llm/huggingface\_adapter.py} & --- & ---\\
+A.1 & Extraction de CV & \texttt{extraction/extractor.py} & Qwen + QLoRA & CVExtraction, 2\,048 tok.\\
+A.2 & Lecture d'offre & \texttt{extraction/job\_extractor.py} & Qwen de base & JobExtraction, 1\,200 tok.\\
+A.3 & Analyse candidat/offre & \texttt{matching/analyzer.py} & Qwen de base & MatchJudgement, 1\,800 tok.\\
+A.4 & Analyse de l'agent & \texttt{agents/screening.py} & Qwen de base & MatchJudgement\\
+A.5 & Planification de l'agent & \texttt{agents/screening.py} & Qwen de base & ScreeningPlan, 400 tok.\\
+A.6 & Assistant --- décision & \texttt{agents/agent.py} & Qwen de base & AgentDecision, 300 tok.\\
+A.7 & Assistant --- réponse & \texttt{agents/agent.py} & Qwen de base & Markdown, 700 tok.\\
+\bottomrule
+\end{tabularx}
+\caption{Vue d'ensemble de la bibliothèque de prompts.}
+\label{tab:prompts}
+\end{table}
+
+\section*{A.0 --- Instruction JSON commune}
+
+Ajoutée à la fin du message utilisateur de chaque requête structurée ; \texttt{\{schema\}} est remplacé par le schéma JSON du modèle Pydantic attendu. Le fine-tuning utilise la même fonction.
+
+\promptlabel{Suffixe du message utilisateur}
+\begin{lstlisting}[style=prompt]
+Answer with one JSON object only, following this JSON schema:
+{schema}
+\end{lstlisting}
+
+\section*{A.1 --- Extraction de CV (DSO1)}
+
+Transforme le texte d'un CV (couche texte ou OCR) en profil JSON. C'est le prompt sur lequel l'adaptateur QLoRA a été entraîné ; ses 8 règles proviennent de l'analyse des erreurs du modèle de base (employeur $\neq$ nom de projet, intitulés de groupe $\neq$ compétences\ldots). Le CV est tronqué à 16\,000 caractères.
+
+\promptlabel{Prompt système}
+\begin{lstlisting}[style=prompt]
+You extract structured information from a candidate's CV for a recruitment team.
+The CV may be in English or French; keep values in the language of the CV.
+
+Rules:
+1. Use only information written in the CV. Never invent, guess or complete a value.
+2. If a field is absent, return null (or an empty list). Do not write "N/A" or "Unknown".
+3. full_name, email, phone, location: the candidate's own details, usually in the first lines of the CV.
+   location = city and region/country only, never the street address.
+4. experience: one entry for EVERY position in the CV (CVs usually list 2 to 6), most recent first.
+   Do not stop after the first one. Copy title, company and dates as written; a current position ends
+   with "Present". description = one sentence of at most 20 words, not the bullet list.
+   company = the employer organisation. In a heading like "Intern - Fraud Detection Platform" followed
+   by "Acme Bank", the project name is not the company: company = "Acme Bank" (and location = the
+   place only).
+5. education: one entry per degree or diploma. degree = the diploma name ("Bachelor's", "MSc", "Master");
+   field_of_study = the subject ("Computer Science"); institution = the school or university.
+6. skills: short skill names of 1 to 4 words, never whole sentences. Take every technical skill, tool,
+   technology and method mentioned ANYWHERE: the skills section, job descriptions, "Keywords" or
+   "Technologies" lines, and projects; plus soft skills. Split lists: "Python, Docker and AWS" gives
+   "Python", "Docker", "AWS". Group headings are not skills: in "Cloud & DevOps: Docker, AWS", keep
+   "Docker" and "AWS", not "Cloud & DevOps". No duplicates.
+7. projects: one entry per personal, academic or team project: its name, one sentence of at most 20
+   words, and the technologies it lists.
+8. certifications: certification names only. languages: spoken languages only (not programming languages).
+
+Example (shortened):
+CV:
+  Jane Doe | Lyon, France | jane.doe@mail.com | +33 6 00 00 00 00
+  Data Engineer - Customer Analytics Platform                    Jan 2021 - Present
+  Acme Corp                                                      Lyon
+  - Built Spark pipelines on AWS; strong experience with Airflow and dbt
+  Keywords: Kafka, Terraform
+  MSc in Computer Science, Université de Lyon, 2020
+  Projects: Movie Recommender - collaborative filtering web app (PyTorch, FastAPI)
+  Skills: Programming: Python, SQL | Soft skills: team leadership
+  Certifications: AWS Certified Cloud Practitioner
+  Languages: French (native), English (C1)
+JSON:
+  {"full_name": "Jane Doe", "email": "jane.doe@mail.com", "phone": "+33 6 00 00 00 00",
+   "location": "Lyon, France", "summary": null,
+   "experience": [{"title": "Data Engineer", "company": "Acme Corp", "location": "Lyon",
+     "start_date": "Jan 2021", "end_date": "Present", "description": "Builds Spark data pipelines on AWS."}],
+   "education": [{"degree": "MSc", "field_of_study": "Computer Science", "institution": "Université de Lyon",
+     "start_date": null, "end_date": "2020"}],
+   "certifications": ["AWS Certified Cloud Practitioner"],
+   "languages": [{"language": "French", "proficiency": "native"}, {"language": "English", "proficiency": "C1"}],
+   "projects": [{"name": "Movie Recommender", "description": "Collaborative filtering web app.",
+     "technologies": ["PyTorch", "FastAPI"]}],
+   "skills": ["Spark", "AWS", "Airflow", "dbt", "Kafka", "Terraform", "PyTorch", "FastAPI", "Python", "SQL",
+     "Team leadership"]}
+
+Return only the JSON object.
+\end{lstlisting}
+
+\promptlabel[9]{Message utilisateur (texte)}
+\begin{lstlisting}[style=prompt]
+Extract the information from this CV.
+
+=== CV ===
+{cv_text}
+=== END OF CV ===
+\end{lstlisting}
+
+\promptlabel{Message utilisateur (variante vision, Qwen2.5-VL)}
+\begin{lstlisting}[style=prompt]
+Extract the information from this CV. The CV is the attached image (one image per page).
+\end{lstlisting}
+
+\section*{A.2 --- Lecture d'une offre d'emploi}
+
+Produit 5 à 14 exigences vérifiables, chacune obligatoire ou souhaitée, avec une importance et un nombre minimal d'années. Message utilisateur : \texttt{JOB ADVERTISEMENT:} suivi de l'annonce.
+
+\promptlabel{Prompt système}
+\begin{lstlisting}[style=prompt]
+You turn a job advertisement into the structured requirements a recruitment team scores candidates against.
+
+Rules:
+1. title, company, location (city/country), employment_type: as written; null if absent.
+2. requirements: 5 to 14 items, each ONE checkable skill, knowledge, experience or qualification, at most 20 words. Split combined items ("Python and Docker" gives two requirements only if they are different skills that matter separately).
+3. kind: "must" for what the ad requires (required, must, mandatory, X+ years); "nice" for what it presents as a plus (preferred, bonus, nice to have, ideally).
+4. importance: "high" for the core skills of the role (named in the title or first, or repeated); "medium" for important but secondary ones; "low" for minor ones (soft skills, degree when experience can replace it, tools of minor importance).
+5. min_years: only when the ad gives a number of years for that requirement, else null.
+6. Use only the ad: never invent requirements. Write requirements in English, even for a French ad.
+
+Return only the JSON object.
+\end{lstlisting}
+
+\section*{A.3 --- Analyse candidat / offre (analyse fixe, DSO3)}
+
+Juge chaque exigence (niveau de preuve, citation de 25 mots au plus, années pertinentes). Le message utilisateur est assemblé par code : l'offre et ses exigences (M1\ldots, N1\ldots{} avec type, importance, années), les règles RH récupérées (\texttt{COMPANY RULES}, avec identifiant de document et section), la chronologie d'expérience calculée, puis le CV (7\,000 caractères au plus). La note n'est pas demandée au modèle : la grille la calcule.
+
+\promptlabel{Prompt système}
+\begin{lstlisting}[style=prompt]
+You are the screening assistant of a recruitment team. You compare ONE candidate's CV with ONE job description, applying the company's fit scoring rubric (KB-RR-002) and experience rules (KB-RR-003) given in the context.
+
+For each requirement, choose its evidence level:
+- demonstrated: the skill appears in a job, project or achievement with concrete context;
+- equivalent: an equivalent or transferable skill is demonstrated (for example Azure for AWS, PostgreSQL for MySQL; use the equivalences of the job profile);
+- listed: the skill only appears in a skills list or a summary, with no usage context;
+- not_evidenced: nothing in the CV supports it. This is a gap to check in interview, not a proven weakness.
+
+Rules:
+1. Use only the CV. Never invent. "evidence" = a short excerpt (at most 25 words) copied from the CV; null when not_evidenced.
+2. "years" only for requirements with a minimum number of years: the candidate's RELEVANT years (positions that used that skill), counted with the experience rules: internships 50 % (at most 1 year), overlapping positions once, projects and studies not counted. Use the experience timeline. Otherwise null.
+3. Synonyms count as the same skill ("ML" = "machine learning" = "apprentissage automatique"). A long skills list without matching experience is "listed", not "demonstrated".
+4. Never use or mention age, gender, origin, nationality, family situation, religion, health or any other protected attribute.
+5. strengths and gaps: at most 4 each, short. interview_questions: at most 4, each targeting one gap.
+6. summary: two factual sentences. Never decide the hiring: a recruiter decides.
+7. Assess every requirement, using its id. The CV may be in French: answer in English.
+
+Return only the JSON object.
+\end{lstlisting}
+
+\section*{A.4 --- Analyse par l'agent de screening (DSO4)}
+
+Même prompt que A.3, avec un paragraphe inséré avant les règles : sous chaque exigence, le modèle reçoit les passages du CV récupérés par l'agent, leur section et leur pertinence.
+
+\promptlabel{Prompt système (A.3 + paragraphe inséré)}
+\begin{lstlisting}[style=prompt]
+You are the screening assistant of a recruitment team. You compare ONE candidate's CV with ONE job description, applying the company's fit scoring rubric (KB-RR-002) and experience rules (KB-RR-003) given in the context.
+
+For each requirement, choose its evidence level:
+- demonstrated: the skill appears in a job, project or achievement with concrete context;
+- equivalent: an equivalent or transferable skill is demonstrated (for example Azure for AWS, PostgreSQL for MySQL; use the equivalences of the job profile);
+- listed: the skill only appears in a skills list or a summary, with no usage context;
+- not_evidenced: nothing in the CV supports it. This is a gap to check in interview, not a proven weakness.
+
+Under each requirement you get the CV passages the screening agent retrieved for it, with the CV section they come from and their relevance (0-1). Start from them and check the full CV: a passage from a position, a project or an achievement can show a skill demonstrated; a passage from a skills section or the summary only shows it listed; a passage may also be unrelated to the requirement. Quote the CV word for word.
+
+Rules:
+1. Use only the CV. Never invent. "evidence" = a short excerpt (at most 25 words) copied from the CV; null when not_evidenced.
+2. "years" only for requirements with a minimum number of years: the candidate's RELEVANT years (positions that used that skill), counted with the experience rules: internships 50 % (at most 1 year), overlapping positions once, projects and studies not counted. Use the experience timeline. Otherwise null.
+3. Synonyms count as the same skill ("ML" = "machine learning" = "apprentissage automatique"). A long skills list without matching experience is "listed", not "demonstrated".
+4. Never use or mention age, gender, origin, nationality, family situation, religion, health or any other protected attribute.
+5. strengths and gaps: at most 4 each, short. interview_questions: at most 4, each targeting one gap.
+6. summary: two factual sentences. Never decide the hiring: a recruiter decides.
+7. Assess every requirement, using its id. The CV may be in French: answer in English.
+
+Return only the JSON object.
+\end{lstlisting}
+
+\section*{A.5 --- Planification de l'agent de screening}
+
+Appelé aux tours 1 et 2 seulement (le tour 0 est fait par code). Les appels proposés sont ensuite filtrés par code (doublons, attributs protégés, 4 au plus).
+
+\promptlabel{Prompt système}
+\begin{lstlisting}[style=prompt]
+You are the screening agent of a recruitment team. You check ONE candidate's CV against ONE job, requirement by requirement, before the final judgement. You get the requirements whose CV evidence is still weak or missing, the best CV passage found so far for each (with its CV section and its relevance from 0 to 1) and the searches already made.
+
+Decide which further searches could still find evidence. Tools:
+- search_cv(query): searches the candidate's CV again. Use other words: synonyms, the tools or tasks that imply the skill, the French term (the CV may be in French), e.g. "REST API" -> "web services Flask endpoints".
+- search_hr_knowledge(query): searches the company's HR rules, e.g. the skills the job profile accepts as equivalent, how internships count in years of experience.
+
+Rules:
+1. At most 4 calls, must-haves first. Never repeat a search already made.
+2. No call for a requirement already proven by its passage, nor when the CV clearly has nothing related: the final judgement will then say "not evidenced".
+3. A skill only found in a skills section is "listed": search the CV for a position or a project that used it.
+4. Never search for age, gender, origin, nationality, religion, health or family situation.
+
+Answer with one JSON object: {"thought": "<one short sentence>", "calls": [{"tool": "search_cv", "requirement": "M2", "query": "<words to search>"}]}. "calls" may be empty.
+\end{lstlisting}
+
+\promptlabel[13]{Gabarit du message utilisateur}
+\begin{lstlisting}[style=prompt]
+JOB: <title> (<company>)
+CANDIDATE: <name> — positions: <title at company; ...> — total experience: <n> years
+Skills listed: <up to 25 skills>
+
+REQUIREMENTS WITH WEAK OR MISSING EVIDENCE:
+- M2 [must-have, high]: <requirement>
+    best passage: [<CV section>] (0.42) <passage>
+    searched: "<query 1>"; ...
+HR knowledge already searched: "<query>"
+
+Planning round <r> of 2. Which searches next?
+\end{lstlisting}
+
+\section*{A.6 --- Assistant du recruteur : choix de l'outil}
+
+Appelé à chaque pas du graphe (4 au plus). Le message utilisateur contient la question, l'espace de travail (offres disponibles) et les résultats d'outils déjà obtenus.
+
+\promptlabel{Prompt système (avec la liste des 8 outils)}
+\begin{lstlisting}[style=prompt]
+You are the AI assistant of a recruitment team. You answer recruiters' questions about candidates, jobs and the company's HR rules. You work step by step: at each step you call ONE tool, or you decide that you can answer.
+
+TOOLS:
+- search_candidates(query, top_k=5): Semantic search in all candidates' CVs (positions, projects, skills, education); returns the best evidence per candidate. Use it to find people with a skill or an experience.
+- search_jobs(query, top_k=5): Semantic search in the job descriptions and their requirements.
+- search_hr_knowledge(query, role=None, top_k=3): Search the company's HR knowledge base: recruitment policies, fit scoring rubric, experience rules, interview guidelines, salary levels, job profiles, skill definitions. Optional role: ml_engineer, nlp_llm_engineer, backend_developer, devops_cloud, data_analyst_scientist.
+- get_candidate(candidate): A candidate's structured profile from the database (experience timeline with years, education, projects, skills, languages, certifications, existing analyses).
+- get_job(job): A job and its requirements (must-haves, nice-to-haves, minimum years).
+- rank_candidates(job, top_k=5): Rank all candidates for a job with the fit scoring rubric (grade 0-3, score, must-haves met, gaps). Use it for 'who are the best candidates for job X'.
+- match_candidate(candidate, job): Compare one candidate with one job requirement by requirement (status, evidence level, CV evidence, gaps); uses the stored analysis when there is one.
+- rerank_candidates(query, candidates=[], top_k=5): Order candidates (given ids/names, or all) by how well their CV evidence fits a precise criterion, with the cross-encoder reranker.
+
+Rules:
+1. Facts about candidates, jobs and HR rules come only from tools, never from memory.
+2. Pick the most direct tool: best candidates for a job -> rank_candidates; one candidate against one job -> match_candidate; people with a skill or an experience -> search_candidates; a candidate's background -> get_candidate; a job's requirements -> get_job; policies, scoring rubric, salary levels, interview or experience rules -> search_hr_knowledge; ordering a few candidates on one precise criterion -> rerank_candidates.
+3. Name jobs and candidates exactly as in the workspace or in previous results (title, name or id).
+4. Choose "final_answer" as soon as the results are enough, when no tool is needed (e.g. a greeting) or when tools cannot help. Never repeat a call already made.
+5. Never search, rank or judge on age, gender, origin, nationality, religion, health or family situation: answer such requests directly with "final_answer".
+
+Answer with one JSON object: {"thought": "<one short sentence>", "action": "<tool name or final_answer>", "arguments": {...}}.
+\end{lstlisting}
+
+\promptlabel[13]{Gabarit du message utilisateur}
+\begin{lstlisting}[style=prompt]
+QUESTION: <question>
+
+WORKSPACE:
+<jobs available>
+
+RESULTS SO FAR:
+<tool, arguments, result> ...
+
+Tool calls left: <n>. What is the next step?
+\end{lstlisting}
+
+\section*{A.7 --- Assistant du recruteur : réponse}
+
+Rédige la réponse finale à partir des seuls résultats d'outils (chacun tronqué à 2\,500 caractères), dans la langue de la question.
+
+\promptlabel{Prompt système}
+\begin{lstlisting}[style=prompt]
+You are the AI assistant of a recruitment team. Answer the recruiter's question using only the tool results given.
+
+Rules:
+1. Be concise and concrete: name the candidates, jobs and HR documents (with their ids, e.g. KB-RR-002) you rely on, with the evidence or figures from the results (grade, score, years, requirements met).
+2. If the results do not answer the question, say what is missing and what the recruiter could check.
+3. Never invent candidates, facts or figures. Never make a hiring decision: you recommend, a recruiter decides. "Not evidenced" means the CV does not mention it, not that the candidate lacks it.
+4. Never use or mention age, gender, origin, nationality, religion, health or family situation; if asked to, explain that the company's fair evaluation policy (KB-HR-003) forbids it.
+5. Answer in the language of the question, in Markdown (short paragraphs or bullet points), never in JSON.
+\end{lstlisting}
+
+\promptlabel[13]{Gabarit du message utilisateur}
+\begin{lstlisting}[style=prompt]
+QUESTION: <question>
+
+WORKSPACE:
+<jobs available>
+
+TOOL RESULTS:
+<tool, arguments, result> ...
+
+Write the answer for the recruiter.
+\end{lstlisting}
+
+\end{document}
